@@ -4,9 +4,9 @@ PRISM is a predictive maintenance dashboard for industrial milling machines. It 
 
 ## MVP
 
-The MVP delivers multi-class failure classification for a single equipment type, milling machines. It classifies four learnable failure modes: tool wear, heat dissipation, power, and overstrain. PRISM sends automated alerts when failure risk exceeds a threshold. The dashboard shows the predicted failure mode and confidence score for the current readings.
+PRISM is for the maintenance technician at a small machine shop who runs CNC milling machines and has no data scientist. The technician cannot tell from raw sensor readings which failure is developing, so the shop repairs healthy machines or loses production to unplanned breakdowns. The technician enters five readings (air temperature, process temperature, rotational speed, torque, tool wear) and PRISM shows the predicted failure mode with a confidence score. PRISM sends an alert when failure risk crosses a threshold. A machine learning classifier trained on the AI4I 2020 dataset does the classification. The model weighs all readings together and names one or more of four failure modes: tool wear, heat dissipation, power, and overstrain. A single record carries more than one failure mode at once, so PRISM treats the task as multi-label. AI4I is a snapshot of operating conditions, not a time series. PRISM flags failure risk under current conditions and does not forecast a failure date.
 
-AI4I is a snapshot of operating conditions, not a time series. PRISM flags failure risk under current conditions. It does not forecast a failure date.
+Safety disclaimer: PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.
 
 ## What PRISM aims to deliver
 
