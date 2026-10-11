@@ -1,3 +1,5 @@
+Live site: http://prism-cua-env.eba-3sfumww2.us-east-1.elasticbeanstalk.com/
+
 # PRISM: Predictive Real-time Infrastructure Sensor Monitoring
 
 PRISM is a predictive maintenance dashboard for industrial milling machines. It uses machine-learning models trained on the AI4I 2020 dataset to flag failure risk under current operating conditions. Maintenance teams enter equipment sensor readings, and PRISM classifies which failure mode the readings point to, with a confidence score.
