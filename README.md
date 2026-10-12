@@ -10,6 +10,15 @@ PRISM is for the maintenance technician at a small machine shop who runs CNC mil
 
 Safety disclaimer: PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.
 
+## Dashboard (first version)
+
+The home page is one dashboard for one milling machine (M-01) running on simulated sensor readings. It shows a failure-risk score from 0 to 100, a plain-English reason, the stress on each failure mode, and the last 30 readings. Four demo situations (worn tool, overheating, overload, healthy) show how the score reacts.
+
+- The score is rule-based. It uses the AI4I failure limits, which reproduce the heat, power and overstrain labels exactly. A trained model can replace `app/Services/RiskScorer.php` later.
+- Readings come from `app/Services/SensorSimulator.php`. They are repeatable, so the app needs no database.
+- AI4I has no vibration column. Rotational speed and torque stand in for mechanical load, and tool wear in minutes stands in for run time.
+- Backtest on the 10,000 AI4I records (18 random-failure records left out): 0 of 7,448 Low records failed, 40 of 1,889 Elevated (2.1%), 290 of 645 High (45.0%).
+
 ## What PRISM aims to deliver
 
 - Fewer unneeded repairs, by avoiding preventive maintenance on healthy equipment.
