@@ -55,7 +55,7 @@
         .why { padding: var(--prism-space-4); }
         .why p { margin: 0 0 var(--prism-space-2); font-size: 1rem; }
         .drivers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px var(--prism-space-6); margin-top: var(--prism-space-3); }
-        @media (max-width: 1000px) { .drivers { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) { .drivers { grid-template-columns: 1fr; } }
         .driver { display: grid; grid-template-columns: 110px 1fr 36px; align-items: center; gap: 8px; font-size: 0.875rem; }
         .driver .bar { height: 10px; background: var(--prism-surface-raised); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-sm); overflow: hidden; }
         .driver .bar i { display: block; height: 100%; width: 0; background: var(--prism-risk-low); transition: width 0.5s ease, background 0.3s ease; }
@@ -84,16 +84,19 @@
         @media (max-width: 800px) { .row-2 { grid-template-columns: 1fr; } }
         .row-2 .ai { margin-top: 0; }
         .chart { padding: var(--prism-space-4); margin-top: var(--prism-space-3); }
+        .row-2 .chart { margin-top: 0; }
         .chart svg { width: 100%; height: auto; display: block; }
         .chart text { font-family: var(--prism-font-data); }
         .chart .cap { color: var(--prism-muted); font-size: 0.8125rem; margin: 4px 0 0; }
 
+        .fold > summary { cursor: pointer; }
+        .section-title { display: list-item; }
+        .chart .fold > summary { font-weight: 600; font-size: 1rem; margin-bottom: var(--prism-space-3); }
         footer { margin-top: var(--prism-space-4); color: var(--prism-muted); font-size: 0.875rem; display: grid; gap: var(--prism-space-2); }
         footer p { margin: 0; }
         footer strong { color: var(--prism-text); }
         @media (max-width: 480px) {
             .card { padding: var(--prism-space-4); }
-            .page-head .btn { width: 100%; }
             .driver { grid-template-columns: 100px 1fr 40px; gap: var(--prism-space-2); }
             .tile { padding: var(--prism-space-3); }
             .tile .val { font-size: 1.25rem; }
@@ -110,11 +113,7 @@
 <div class="wrap">
     <main id="main" tabindex="-1">
     <div class="page-head">
-        <div>
-            <h1>Machine Risk Analysis</h1>
-            <p>Simulated readings for one milling machine. Pick a situation to see the predicted failure risk and the reason.</p>
-        </div>
-        <button type="button" class="btn" id="cta-run">Run the failure demo</button>
+        <h1>Machine Risk Analysis</h1>
     </div>
 
     <div class="toolbar">
@@ -128,6 +127,7 @@
         <span class="badge">SIMULATED DATA</span>
         <span class="status"><i class="dot" id="dot"></i><span id="status-text">Starting</span></span>
         <button type="button" class="btn" id="pause">Pause</button>
+        <button type="button" class="btn" id="cta-run">Run the failure demo</button>
     </div>
     <p class="blurb" id="blurb"></p>
 
@@ -156,21 +156,26 @@
             <h2 id="why-title">Why this score</h2>
             <p id="why">Analyzing readings...</p>
             <div class="drivers" id="drivers" role="group" aria-label="Stress on each failure mode"></div>
-            <p class="hint">Each bar shows how close the readings are to the limit for that failure mode. 100 means the limit is crossed. The score is the highest bar.</p>
         </section>
     </div>
 
+    <div class="grid row-2">
     @include('partials.ai-panel')
-
-    <h2 class="section-title" id="sensors-title">Sensor Readings</h2>
-    <p class="section-note">Simulated values. Temperatures show in °C with the kelvin value beneath.</p>
-    <div class="tiles" id="tiles" role="group" aria-labelledby="sensors-title"></div>
-
     <section class="card chart" aria-labelledby="chart-title">
-        <h2 id="chart-title">Risk score over the last 30 readings</h2>
+        <details class="fold" id="fold-chart" open>
+        <summary id="chart-title">Risk score over the last 30 readings</summary>
         <svg id="chart" viewBox="0 0 640 130" role="img" aria-label="Line chart of the risk score for the last 30 readings. Waiting for the first reading." aria-describedby="cycle"></svg>
         <p class="cap" id="cycle">Reading 0 of {{ $cycle }}. The demo restarts after reading {{ $cycle }}, as if the tool were changed.</p>
+        </details>
     </section>
+    </div>
+
+    <details class="fold" id="fold-sensors" open>
+        <summary class="section-title" id="sensors-title">Sensor Readings</summary>
+        <p class="section-note">Simulated values. Temperatures show in °C with the kelvin value beneath.</p>
+        <div class="tiles" id="tiles" role="group" aria-labelledby="sensors-title"></div>
+    </details>
+
 
     
 
@@ -179,8 +184,7 @@
     </main>
 
     <footer>
-        <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.</p>
-        <p>Every reading on this page is simulated. <a href="{{ url('/faq') }}">FAQ</a> &middot; <a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a></p>
+        <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern. Every reading on this page is simulated. <a href="{{ url('/faq') }}">FAQ</a> &middot; <a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a></p>
     </footer>
 </div>
 
@@ -432,6 +436,11 @@
 
     // Stop polling while the tab is hidden. Fetch again as soon as it is visible.
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { step(); } });
+
+    // On phones the sensor tiles and the chart start collapsed to shorten the page.
+    const folds = Array.from(document.querySelectorAll('.fold'));
+    if (window.matchMedia('(max-width: 480px)').matches) { folds.forEach((f) => f.removeAttribute('open')); }
+    folds.forEach((f) => f.addEventListener('toggle', () => { if (f.open) { render(); } }));
 
     buildStatic();
     selectScenario(state.scenario);

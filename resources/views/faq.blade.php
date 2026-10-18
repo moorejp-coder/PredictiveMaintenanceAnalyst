@@ -91,7 +91,7 @@
     <details>
         <summary>What does PRISM do?</summary>
         <div class="answer">
-            <p>PRISM scores failure risk for one simulated milling machine, M-01. PRISM runs six checks: tool wear, heat buildup, power draw, overstrain, vibration and machine run hours. Each check gives a stress value from 0 to 1. The score is the highest stress, shown from 0 to 100. PRISM then shows a band, a plain-English reason and one fixed action.</p>
+            <p>PRISM scores failure risk for one simulated milling machine, M-01. PRISM runs six checks: tool wear, heat buildup, power draw, overstrain, vibration and machine run hours. Each check gives a stress value from 0 to 1. The score is the highest stress, shown from 0 to 100. On the dashboard, each bar shows how close the readings are to the limit for one check, and 100 means the limit is crossed. PRISM then shows a band, a plain-English reason and one fixed action.</p>
             <table>
                 <tr><th scope="col">Score</th><th scope="col">Band</th><th scope="col">Action shown</th></tr>
                 <tr><td>0 to 39</td><td>Low</td><td>No action needed. Keep monitoring.</td></tr>
