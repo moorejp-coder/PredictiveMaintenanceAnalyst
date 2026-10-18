@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Privacy Policy | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="How PRISM handles data. PRISM has no accounts, no forms and no analytics.">
-    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
     <style>
         :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8; }
         * { box-sizing: border-box; }

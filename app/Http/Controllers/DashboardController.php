@@ -33,6 +33,6 @@ class DashboardController extends Controller
             'tick' => (int) $data['tick'],
             'reading' => $reading,
             'risk' => (new RiskScorer('L'))->score($reading),
-        ]);
+        ])->header('X-Robots-Tag', 'noindex');
     }
 }

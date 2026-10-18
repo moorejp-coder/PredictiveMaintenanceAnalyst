@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Support\CanonicalUrl;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,5 +28,11 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+
+        // One canonical address per page: APP_URL host, no query string,
+        // no trailing slash.
+        View::composer(['dashboard', 'faq', 'privacy', 'terms'], function ($view) {
+            $view->with('canonicalUrl', CanonicalUrl::current());
+        });
     }
 }

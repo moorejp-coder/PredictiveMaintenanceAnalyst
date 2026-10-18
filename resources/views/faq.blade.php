@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FAQ: Scope, Ownership and Limits | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="Plain answers on what PRISM does, what PRISM does not do, who owns PRISM, and what PRISM does not promise.">
-    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
     <style>
         :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8;
                 --ok:#34d399; --partial:#fbbf24; --none:#f87171; }
