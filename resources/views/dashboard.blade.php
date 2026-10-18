@@ -41,6 +41,20 @@
         .machine span { color: var(--muted); font-size: 0.8125rem; }
         @media (max-width: 640px) { .machine { text-align: left; } }
 
+
+        .cta {
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px;
+            margin: 16px 0 0; padding: 16px 20px; background: var(--panel-2);
+            border: 1px solid var(--accent); border-radius: 12px;
+        }
+        .cta h2 { margin: 0; font-size: 1.125rem; }
+        .cta p { margin: 4px 0 0; color: var(--muted); font-size: 0.875rem; }
+        button.cta-btn {
+            background: var(--accent); border-color: var(--accent); color: #04121f;
+            font-weight: 700; font-size: 1rem; padding: 10px 22px; min-height: 44px;
+        }
+        button.cta-btn:hover { background: #7dd3fc; border-color: #7dd3fc; }
+
         .toolbar {
             display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 16px 0;
         }
@@ -136,6 +150,14 @@
             <span>Product quality variant L</span>
         </div>
     </header>
+
+    <section class="cta" aria-labelledby="cta-title">
+        <div>
+            <h2 id="cta-title">See PRISM catch a failure before it happens.</h2>
+            <p>Run the worn tool demo. Watch the risk score climb and read the plain-English reason.</p>
+        </div>
+        <button type="button" class="cta-btn" id="cta-run">Run the failure demo</button>
+    </section>
 
     <div class="toolbar">
         <span class="label" id="scenario-label">Simulated situation</span>
@@ -390,6 +412,12 @@
         el.pause.setAttribute('aria-pressed', state.paused ? 'true' : 'false');
         setStatus(state.paused ? 'paused' : 'live');
         if (!state.paused) { step(); }
+    });
+
+    $('cta-run').addEventListener('click', () => {
+        if (state.paused) { el.pause.click(); }
+        selectScenario('worn_tool');
+        el.risk.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
     });
 
     buildStatic();
