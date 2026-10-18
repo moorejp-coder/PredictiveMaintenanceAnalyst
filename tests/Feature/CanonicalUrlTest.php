@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\RedirectTrailingSlash;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 class CanonicalUrlTest extends TestCase
@@ -10,13 +12,24 @@ class CanonicalUrlTest extends TestCase
     {
         $html = $this->get('/faq?utm_source=x&ref=y')->assertOk()->getContent();
 
-        $this->assertStringContainsString('<link rel="canonical" href="http://localhost/faq">', $html);
+        $this->assertStringContainsString('<link rel="canonical" href="'.url('/faq').'">', $html);
     }
 
     public function test_trailing_slash_redirects_permanently(): void
     {
-        $this->get('/faq/')->assertStatus(301)->assertRedirect('/faq');
-        $this->get('/faq/?a=1')->assertStatus(301)->assertRedirect('/faq?a=1');
+        // The test client trims trailing slashes from the URL, so call the
+        // middleware with a raw request instead.
+        $middleware = new RedirectTrailingSlash;
+        $next = fn () => response('ok');
+
+        $response = $middleware->handle(Request::create('http://localhost/faq/', 'GET'), $next);
+        $this->assertSame(301, $response->getStatusCode());
+        $this->assertSame('/faq', parse_url($response->headers->get('Location'), PHP_URL_PATH));
+
+        $response = $middleware->handle(Request::create('http://localhost/faq/?a=1', 'GET'), $next);
+        $this->assertSame(301, $response->getStatusCode());
+        $this->assertSame('/faq', parse_url($response->headers->get('Location'), PHP_URL_PATH));
+        $this->assertSame('a=1', parse_url($response->headers->get('Location'), PHP_URL_QUERY));
     }
 
     public function test_canonical_uses_configured_app_url_host(): void
