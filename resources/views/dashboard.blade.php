@@ -199,7 +199,7 @@
 
     <section class="card chart" aria-labelledby="chart-title">
         <h2 id="chart-title">Risk score over the last 30 readings</h2>
-        <svg id="chart" viewBox="0 0 640 170" role="img" aria-label="Line chart of the risk score for the last 30 readings"></svg>
+        <svg id="chart" viewBox="0 0 640 170" role="img" aria-label="Line chart of the risk score for the last 30 readings. Waiting for the first reading." aria-describedby="cycle"></svg>
         <p class="cap" id="cycle">Reading 0 of {{ $cycle }}. The demo restarts after reading {{ $cycle }}, as if the tool were changed.</p>
     </section>
 
@@ -317,6 +317,18 @@
         return out;
     }
 
+    function chartLabel(scores, bandLabel) {
+        const last = scores[scores.length - 1];
+        const first = scores[0];
+        const min = Math.min.apply(null, scores), max = Math.max.apply(null, scores);
+        const trend = scores.length < 2 ? 'one reading so far' :
+            (last > first ? 'rising' : (last < first ? 'falling' : 'flat'));
+        return 'Line chart of the risk score for the last ' + scores.length + ' readings. ' +
+            'Latest score ' + last + ' out of 100, ' + bandLabel + ' risk. ' +
+            'Range ' + min + ' to ' + max + '. Trend ' + trend + '. ' +
+            'Shaded zones: green below 40, amber 40 to 69, red 70 and above.';
+    }
+
     function render() {
         const latest = state.history[state.history.length - 1];
         if (!latest) { return; }
@@ -353,7 +365,9 @@
             tile.querySelector('.tag').textContent = b === 'low' ? '' : 'Driving the risk';
         });
 
-        el.chart.innerHTML = chartSvg(state.history.map((h) => h.risk.score));
+        const scores = state.history.map((h) => h.risk.score);
+        el.chart.innerHTML = chartSvg(scores);
+        el.chart.setAttribute('aria-label', chartLabel(scores, risk.band_label));
         el.cycle.textContent = 'Reading ' + ((latest.tick % CYCLE) + 1) + ' of ' + CYCLE +
             '. The demo restarts after reading ' + CYCLE + ', as if the tool were changed.';
 

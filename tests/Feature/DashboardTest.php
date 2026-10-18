@@ -69,4 +69,15 @@ class DashboardTest extends TestCase
             ->assertSee('SLA posture')
             ->assertSee('does not replace an inspection');
     }
+
+    public function test_dashboard_gives_the_chart_a_text_alternative_and_hides_decoration(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('id="chart"', false)
+            ->assertSee('role="img"', false)
+            ->assertSee('aria-label="Line chart of the risk score', false)
+            ->assertSee('aria-describedby="cycle"', false)
+            ->assertSee('<svg viewBox="0 0 120 120" aria-hidden="true">', false);
+    }
 }
