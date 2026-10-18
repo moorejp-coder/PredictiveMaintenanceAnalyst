@@ -1,2 +1,4 @@
 User-agent: *
 Disallow: /api/
+
+Sitemap: http://prism-cua-env.eba-fsf9rffw.us-east-2.elasticbeanstalk.com/sitemap.xml
