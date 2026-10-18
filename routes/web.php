@@ -7,3 +7,4 @@ Route::get('/', [DashboardController::class, 'index']);
 Route::get('/api/readings', [DashboardController::class, 'readings']);
 Route::view('/privacy', 'privacy');
 Route::view('/terms', 'terms');
+Route::view('/faq', 'faq');

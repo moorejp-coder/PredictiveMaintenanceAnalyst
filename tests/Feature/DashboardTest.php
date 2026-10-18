@@ -52,6 +52,21 @@ class DashboardTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee(url('/terms'), false)
-            ->assertSee(url('/privacy'), false);
+            ->assertSee(url('/privacy'), false)
+            ->assertSee(url('/faq'), false);
+    }
+
+    public function test_faq_page_loads_and_covers_the_six_governance_areas(): void
+    {
+        $this->get('/faq')
+            ->assertOk()
+            ->assertSee('PRISM FAQ')
+            ->assertSee('In-scope definition')
+            ->assertSee('Out-of-scope risk control')
+            ->assertSee('Escalation rule')
+            ->assertSee('Ownership and maintenance')
+            ->assertSee('Lifecycle reality')
+            ->assertSee('SLA posture')
+            ->assertSee('does not replace an inspection');
     }
 }
