@@ -2,7 +2,8 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1220">
     <title>Milling Machine Failure Risk Dashboard | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="PRISM shows a failure-risk score and a plain-English reason for one milling machine, using simulated temperature, vibration and run-hour readings.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
@@ -21,7 +22,7 @@
             --band: var(--low);
         }
         * { box-sizing: border-box; }
-        html { color-scheme: dark; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
         body {
             margin: 0;
             background: var(--bg);
@@ -29,7 +30,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.5;
         }
-        .wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 40px; }
+        .wrap { max-width: 1120px; margin: 0 auto; padding: 20px max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 
         header.top {
             display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
@@ -112,11 +113,11 @@
         .driver output { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
         .why .hint { color: var(--muted); font-size: 0.8125rem; margin: 18px 0 0; }
 
-        .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-top: 16px; }
+        .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
         .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
         .tile.flag { border-color: var(--elevated); }
         .tile.flag.high { border-color: var(--high); }
-        .tile .name { color: var(--muted); font-size: 0.8125rem; display: flex; justify-content: space-between; gap: 8px; }
+        .tile .name { color: var(--muted); font-size: 0.8125rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; }
         .tile .tag { color: var(--elevated); font-weight: 600; font-size: 0.75rem; }
         .tile.high .tag { color: var(--high); }
         .tile .val { font-size: 1.75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -134,6 +135,18 @@
         footer p { margin: 0; }
         footer strong { color: var(--text); }
         .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+        @media (max-width: 480px) {
+            .card { padding: 16px; }
+            .cta { padding: 14px 16px; }
+            button.cta-btn { width: 100%; }
+            .driver { grid-template-columns: 96px 1fr 36px; gap: 8px; }
+            .tile { padding: 12px; }
+            .tile .val { font-size: 1.5rem; }
+            .spacer { display: none; }
+        }
+        @media (pointer: coarse) {
+            button { min-height: 44px; }
+        }
         @media (prefers-reduced-motion: reduce) {
             .ring .value, .driver .bar i { transition: none; }
         }
@@ -297,8 +310,15 @@
             '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="2.6"></circle>';
     }
 
+    let chartWidth = 640;
+    function measureChart() {
+        const w = Math.round(el.chart.getBoundingClientRect().width);
+        chartWidth = Math.max(260, Math.min(640, w || 640));
+        el.chart.setAttribute('viewBox', '0 0 ' + chartWidth + ' 170');
+    }
+
     function chartSvg(scores) {
-        const W = 640, H = 170, L = 34, R = 10, T = 10, B = 14;
+        const W = chartWidth, H = 170, L = 34, R = 10, T = 10, B = 14;
         const x = (i) => L + (i * (W - L - R)) / (MAX_POINTS - 1);
         const y = (v) => T + (1 - v / 100) * (H - T - B);
         let out = '';
@@ -367,6 +387,7 @@
         });
 
         const scores = state.history.map((h) => h.risk.score);
+        measureChart();
         el.chart.innerHTML = chartSvg(scores);
         el.chart.setAttribute('aria-label', chartLabel(scores, risk.band_label));
         el.cycle.textContent = 'Reading ' + ((latest.tick % CYCLE) + 1) + ' of ' + CYCLE +
@@ -433,6 +454,12 @@
         if (state.paused) { el.pause.click(); }
         selectScenario('worn_tool');
         el.risk.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    });
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(render, 150);
     });
 
     buildStatic();

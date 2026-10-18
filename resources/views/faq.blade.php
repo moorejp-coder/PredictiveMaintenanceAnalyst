@@ -2,7 +2,8 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1220">
     <title>FAQ: Scope, Ownership and Limits | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="Plain answers on what PRISM does, what PRISM does not do, who owns PRISM, and what PRISM does not promise.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
@@ -10,17 +11,17 @@
         :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8;
                 --ok:#34d399; --partial:#fbbf24; --none:#f87171; }
         * { box-sizing: border-box; }
-        html { color-scheme: dark; scroll-behavior: smooth; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; scroll-behavior: smooth; }
         body { margin:0; background:var(--bg); color:var(--text); line-height:1.6;
                font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-        .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 56px; }
+        .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
         h1 { margin: 0 0 4px; font-size: 1.6rem; letter-spacing: 0.04em; }
         h2 { margin: 36px 0 12px; font-size: 1.1rem; padding-top: 16px; border-top: 1px solid var(--line); }
         p, li { color: var(--muted); }
         li { margin-bottom: 6px; }
         strong { color: var(--text); }
         a { color: var(--accent); }
-        code { color: var(--text); font-size: 0.9em; }
+        code { color: var(--text); font-size: 0.9em; overflow-wrap: anywhere; }
         .meta { color: var(--muted); font-size: 0.875rem; margin: 0 0 16px; }
         .summary { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px 18px 12px; }
         .safety { background: var(--panel); border: 1px solid var(--accent); border-radius: 10px; padding: 12px 18px; margin: 16px 0; }
@@ -28,6 +29,11 @@
         table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.9rem; }
         th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--muted); }
         th { color: var(--text); }
+        @media (max-width: 560px) {
+            table { font-size: 0.8125rem; }
+            th, td { padding: 6px 6px; overflow-wrap: anywhere; }
+            .tag { white-space: normal; }
+        }
         .tag { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
         .tag.ok { color: var(--ok); border-color: var(--ok); }
         .tag.partial { color: var(--partial); border-color: var(--partial); }
@@ -44,6 +50,7 @@
         .tools { display: flex; gap: 8px; margin: 16px 0 0; }
         button { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 0.875rem; cursor: pointer; }
         button:hover { border-color: var(--accent); }
+        @media (pointer: coarse) { button { min-height: 44px; padding: 8px 16px; } summary { min-height: 44px; align-items: center; } }
     </style>
 </head>
 <body>

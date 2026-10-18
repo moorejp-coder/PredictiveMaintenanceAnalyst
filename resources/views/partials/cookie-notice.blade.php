@@ -1,6 +1,6 @@
 <div id="cookie-notice" role="region" aria-label="Cookie notice" hidden>
     <style>
-        #cookie-notice { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 1000; max-width: 560px;
+        #cookie-notice { position: fixed; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); z-index: 1000; max-width: 560px;
                          margin: 0 auto; background: #111a2e; color: #e8eefb; border: 1px solid #26355a;
                          border-radius: 10px; padding: 14px 16px; font: 0.875rem/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
                          box-shadow: 0 8px 24px rgba(0,0,0,.4); }
@@ -9,6 +9,7 @@
         #cookie-notice a { color: #38bdf8; }
         #cookie-notice button { background: #38bdf8; color: #0b1220; border: 0; border-radius: 6px; padding: 8px 16px;
                                 font: inherit; font-weight: 600; cursor: pointer; }
+        @media (pointer: coarse) { #cookie-notice button { min-height: 44px; } }
         #cookie-notice button:focus-visible { outline: 2px solid #e8eefb; outline-offset: 2px; }
     </style>
     <p>PRISM sets two cookies, a session cookie and a security cookie. Both are required for the site to work. PRISM sets no analytics, advertising or tracking cookies. <a href="{{ url('/privacy') }}">Read the privacy policy</a>.</p>

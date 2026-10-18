@@ -2,17 +2,18 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1220">
     <title>Terms and Conditions | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="The terms for using PRISM, a demo predictive maintenance dashboard that runs on simulated readings.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     <style>
         :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8; }
         * { box-sizing: border-box; }
-        html { color-scheme: dark; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
         body { margin:0; background:var(--bg); color:var(--text); line-height:1.6;
                font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-        .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 56px; }
+        .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
         h1 { margin: 0 0 4px; font-size: 1.6rem; letter-spacing: 0.04em; }
         h2 { margin: 32px 0 8px; font-size: 1.1rem; padding-top: 16px; border-top: 1px solid var(--line); }
         p, li { color: var(--muted); }

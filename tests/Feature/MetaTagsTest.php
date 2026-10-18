@@ -28,6 +28,17 @@ class MetaTagsTest extends TestCase
         $this->assertStringContainsString('<link rel="canonical" href="'.url($path === '/' ? '' : $path).'">', $html);
     }
 
+    /**
+     * @dataProvider pages
+     */
+    public function test_page_is_mobile_ready(string $path): void
+    {
+        $html = $this->get($path)->assertOk()->getContent();
+
+        $this->assertStringContainsString('<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">', $html);
+        $this->assertStringContainsString('<meta name="theme-color" content="#0b1220">', $html);
+    }
+
     public function test_titles_and_descriptions_are_unique(): void
     {
         $titles = [];

@@ -2,13 +2,14 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1220">
     <meta name="robots" content="noindex">
     <title>Page not found | {{ config('app.name', 'PRISM') }}</title>
     <style>
         :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8; }
         * { box-sizing: border-box; }
-        html { color-scheme: dark; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
         body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
                background:var(--bg); color:var(--text); line-height:1.6;
                font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
@@ -23,6 +24,7 @@
                color:var(--text); text-decoration:none; font-size:0.9rem; }
         .btn:hover { border-color:var(--accent); }
         .btn.primary { border-color:var(--accent); color:var(--accent); font-weight:600; }
+        @media (pointer: coarse) { .btn { padding: 12px 18px; } }
         a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
     </style>
 </head>
