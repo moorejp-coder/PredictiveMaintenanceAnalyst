@@ -114,7 +114,7 @@
                 <li><strong>Store data.</strong> PRISM has no accounts, no forms and no database.</li>
                 <li><strong>Give engineering, maintenance or safety advice.</strong> See Terms section 4.</li>
             </ul>
-            <p class="src">Sources: <code>README.md</code>, dashboard footer, <a href="{{ url('/terms') }}">Terms</a> and <a href="{{ url('/privacy') }}">Privacy Policy</a>.</p>
+            <p class="src">Sources: <code>README.md</code>, <a href="{{ url('/terms') }}">Terms</a> and <a href="{{ url('/privacy') }}">Privacy Policy</a>.</p>
         </div>
     </details>
 
@@ -130,7 +130,23 @@
             </table>
             <p>Check: 7,448 + 1,889 + 645 = 9,982, which equals 10,000 minus 18.</p>
             <p>The same dataset supplied the limits. These figures show fit to AI4I. They do not show performance on real machines. The vibration and run hours checks are not tested on any failures.</p>
-            <p class="src">Source: <code>README.md</code> and dashboard footer.</p>
+            <p class="src">Source: <code>README.md</code>.</p>
+        </div>
+    </details>
+
+    <details>
+        <summary>Where does the data come from?</summary>
+        <div class="answer">
+            <p>Every reading on the dashboard is simulated. Baselines and limits for temperature, speed, torque and tool wear come from the AI4I 2020 Predictive Maintenance Dataset (Matzka, 2020, UCI Machine Learning Repository, CC BY 4.0).</p>
+            <p>AI4I has no vibration or machine run hours. Those two readings are invented for this demo and their checks are not tested on real failures. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) are the ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</p>
+            <p class="src">Sources: <code>config/prism.php</code>, <code>README.md</code>.</p>
+        </div>
+    </details>
+
+    <details>
+        <summary>What does PRISM stand for?</summary>
+        <div class="answer">
+            <p>Predictive Real-time Infrastructure Sensor Monitoring. Machine Risk, Made Clear.</p>
         </div>
     </details>
 
@@ -266,7 +282,7 @@
                 <li>The limits were checked on the same dataset they came from.</li>
                 <li>The site has no HTTPS.</li>
             </ul>
-            <p class="src">Sources: <code>README.md</code>, dashboard footer, <a href="{{ url('/terms') }}">Terms</a> section 3.</p>
+            <p class="src">Sources: <code>README.md</code>, <a href="{{ url('/terms') }}">Terms</a> section 3.</p>
         </div>
     </details>
 
@@ -280,8 +296,8 @@
     <details>
         <summary>What is on the roadmap?</summary>
         <div class="answer">
-            <p>The dashboard footer lists more machines, live sensor feeds and alerts. The scorer class is built to be swapped for a trained model without changing the page. Roadmap items are not commitments. Live feeds and alerts would collect new data, so the Privacy Policy would change first.</p>
-            <p class="src">Sources: dashboard footer, <code>RiskScorer.php</code> comments, <a href="{{ url('/privacy') }}">Privacy Policy</a> section 10.</p>
+            <p>The roadmap lists more machines, live sensor feeds and alerts. The scorer class is built to be swapped for a trained model without changing the page. Roadmap items are not commitments. Live feeds and alerts would collect new data, so the Privacy Policy would change first.</p>
+            <p class="src">Sources: <code>RiskScorer.php</code> comments, <a href="{{ url('/privacy') }}">Privacy Policy</a> section 10.</p>
         </div>
     </details>
 

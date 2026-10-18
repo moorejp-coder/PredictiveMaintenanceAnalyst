@@ -185,11 +185,8 @@
     </main>
 
     <footer>
-        <p><strong>How the score works.</strong> PRISM runs six checks: tool wear, heat buildup, power draw, overstrain, vibration and machine run hours. The score is the highest result, from 0 to 100. The first four checks were tested on the 10,000 AI4I records (18 random-failure records left out, because no reading predicts them): none of the 7,448 Low records failed, 2.1% of the 1,889 Elevated records failed, and 45.0% of the 645 High records failed.</p>
-        <p><strong>Data.</strong> Every reading on this page is simulated. Baselines and limits for temperature, speed, torque and tool wear come from the AI4I 2020 Predictive Maintenance Dataset (Matzka, 2020, UCI Machine Learning Repository, CC BY 4.0). AI4I has no vibration or machine run hours. Those two readings are invented for this demo and their checks are not tested on real failures. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) are the ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</p>
         <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.</p>
-        <p><strong>About PRISM.</strong> Predictive Real-time Infrastructure Sensor Monitoring. Machine Risk, Made Clear.</p>
-        <p><strong>Next.</strong> More machines, live sensor feeds and alerts are on the roadmap.</p>
+        <p>How the score works, where the data comes from and what is next: see the <a href="{{ url('/faq') }}">FAQ</a>. Every reading on this page is simulated.</p>
         <p><a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a> &middot; <a href="{{ url('/faq') }}">FAQ</a></p>
     </footer>
 </div>
