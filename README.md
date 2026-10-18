@@ -1,4 +1,4 @@
-Live site: http://prism-cua-env.eba-3sfumww2.us-east-1.elasticbeanstalk.com/
+Live site: http://prism-cua-env.eba-fsf9rffw.us-east-2.elasticbeanstalk.com/
 
 # PRISM: Predictive Real-time Infrastructure Sensor Monitoring
 
