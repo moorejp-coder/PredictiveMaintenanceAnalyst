@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class MetaTagsTest extends TestCase
@@ -16,9 +17,7 @@ class MetaTagsTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider pages
-     */
+    #[DataProvider('pages')]
     public function test_page_has_title_description_and_canonical(string $path): void
     {
         $html = $this->get($path)->assertOk()->getContent();
@@ -28,9 +27,7 @@ class MetaTagsTest extends TestCase
         $this->assertStringContainsString('<link rel="canonical" href="'.url($path === '/' ? '' : $path).'">', $html);
     }
 
-    /**
-     * @dataProvider pages
-     */
+    #[DataProvider('pages')]
     public function test_page_is_mobile_ready(string $path): void
     {
         $html = $this->get($path)->assertOk()->getContent();
