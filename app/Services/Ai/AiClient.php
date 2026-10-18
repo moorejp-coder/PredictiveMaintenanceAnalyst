@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Log;
  */
 final class AiClient
 {
+    private const THINKING_HEADROOM = 1024;
+
     public function __construct(
         private readonly ?string $key,
         private readonly string $model,
@@ -68,7 +70,10 @@ final class AiClient
                 ->acceptJson()
                 ->post($this->baseUrl.'/v1/messages', [
                     'model' => $this->model,
-                    'max_tokens' => $maxTokens,
+                    // Thinking tokens count toward max_tokens, so leave room for them
+                    // or the model can run out before it writes the answer.
+                    'max_tokens' => $maxTokens + self::THINKING_HEADROOM,
+                    'output_config' => ['effort' => 'low'],
                     'system' => $system,
                     'messages' => [['role' => 'user', 'content' => $user]],
                 ]);
@@ -86,10 +91,22 @@ final class AiClient
             return null;
         }
 
-        $text = data_get($response->json(), 'content.0.text');
-        if (! is_string($text) || trim($text) === '') {
+        // The reply may start with a non-text block (for example thinking), so use the first text block.
+        $blocks = (array) data_get($response->json(), 'content', []);
+        $text = null;
+        foreach ($blocks as $block) {
+            if (is_array($block) && ($block['type'] ?? null) === 'text' && is_string($block['text'] ?? null) && trim($block['text']) !== '') {
+                $text = $block['text'];
+                break;
+            }
+        }
+        if ($text === null) {
             $this->failure = 'bad_reply';
-            Log::warning('ai_call_failed', ['reason' => 'empty_reply']);
+            Log::warning('ai_call_failed', [
+                'reason' => 'empty_reply',
+                'stop_reason' => data_get($response->json(), 'stop_reason'),
+                'block_types' => array_map(fn ($b) => is_array($b) ? ($b['type'] ?? '?') : '?', $blocks),
+            ]);
 
             return null;
         }

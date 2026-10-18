@@ -18,6 +18,12 @@
         .ai p { margin: 6px 0 0; }
         .ai .ai-note { color: var(--prism-muted, var(--muted, #a3b3d1)); font-size: 0.8125rem; }
         .ai [hidden] { display: none; }
+        .ai-modal { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 2px solid var(--prism-accent, #8ab4f8); border-radius: 12px; background: var(--prism-surface-raised, var(--prism-surface, #fff)); color: inherit; overflow: auto; }
+        .ai-modal::backdrop { background: rgba(0, 0, 0, 0.6); }
+        .ai-modal-inner { padding: 20px 24px 24px; }
+        .ai-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+        .ai-modal-head h2 { margin: 0; font-size: 1.25rem; }
+        .ai-close { min-height: 44px; min-width: 44px; }
     </style>
     <div class="ai-head">
         <div>
@@ -26,26 +32,40 @@
         </div>
         <button type="button" class="btn btn--primary ai-cta" id="ai-run">Explain this reading</button>
     </div>
-    <div aria-live="polite">
-        <p class="ai-note" id="ai-status"></p>
-        <div id="ai-diagnosis" hidden>
-            <h3>Likely cause</h3>
-            <p id="ai-cause"></p>
-            <ul id="ai-checks"></ul>
+    <dialog class="ai-modal" id="ai-modal" aria-labelledby="ai-modal-title">
+        <div class="ai-modal-inner">
+            <div class="ai-modal-head">
+                <h2 id="ai-modal-title">Explain this reading</h2>
+                <button type="button" class="btn ai-close" id="ai-close" aria-label="Close">Close</button>
+            </div>
+            <div aria-live="polite">
+                <p class="ai-note" id="ai-status"></p>
+                <div id="ai-diagnosis" hidden>
+                    <h3>Likely cause</h3>
+                    <p id="ai-cause"></p>
+                    <ul id="ai-checks"></ul>
+                </div>
+                <div id="ai-order" hidden>
+                    <h3 id="ai-order-title"></h3>
+                    <p id="ai-priority"></p>
+                    <ol id="ai-steps"></ol>
+                </div>
+                <p class="ai-note" id="ai-meta"></p>
+            </div>
         </div>
-        <div id="ai-order" hidden>
-            <h3 id="ai-order-title"></h3>
-            <p id="ai-priority"></p>
-            <ol id="ai-steps"></ol>
-        </div>
-        <p class="ai-note" id="ai-meta"></p>
-    </div>
+    </dialog>
     <script>
     (function () {
         'use strict';
         const panel = document.getElementById('ai-panel');
         const $ = (id) => document.getElementById(id);
         const btn = $('ai-run');
+        const modal = $('ai-modal');
+
+        $('ai-close').addEventListener('click', () => modal.close());
+        // Click on the dimmed backdrop closes the pop-up.
+        modal.addEventListener('click', (e) => { if (e.target === modal) { modal.close(); } });
+        modal.addEventListener('close', () => btn.focus());
 
         async function get(base, latest) {
             const url = base + '?scenario=' + encodeURIComponent(latest.scenario) + '&tick=' + latest.tick;
@@ -86,6 +106,7 @@
 
         btn.addEventListener('click', async () => {
             const latest = window.prismLatest;
+            if (!modal.open) { modal.showModal(); }
             if (!latest) { $('ai-status').textContent = 'Wait for the first reading, then try again.'; return; }
             btn.disabled = true;
             btn.setAttribute('aria-busy', 'true');
