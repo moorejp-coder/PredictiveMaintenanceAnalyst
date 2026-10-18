@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'PRISM') }} Failure Risk Dashboard</title>
-    <meta name="description" content="PRISM shows a failure-risk score and a plain-English reason for one milling machine, using simulated sensor readings.">
+    <meta name="description" content="PRISM shows a failure-risk score and a plain-English reason for one milling machine, using simulated temperature, vibration and run-hour readings.">
     <style>
         :root {
             --bg: #0b1220;
@@ -89,7 +89,7 @@
 
         .why p { margin: 0 0 12px; font-size: 1.0625rem; }
         .drivers { display: grid; gap: 10px; margin-top: 16px; }
-        .driver { display: grid; grid-template-columns: 110px 1fr 44px; align-items: center; gap: 10px; font-size: 0.875rem; }
+        .driver { display: grid; grid-template-columns: 120px 1fr 44px; align-items: center; gap: 10px; font-size: 0.875rem; }
         .driver .bar { height: 10px; background: var(--panel-2); border-radius: 999px; overflow: hidden; }
         .driver .bar i { display: block; height: 100%; width: 0; background: var(--low); border-radius: 999px; transition: width 0.5s ease, background 0.3s ease; }
         .driver .bar i.elevated { background: var(--elevated); }
@@ -184,8 +184,8 @@
     <div class="sr-only" role="status" id="sr-status"></div>
 
     <footer>
-        <p><strong>How the score works.</strong> PRISM runs four checks, one per failure mode: tool wear, heat buildup, power draw and overstrain. The score is the highest result, from 0 to 100. In a test on the 10,000 AI4I records (18 random-failure records left out, because no reading predicts them): none of the 7,448 Low records failed, 2.1% of the 1,889 Elevated records failed, and 45.0% of the 645 High records failed.</p>
-        <p><strong>Data.</strong> Every reading on this page is simulated. Baselines and failure limits come from the AI4I 2020 Predictive Maintenance Dataset (Matzka, 2020, UCI Machine Learning Repository, CC BY 4.0).</p>
+        <p><strong>How the score works.</strong> PRISM runs six checks: tool wear, heat buildup, power draw, overstrain, vibration and machine run hours. The score is the highest result, from 0 to 100. The first four checks were tested on the 10,000 AI4I records (18 random-failure records left out, because no reading predicts them): none of the 7,448 Low records failed, 2.1% of the 1,889 Elevated records failed, and 45.0% of the 645 High records failed.</p>
+        <p><strong>Data.</strong> Every reading on this page is simulated. Baselines and limits for temperature, speed, torque and tool wear come from the AI4I 2020 Predictive Maintenance Dataset (Matzka, 2020, UCI Machine Learning Repository, CC BY 4.0). AI4I has no vibration or machine run hours. Those two readings are invented for this demo and their checks are not tested on real failures. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) are the ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</p>
         <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.</p>
         <p><strong>Next.</strong> More machines, live sensor feeds and alerts are on the roadmap.</p>
     </footer>
@@ -203,15 +203,19 @@
     const RING = 326.73;
 
     const SENSORS = [
-        { key: 'air_temp_k', label: 'Air temperature', unit: '°C', drivers: ['heat'],
-          main: (v) => (v - 273.15).toFixed(1), sub: (v) => v.toFixed(1) + ' K' },
         { key: 'process_temp_k', label: 'Process temperature', unit: '°C', drivers: ['heat'],
           main: (v) => (v - 273.15).toFixed(1), sub: (v) => v.toFixed(1) + ' K' },
+        { key: 'air_temp_k', label: 'Air temperature', unit: '°C', drivers: ['heat'],
+          main: (v) => (v - 273.15).toFixed(1), sub: (v) => v.toFixed(1) + ' K' },
+        { key: 'vibration_mm_s', label: 'Vibration', unit: 'mm/s', drivers: ['vibration'],
+          main: (v) => v.toFixed(2), sub: () => 'RMS velocity' },
+        { key: 'run_hours', label: 'Machine run hours', unit: 'h', drivers: ['run_hours'],
+          main: (v) => Math.round(v).toLocaleString('en-US'), sub: () => 'since last overhaul' },
         { key: 'rotational_speed_rpm', label: 'Rotational speed', unit: 'rpm', drivers: ['heat', 'power'],
           main: (v) => Math.round(v).toLocaleString('en-US'), sub: () => '' },
         { key: 'torque_nm', label: 'Torque', unit: 'Nm', drivers: ['power', 'overstrain'],
           main: (v) => v.toFixed(1), sub: () => '' },
-        { key: 'tool_wear_min', label: 'Tool run time', unit: 'min', drivers: ['tool_wear', 'overstrain'],
+        { key: 'tool_wear_min', label: 'Tool wear', unit: 'min', drivers: ['tool_wear', 'overstrain'],
           main: (v) => String(Math.round(v)), sub: () => '' },
     ];
 
@@ -246,7 +250,7 @@
             el.tiles.appendChild(tile);
         });
         el.drivers.innerHTML = '';
-        ['tool_wear', 'heat', 'power', 'overstrain'].forEach((k) => {
+        ['tool_wear', 'heat', 'power', 'overstrain', 'vibration', 'run_hours'].forEach((k) => {
             const row = document.createElement('div');
             row.className = 'driver';
             row.id = 'driver-' + k;

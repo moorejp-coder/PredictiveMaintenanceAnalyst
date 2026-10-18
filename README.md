@@ -13,12 +13,13 @@ Safety disclaimer: PRISM supports a qualified technician and does not replace an
 
 ## Dashboard (first version)
 
-The home page is one dashboard for one milling machine (M-01) running on simulated sensor readings. It shows a failure-risk score from 0 to 100, a plain-English reason, the stress on each failure mode, and the last 30 readings. Four demo situations (worn tool, overheating, overload, healthy) show how the score reacts.
+The home page is one dashboard for one milling machine (M-01) running on simulated sensor readings. It shows a failure-risk score from 0 to 100, a plain-English reason, the stress on each check, seven simulated sensor readings (process and air temperature, vibration, machine run hours, rotational speed, torque, tool wear) and the last 30 readings. Four demo situations (worn tool, overheating, overload, healthy) show how the score reacts.
 
 - The score is rule-based. It uses the AI4I failure limits, which reproduce the heat, power and overstrain labels exactly. A trained model can replace `app/Services/RiskScorer.php` later.
 - Readings come from `app/Services/SensorSimulator.php`. They are repeatable, so the app needs no database.
-- AI4I has no vibration column. Rotational speed and torque stand in for mechanical load, and tool wear in minutes stands in for run time.
-- Backtest on the 10,000 AI4I records (18 random-failure records left out): 0 of 7,448 Low records failed, 40 of 1,889 Elevated (2.1%), 290 of 645 High (45.0%).
+- AI4I has no vibration or machine run hours column. Those two readings are simulated, and their checks are not backtested. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) are the ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.
+- Run hours alone never score above 50 (Elevated). Tool wear alone never scores above 60.
+- Backtest of the four AI4I checks (tool wear, heat, power, overstrain) on the 10,000 AI4I records (18 random-failure records left out): 0 of 7,448 Low records failed, 40 of 1,889 Elevated (2.1%), 290 of 645 High (45.0%).
 
 ## Run locally
 

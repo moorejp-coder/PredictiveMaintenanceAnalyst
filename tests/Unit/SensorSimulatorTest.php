@@ -37,6 +37,21 @@ class SensorSimulatorTest extends TestCase
         }
     }
 
+    public function test_reading_includes_vibration_and_run_hours(): void
+    {
+        $reading = (new SensorSimulator)->reading('healthy', 0);
+
+        $this->assertGreaterThan(0, $reading['vibration_mm_s']);
+        $this->assertSame(1200.0, $reading['run_hours']);
+    }
+
+    public function test_run_hours_grow_within_a_cycle(): void
+    {
+        $simulator = new SensorSimulator;
+
+        $this->assertGreaterThan($simulator->reading('worn_tool', 0)['run_hours'], $simulator->reading('worn_tool', 10)['run_hours']);
+    }
+
     public function test_unknown_scenario_is_rejected(): void
     {
         $this->expectException(\InvalidArgumentException::class);
