@@ -127,7 +127,6 @@
         <span class="badge">SIMULATED DATA</span>
         <span class="status"><i class="dot" id="dot"></i><span id="status-text">Starting</span></span>
         <button type="button" class="btn" id="pause">Pause</button>
-        <button type="button" class="btn" id="cta-run">Run the failure demo</button>
     </div>
     <p class="blurb" id="blurb"></p>
 
@@ -420,12 +419,6 @@
         el.pause.textContent = state.paused ? 'Resume' : 'Pause';
         setStatus(state.paused ? 'paused' : 'live');
         if (!state.paused) { step(); }
-    });
-
-    $('cta-run').addEventListener('click', () => {
-        if (state.paused) { el.pause.click(); }
-        selectScenario('worn_tool');
-        el.risk.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
     });
 
     let resizeTimer = null;
