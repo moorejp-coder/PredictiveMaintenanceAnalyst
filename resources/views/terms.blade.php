@@ -3,8 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'PRISM') }} Terms and Conditions</title>
+    <title>Terms and Conditions | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="The terms for using PRISM, a demo predictive maintenance dashboard that runs on simulated readings.">
+    <link rel="canonical" href="{{ url()->current() }}">
     <style>
         :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8; }
         * { box-sizing: border-box; }

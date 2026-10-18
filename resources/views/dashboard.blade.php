@@ -3,8 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'PRISM') }} Failure Risk Dashboard</title>
+    <title>Milling Machine Failure Risk Dashboard | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="PRISM shows a failure-risk score and a plain-English reason for one milling machine, using simulated temperature, vibration and run-hour readings.">
+    <link rel="canonical" href="{{ url()->current() }}">
     <style>
         :root {
             --bg: #0b1220;
