@@ -178,6 +178,7 @@
         <p class="cap" id="cycle">Reading 0 of {{ $cycle }}. The demo restarts after reading {{ $cycle }}, as if the tool were changed.</p>
     </section>
 
+    @include('partials.ai-panel')
 
     <div class="sr-only" role="status" id="sr-status"></div>
     <div class="sr-only" role="alert" id="sr-alert"></div>
