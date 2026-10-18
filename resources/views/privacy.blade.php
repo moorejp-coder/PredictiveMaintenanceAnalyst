@@ -91,6 +91,7 @@
 
     <h2>11. Contact</h2>
     <p>James Moore, [CONTACT EMAIL]</p>
+    <p>See also the <a href="{{ url('/terms') }}">Terms and Conditions</a>.</p>
 </div>
 </body>
 </html>

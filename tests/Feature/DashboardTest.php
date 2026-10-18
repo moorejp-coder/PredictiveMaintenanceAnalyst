@@ -38,4 +38,20 @@ class DashboardTest extends TestCase
     {
         $this->getJson('/api/readings?scenario=nope&tick=0')->assertStatus(422);
     }
+
+    public function test_terms_page_loads(): void
+    {
+        $this->get('/terms')
+            ->assertOk()
+            ->assertSee('PRISM Terms and Conditions')
+            ->assertSee('does not replace an inspection');
+    }
+
+    public function test_dashboard_footer_links_to_terms_and_privacy(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee(url('/terms'), false)
+            ->assertSee(url('/privacy'), false);
+    }
 }
