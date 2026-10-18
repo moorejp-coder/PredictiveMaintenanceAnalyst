@@ -1,4 +1,5 @@
 Live site: http://prism-cua-env.eba-fsf9rffw.us-east-2.elasticbeanstalk.com/
+Local site: http://127.0.0.1:8000/ (run `php artisan serve` in the project folder first)
 
 # PRISM: Predictive Real-time Infrastructure Sensor Monitoring
 
@@ -18,6 +19,13 @@ The home page is one dashboard for one milling machine (M-01) running on simulat
 - Readings come from `app/Services/SensorSimulator.php`. They are repeatable, so the app needs no database.
 - AI4I has no vibration column. Rotational speed and torque stand in for mechanical load, and tool wear in minutes stands in for run time.
 - Backtest on the 10,000 AI4I records (18 random-failure records left out): 0 of 7,448 Low records failed, 40 of 1,889 Elevated (2.1%), 290 of 645 High (45.0%).
+
+## Run locally
+
+1. `composer install`
+2. `cp .env.example .env && php artisan key:generate`
+3. `php artisan serve`
+4. Open http://127.0.0.1:8000/
 
 ## What PRISM aims to deliver
 
