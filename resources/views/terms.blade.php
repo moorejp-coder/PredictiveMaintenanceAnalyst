@@ -100,5 +100,6 @@
     <h2>13. Contact</h2>
     <p>James Moore, [CONTACT EMAIL]</p>
 </div>
+@include('partials.cookie-notice')
 </body>
 </html>

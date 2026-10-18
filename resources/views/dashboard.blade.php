@@ -440,5 +440,6 @@
     window.setInterval(step, INTERVAL_MS);
 })();
 </script>
+@include('partials.cookie-notice')
 </body>
 </html>

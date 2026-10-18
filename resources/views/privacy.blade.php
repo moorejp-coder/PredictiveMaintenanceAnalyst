@@ -56,6 +56,7 @@
         <tr><td>Security cookie</td><td>A cookie named <code>XSRF-TOKEN</code>. The framework sets it to guard against forged requests.</td><td>Security.</td></tr>
     </table>
     <p>PRISM has no database. It stores no user records.</p>
+    <p>Both cookies are strictly necessary for the site to work, so PRISM does not ask for cookie consent. A short notice tells you about them. Your choice to dismiss the notice is stored in your browser (local storage), not in a cookie, and is never sent to PRISM. <button type="button" onclick="window.prismCookieNotice &amp;&amp; window.prismCookieNotice.open()" style="background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit">Show the cookie notice again</button>.</p>
 
     <h2>3. How PRISM uses information</h2>
     <ul>
@@ -94,5 +95,6 @@
     <p>James Moore, [CONTACT EMAIL]</p>
     <p>See also the <a href="{{ url('/terms') }}">Terms and Conditions</a>.</p>
 </div>
+@include('partials.cookie-notice')
 </body>
 </html>
