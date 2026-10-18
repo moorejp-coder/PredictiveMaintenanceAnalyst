@@ -13,8 +13,10 @@ use Illuminate\Support\Facades\Log;
  * shows. Good replies are cached for an hour. Fallbacks are cached for a
  * minute, so a slow API is not retried on every click.
  *
- * run() returns: source ("ai", "cache" or "fallback"), data, and tokens
- * (input and output counts, or null when no call was made).
+ * run() returns: source ("ai", "cache" or "fallback"), data, tokens
+ * (input and output counts, or null when no call was made) and reason. The
+ * reason is null unless the source is "fallback". Then it is one of low_risk,
+ * no_key, timeout, api_error or bad_reply.
  */
 abstract class AiStep
 {
@@ -44,11 +46,15 @@ abstract class AiStep
         return true;
     }
 
-    /** @return array{source: string, data: array, tokens: array{input: int, output: int}|null} */
+    /** @return array{source: string, data: array, tokens: array{input: int, output: int}|null, reason: string|null} */
     public function run(array $input): array
     {
-        if (! $this->shouldCall($input) || ! $this->ai->enabled()) {
-            return $this->finish('fallback', $this->fallback($input), null, $input);
+        if (! $this->shouldCall($input)) {
+            return $this->finish('fallback', $this->fallback($input), null, $input, 'low_risk');
+        }
+
+        if (! $this->ai->enabled()) {
+            return $this->finish('fallback', $this->fallback($input), null, $input, 'no_key');
         }
 
         $key = 'ai:'.$this->name().':'.sha1((string) json_encode($input));
@@ -57,7 +63,9 @@ abstract class AiStep
         if (is_array($cached) && isset($cached['source'], $cached['data'])) {
             $source = $cached['source'] === 'ai' ? 'cache' : 'fallback';
 
-            return $this->finish($source, $cached['data'], $cached['tokens'] ?? null, $input);
+            $reason = $source === 'fallback' ? ($cached['reason'] ?? 'api_error') : null;
+
+            return $this->finish($source, $cached['data'], $cached['tokens'] ?? null, $input, $reason);
         }
 
         $reply = $this->ai->complete(
@@ -68,30 +76,37 @@ abstract class AiStep
         $data = $reply === null ? null : $this->parse($reply['text'], $input);
 
         if ($data === null) {
-            $result = ['source' => 'fallback', 'data' => $this->fallback($input), 'tokens' => null];
+            $result = [
+                'source' => 'fallback',
+                'data' => $this->fallback($input),
+                'tokens' => null,
+                'reason' => $reply === null ? ($this->ai->failure() ?? 'api_error') : 'bad_reply',
+            ];
             $this->cachePut($key, $result, self::FALLBACK_TTL_SECONDS);
         } else {
             $result = [
                 'source' => 'ai',
                 'data' => $data,
                 'tokens' => ['input' => $reply['input_tokens'], 'output' => $reply['output_tokens']],
+                'reason' => null,
             ];
             $this->cachePut($key, $result, self::AI_TTL_SECONDS);
         }
 
-        return $this->finish($result['source'], $result['data'], $result['tokens'], $input);
+        return $this->finish($result['source'], $result['data'], $result['tokens'], $input, $result['reason']);
     }
 
-    private function finish(string $source, array $data, ?array $tokens, array $input): array
+    private function finish(string $source, array $data, ?array $tokens, array $input, ?string $reason = null): array
     {
         Log::info('ai_step', [
             'step' => $this->name(),
             'source' => $source,
+            'reason' => $reason,
             'input_tokens' => $tokens['input'] ?? null,
             'output_tokens' => $tokens['output'] ?? null,
         ]);
 
-        return ['source' => $source, 'data' => $data, 'tokens' => $tokens];
+        return ['source' => $source, 'data' => $data, 'tokens' => $tokens, 'reason' => $reason];
     }
 
     private function cacheGet(string $key): mixed

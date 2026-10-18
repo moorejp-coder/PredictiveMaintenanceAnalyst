@@ -10,6 +10,9 @@ namespace App\Services\Ai;
  */
 final class WorkOrderStep extends AiStep
 {
+    /** The one simulated machine. The server never takes a machine name from the browser. */
+    private const MACHINE = 'M-01';
+
     private const PRIORITY = [
         'high' => 'Urgent: stop the machine and inspect now',
         'elevated' => 'Schedule at the next stop',
@@ -30,7 +33,7 @@ final class WorkOrderStep extends AiStep
         }
 
         return [
-            'machine' => 'M-01',
+            'machine' => self::MACHINE,
             'band' => $risk['band'],
             'priority' => self::PRIORITY[$risk['band']],
             'action' => $risk['action'],
@@ -88,7 +91,7 @@ final class WorkOrderStep extends AiStep
         return [
             'title' => 'Inspect '.$input['machine'].': '.($input['drivers'][0] ?? 'sensor readings'),
             'priority' => $input['priority'],
-            'steps' => array_merge($input['checks'], [$input['action']]),
+            'steps' => array_values(array_unique(array_merge($input['checks'], [$input['action']]))),
         ];
     }
 }

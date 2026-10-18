@@ -31,7 +31,7 @@ final class ToolWearCheck extends Check
     public function sentence(array $reading): string
     {
         return sprintf(
-            'The tool has run %d min. In the AI4I data, tool failures fall between %d and %d min. Plan a tool change.',
+            'The tool has run %d min. In the AI4I data, tool failures fall between %d and %d min.',
             (float) $reading['tool_wear_min'],
             $this->limits['window_start_min'],
             $this->limits['window_end_min'],

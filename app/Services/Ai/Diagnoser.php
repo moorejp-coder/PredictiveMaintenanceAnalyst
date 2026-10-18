@@ -12,6 +12,19 @@ namespace App\Services\Ai;
 final class Diagnoser extends AiStep
 {
     /**
+     * Built-in checks for the fallback, keyed by the driver label from each Check.
+     * General shop practice. They hold no numbers and no part names.
+     */
+    private const CHECKS = [
+        'Tool wear' => ['Pull the tool and look at the cutting edge for wear.', 'Change the tool if the edge is worn or chipped.'],
+        'Heat buildup' => ['Check the coolant level and flow.', 'Clear chips and dust from the machine vents.'],
+        'Power draw' => ['Turn the spindle by hand and feel for drag.', 'Compare the cut load with the tool and feed settings.'],
+        'Overstrain' => ['Lower the feed rate or the depth of cut.', 'Check that the tool and the workpiece are held firmly.'],
+        'Vibration' => ['Check the tool holder and the workpiece clamping.', 'Listen for rough spindle bearings.'],
+        'Machine hours' => ['Check the maintenance log for the last service.', 'Book a routine service at the next stop.'],
+    ];
+
+    /**
      * @param  array{score: int, band: string, action: string, explanation: string, drivers: list<array{key: string, label: string, stress: int}>, metrics: array<string, float>}  $risk
      */
     public static function input(array $risk): array
@@ -72,6 +85,16 @@ final class Diagnoser extends AiStep
 
     protected function fallback(array $input): array
     {
-        return ['cause' => $input['facts'], 'checks' => [$input['action']]];
+        $top = null;
+        foreach ($input['drivers'] as $driver) {
+            if ($top === null || $driver['stress'] > $top['stress']) {
+                $top = $driver;
+            }
+        }
+
+        return [
+            'cause' => $input['facts'],
+            'checks' => self::CHECKS[$top['driver'] ?? ''] ?? [$input['action']],
+        ];
     }
 }

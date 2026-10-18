@@ -64,7 +64,15 @@
             if (result.source === 'ai') {
                 return 'AI answer, ' + result.tokens.input + ' tokens in, ' + result.tokens.output + ' tokens out';
             }
-            return result.source === 'cache' ? 'AI answer (saved)' : 'Built-in explanation';
+            if (result.source === 'cache') { return 'AI answer (saved)'; }
+            const why = {
+                no_key: 'AI is not connected',
+                low_risk: 'reading is low risk, so no AI call was made',
+                timeout: 'the AI did not answer in time',
+                api_error: 'the AI service returned an error',
+                bad_reply: 'the AI reply failed checks'
+            };
+            return 'Rule-based answer, ' + (why[result.reason] || 'AI was not used');
         }
 
         btn.addEventListener('click', async () => {

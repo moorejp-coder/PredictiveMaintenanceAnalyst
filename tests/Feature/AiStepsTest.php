@@ -172,6 +172,80 @@ class AiStepsTest extends TestCase
             ->assertJsonStructure(['data' => ['title', 'priority', 'steps']]);
     }
 
+    public function test_a_server_error_reports_api_error(): void
+    {
+        Http::fake(['api.anthropic.com/*' => Http::response([], 500)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('reason', 'api_error');
+    }
+
+    public function test_a_timeout_reports_timeout(): void
+    {
+        Http::fake(function () {
+            throw new ConnectionException('timed out');
+        });
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('reason', 'timeout');
+    }
+
+    public function test_a_reply_that_is_not_json_reports_bad_reply(): void
+    {
+        Http::fake(['api.anthropic.com/*' => Http::response([
+            'content' => [['type' => 'text', 'text' => 'Sorry, I cannot help.']],
+            'usage' => ['input_tokens' => 10, 'output_tokens' => 5],
+        ], 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('reason', 'bad_reply');
+    }
+
+    public function test_a_low_risk_reading_reports_low_risk(): void
+    {
+        Http::fake();
+
+        $this->getJson('/api/diagnosis?scenario=healthy&tick=0')->assertJsonPath('reason', 'low_risk');
+    }
+
+    public function test_no_key_reports_no_key(): void
+    {
+        config(['services.anthropic.key' => null]);
+        $this->app->forgetInstance(AiClient::class);
+        Http::fake();
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('reason', 'no_key');
+    }
+
+    public function test_an_ai_answer_reports_no_reason(): void
+    {
+        Http::fake(['api.anthropic.com/*' => Http::response($this->diagnosisBody(), 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('reason', null);
+    }
+
+    public function test_the_built_in_work_order_never_repeats_a_step(): void
+    {
+        config(['services.anthropic.key' => null]);
+        $this->app->forgetInstance(AiClient::class);
+        Http::fake();
+
+        $steps = $this->getJson('/api/work-order'.self::WORN)->assertOk()->json('data.steps');
+
+        $this->assertGreaterThanOrEqual(2, count($steps));
+        $this->assertSame($steps, array_values(array_unique($steps)));
+    }
+
+    public function test_the_built_in_cause_leaves_the_instruction_to_the_steps(): void
+    {
+        config(['services.anthropic.key' => null]);
+        $this->app->forgetInstance(AiClient::class);
+        Http::fake();
+
+        $checks = $this->getJson('/api/diagnosis'.self::WORN)->assertOk()->json('data.checks');
+        $this->assertNotEmpty($checks);
+
+        $reading = (new SensorSimulator)->reading('worn_tool', 59);
+        $this->assertStringNotContainsString('Plan a tool change', (new RiskScorer('L'))->score($reading)['explanation']);
+    }
+
     public function test_bad_input_is_rejected(): void
     {
         Http::fake();
