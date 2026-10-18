@@ -103,7 +103,7 @@
                 <tr><td>40 to 69</td><td>Elevated</td><td>Schedule an inspection at the next stop.</td></tr>
                 <tr><td>70 to 100</td><td>High</td><td>Stop the machine and inspect it now.</td></tr>
             </table>
-            <p class="src">Source: <code>app/Services/RiskScorer.php</code>.</p>
+            <p class="src">Sources: <code>app/Services/RiskScorer.php</code>, <code>config/prism.php</code>.</p>
         </div>
     </details>
 
@@ -144,7 +144,7 @@
     <details>
         <summary>Will PRISM take actions or make commitments nobody approved?</summary>
         <div class="answer">
-            <p>No. PRISM is not a language-model agent. PRISM generates no free text. Every sentence on the dashboard comes from a fixed template in <code>RiskScorer.php</code>. Only three action lines exist (see the table in section 1).</p>
+            <p>No. PRISM is not a language-model agent. PRISM generates no free text. Every sentence on the dashboard comes from a fixed template in a check class under <code>app/Services/Checks</code>. Only three action lines exist (see the table in section 1).</p>
             <p>PRISM has no tool to act with. PRISM has no write endpoint, no database, no email and no link to a machine. The routes are read-only: <code>/</code>, <code>/api/readings</code>, <code>/privacy</code>, <code>/terms</code> and <code>/faq</code>.</p>
             <p class="src">Sources: <code>routes/web.php</code>, <code>app/Http/Controllers/DashboardController.php</code>.</p>
         </div>
@@ -172,7 +172,7 @@
                 <li>A Low score does not mean a machine is safe. A High score does not prove a machine is about to fail (Terms section 4).</li>
                 <li>Do not use PRISM to make safety, repair or production decisions about real equipment (Terms summary).</li>
             </ul>
-            <p class="src">Sources: <code>RiskScorer.php</code> (<code>TOOL_WEAR_CAP</code>, <code>RUN_HOURS_CAP</code>), <a href="{{ url('/terms') }}">Terms</a>.</p>
+            <p class="src">Sources: <code>config/prism.php</code> (<code>tool_wear.cap</code>, <code>run_hours.cap</code>), <a href="{{ url('/terms') }}">Terms</a>.</p>
         </div>
     </details>
 
@@ -234,7 +234,7 @@
         <summary>What needs regular upkeep?</summary>
         <div class="answer">
             <ul>
-                <li><strong>Scoring limits.</strong> The constants in <code>RiskScorer.php</code>. The AI4I limits are fixed. The vibration limits (1.4 and 4.5 mm/s RMS) follow ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</li>
+                <li><strong>Scoring limits.</strong> The values in <code>config/prism.php</code>. The AI4I limits are fixed. The vibration limits (1.4 and 4.5 mm/s RMS) follow ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</li>
                 <li><strong>Terms and Privacy Policy.</strong> Both carry an effective date of October 18, 2026. Any new data collection means a new Privacy Policy first.</li>
                 <li><strong>HTTPS.</strong> Not set up. The live site loads over HTTP.</li>
             </ul>
@@ -277,7 +277,7 @@
     <details>
         <summary>What happens when the limits go stale?</summary>
         <div class="answer">
-            <p>PRISM does not retrain, recalibrate or watch for drift. AI4I is a synthetic dataset published in 2020 (Matzka, 2020). Machines in the field are not guaranteed to match AI4I. Changing a limit means editing <code>RiskScorer.php</code> and deploying again.</p>
+            <p>PRISM does not retrain, recalibrate or watch for drift. AI4I is a synthetic dataset published in 2020 (Matzka, 2020). Machines in the field are not guaranteed to match AI4I. Changing a limit means editing <code>config/prism.php</code> and deploying again.</p>
         </div>
     </details>
 
