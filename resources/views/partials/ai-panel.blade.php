@@ -1,0 +1,101 @@
+{{--
+  "Explain this reading" panel. Two small AI calls, run only on a button press.
+  Needs window.prismLatest set by the dashboard script to the latest /api/readings
+  response (an object with scenario and tick). If the AI is slow or off, the
+  server sends back the built-in explanation, so the panel always has an answer.
+--}}
+<section class="card ai" id="ai-panel" aria-labelledby="ai-title"
+         data-diagnosis="{{ url('/api/diagnosis') }}" data-order="{{ url('/api/work-order') }}">
+    <style>
+        .ai { margin-top: 16px; }
+        .ai h3 { font-size: 0.9375rem; margin: 14px 0 4px; }
+        .ai ul, .ai ol { margin: 6px 0 0; padding-left: 20px; }
+        .ai p { margin: 6px 0 0; }
+        .ai .ai-note { color: var(--prism-muted, var(--muted, #a3b3d1)); font-size: 0.8125rem; }
+        .ai [hidden] { display: none; }
+    </style>
+    <h2 id="ai-title">Explain this reading</h2>
+    <p class="ai-note">Two short AI calls. The first names the likely cause. The second drafts a work order. If the AI is slow or unavailable, PRISM shows its built-in explanation instead.</p>
+    <p><button type="button" id="ai-run">Explain this reading</button></p>
+    <div aria-live="polite">
+        <p class="ai-note" id="ai-status"></p>
+        <div id="ai-diagnosis" hidden>
+            <h3>Likely cause</h3>
+            <p id="ai-cause"></p>
+            <ul id="ai-checks"></ul>
+        </div>
+        <div id="ai-order" hidden>
+            <h3 id="ai-order-title"></h3>
+            <p id="ai-priority"></p>
+            <ol id="ai-steps"></ol>
+        </div>
+        <p class="ai-note" id="ai-meta"></p>
+    </div>
+    <script>
+    (function () {
+        'use strict';
+        const panel = document.getElementById('ai-panel');
+        const $ = (id) => document.getElementById(id);
+        const btn = $('ai-run');
+
+        async function get(base, latest) {
+            const url = base + '?scenario=' + encodeURIComponent(latest.scenario) + '&tick=' + latest.tick;
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 12000);
+            try {
+                const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: ctrl.signal });
+                if (!res.ok) { throw new Error('HTTP ' + res.status); }
+                return await res.json();
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        function fill(list, items) {
+            list.textContent = '';
+            items.forEach((text) => {
+                const li = document.createElement('li');
+                li.textContent = text;
+                list.appendChild(li);
+            });
+        }
+
+        function label(result) {
+            if (result.source === 'ai') {
+                return 'AI answer, ' + result.tokens.input + ' tokens in, ' + result.tokens.output + ' tokens out';
+            }
+            return result.source === 'cache' ? 'AI answer (saved)' : 'Built-in explanation';
+        }
+
+        btn.addEventListener('click', async () => {
+            const latest = window.prismLatest;
+            if (!latest) { $('ai-status').textContent = 'Wait for the first reading, then try again.'; return; }
+            btn.disabled = true;
+            $('ai-diagnosis').hidden = true;
+            $('ai-order').hidden = true;
+            $('ai-meta').textContent = '';
+            $('ai-status').textContent = 'Reading the numbers...';
+            try {
+                const d = await get(panel.dataset.diagnosis, latest);
+                $('ai-cause').textContent = d.data.cause;
+                fill($('ai-checks'), d.data.checks);
+                $('ai-diagnosis').hidden = false;
+
+                $('ai-status').textContent = 'Drafting a work order...';
+                const w = await get(panel.dataset.order, latest);
+                $('ai-order-title').textContent = w.data.title;
+                $('ai-priority').textContent = 'Priority: ' + w.data.priority;
+                fill($('ai-steps'), w.data.steps);
+                $('ai-order').hidden = false;
+
+                $('ai-status').textContent = '';
+                $('ai-meta').textContent = 'Likely cause: ' + label(d) + '. Work order: ' + label(w) + '.';
+            } catch (err) {
+                $('ai-status').textContent = 'This step is not available right now. The score and reason above still apply.';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    })();
+    </script>
+</section>

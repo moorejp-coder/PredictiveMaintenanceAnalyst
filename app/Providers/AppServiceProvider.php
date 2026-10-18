@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Ai\AiClient;
 use App\Support\CanonicalUrl;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -14,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(AiClient::class, fn () => AiClient::fromConfig());
     }
 
     /**

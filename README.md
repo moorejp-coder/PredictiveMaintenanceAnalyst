@@ -21,6 +21,27 @@ The home page is one dashboard for one milling machine (M-01) running on simulat
 - Run hours alone never score above 50 (Elevated). Tool wear alone never scores above 60.
 - Backtest of the four AI4I checks (tool wear, heat, power, overstrain) on the 10,000 AI4I records (18 random-failure records left out): 0 of 7,448 Low records failed, 40 of 1,889 Elevated (2.1%), 290 of 645 High (45.0%).
 
+## AI steps
+
+The rules do the math. AI explains the result in plain words, only when a visitor presses "Explain this reading" and only when the band is Elevated or High.
+
+- Call 1, Diagnose (`app/Services/Ai/Diagnoser.php`): sends the score, the band, the drivers at 40 or above, the fact sentences the checks already wrote, and the derived metrics. Gets back a likely cause and one or two physical checks.
+- Call 2, Work order (`app/Services/Ai/WorkOrderStep.php`): sends the diagnosis from call 1. Gets back a title and steps. Code sets the priority from the band. The model does not.
+- Neither call sees the scoring rules or the reading history. The server rebuilds the reading from the scenario and tick, so no visitor text reaches a prompt.
+- Each call is capped at 220 or 260 output tokens, has an 8 second timeout, and is not retried. A test checks the input stays under 1,500 characters. The page shows the token counts the API reports.
+- If the key is missing, the API is slow, the API errors, or the reply does not parse, the page shows the built-in explanation from the checks. Good replies are cached for an hour. Fallbacks are cached for a minute.
+- Both routes are rate limited to 30 requests a minute.
+
+Set `ANTHROPIC_API_KEY` in `.env` (local) or as an Elastic Beanstalk environment property (live). `ANTHROPIC_MODEL` and `ANTHROPIC_TIMEOUT` are optional. With no key, PRISM makes no AI call.
+
+## Feedback from my last project and what changed
+
+My last vibe coding project (a course planner) got this feedback: one large `system_prompt.txt` did the heavy lifting, with the database only storing users and classes. The judge asked for more dynamic use of AI, a few smaller prompts, and filtering in code so the model sees only what applies. The judge also noted AI times out fast on a small token window.
+
+- One rule file became six check classes (`app/Services/Checks`) with every limit and its source in `config/prism.php`. `RiskScorer` only collects the results.
+- AI work is split into two small calls. Each gets a short structured input built in PHP, not a rule dump.
+- Every AI call has a timeout, a token cap, a cache and a built-in fallback, and runs on a button press, never inside the 1.2 second reading poll.
+
 ## Run locally
 
 1. `composer install`
@@ -52,3 +73,6 @@ Matzka, S. (2020). AI4I 2020 Predictive Maintenance Dataset [Dataset]. UCI Machi
 License: Creative Commons Attribution 4.0 International (CC BY 4.0). Source page: https://archive.ics.uci.edu/dataset/601/ai4i+2020+predictive+maintenance+dataset
 
 James Moore: "CUA Busch School AI Vibe Coding Contest, Fall 2026"
+
+## Brand
+Brand rules, logo assets and color tokens: [docs/BRAND.md](docs/BRAND.md).

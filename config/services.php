@@ -18,6 +18,13 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    // Optional. With no key, PRISM shows its built-in explanation and makes no AI call.
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-haiku-5-5'),
+        'timeout' => env('ANTHROPIC_TIMEOUT', 8),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
