@@ -84,7 +84,7 @@
         @media (max-width: 800px) { .row-2 { grid-template-columns: 1fr; } }
         .row-2 .ai { margin-top: 0; }
         .chart { padding: var(--prism-space-4); margin-top: var(--prism-space-3); }
-        .row-2 .chart { margin-top: 0; }
+        .row-2 .chart { margin-top: 0; align-self: stretch; }
         .chart svg { width: 100%; height: auto; display: block; }
         .chart text { font-family: var(--prism-font-data); }
         .chart .cap { color: var(--prism-muted); font-size: 0.8125rem; margin: 4px 0 0; }
@@ -163,7 +163,7 @@
     <section class="card chart" aria-labelledby="chart-title">
         <details class="fold" id="fold-chart" open>
         <summary id="chart-title">Risk score over the last 30 readings</summary>
-        <svg id="chart" viewBox="0 0 640 130" role="img" aria-label="Line chart of the risk score for the last 30 readings. Waiting for the first reading." aria-describedby="cycle"></svg>
+        <svg id="chart" viewBox="0 0 640 84" role="img" aria-label="Line chart of the risk score for the last 30 readings. Waiting for the first reading." aria-describedby="cycle"></svg>
         <p class="cap" id="cycle">Reading 0 of {{ $cycle }}. The demo restarts after reading {{ $cycle }}, as if the tool were changed.</p>
         </details>
     </section>
@@ -274,11 +274,11 @@
     function measureChart() {
         const w = Math.round(el.chart.getBoundingClientRect().width);
         chartWidth = Math.max(260, Math.min(1040, w || 640));
-        el.chart.setAttribute('viewBox', '0 0 ' + chartWidth + ' 130');
+        el.chart.setAttribute('viewBox', '0 0 ' + chartWidth + ' 84');
     }
 
     function chartSvg(scores) {
-        const W = chartWidth, H = 130, L = 34, R = 10, T = 8, B = 10;
+        const W = chartWidth, H = 84, L = 34, R = 10, T = 8, B = 10;
         const x = (i) => L + (i * (W - L - R)) / (MAX_POINTS - 1);
         const y = (v) => T + (1 - v / 100) * (H - T - B);
         let out = '';
