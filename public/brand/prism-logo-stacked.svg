@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190" width="260" height="190" fill="none" role="img" aria-label="PRISM">
+  <title>PRISM</title>
+  <g>
+  <g stroke="#8AB4F8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M12 50 H82"/>
+    <path d="M82 50 L144 18 H246"/>
+    <path d="M82 50 L144 39 H246"/>
+    <path d="M82 50 L144 61 H246"/>
+    <path d="M82 50 L144 82 H246"/>
+  </g>
+  <g fill="#8AB4F8">
+    <circle cx="246" cy="18" r="5"/>
+    <circle cx="246" cy="39" r="5"/>
+    <circle cx="246" cy="61" r="5"/>
+    <circle cx="246" cy="82" r="5"/>
+  </g>
+  </g>
+  <text x="130" y="168" text-anchor="middle" font-family="'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif" font-weight="600" font-size="56" letter-spacing="5" fill="#E8EEFB">PRISM</text>
+</svg>

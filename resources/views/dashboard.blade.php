@@ -3,150 +3,104 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0b1220">
     <title>Milling Machine Failure Risk Dashboard | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="PRISM shows a failure-risk score and a plain-English reason for one milling machine, using simulated temperature, vibration and run-hour readings.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
+    @include('partials.brand-head')
     <style>
-        :root {
-            --bg: #0b1220;
-            --panel: #111a2e;
-            --panel-2: #172340;
-            --line: #26355a;
-            --text: #e8eefb;
-            --muted: #a3b3d1;
-            --accent: #38bdf8;
-            --low: #34d399;
-            --elevated: #fbbf24;
-            --high: #f87171;
-            --band: var(--low);
-        }
-        * { box-sizing: border-box; }
-        main:focus { outline: none; }
-        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
-        body {
-            margin: 0;
-            background: var(--bg);
-            color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.5;
-        }
-        .wrap { max-width: 1120px; margin: 0 auto; padding: 20px max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+        :root { --band: var(--prism-risk-low); }
+        .wrap { max-width: 1120px; margin: 0 auto; padding: var(--prism-space-6) max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 
-        header.top {
-            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-            gap: 12px 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line);
-        }
-        .brand h1 { margin: 0; font-size: 1.5rem; letter-spacing: 0.14em; }
-        .brand p { margin: 2px 0 0; color: var(--muted); font-size: 0.8125rem; }
-        .machine { text-align: right; }
-        .machine strong { display: block; font-size: 1rem; }
-        .machine span { color: var(--muted); font-size: 0.8125rem; }
-        @media (max-width: 640px) { .machine { text-align: left; } }
+        .page-head h1 { margin: 0 0 var(--prism-space-1); font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }
+        .page-head p { margin: 0; color: var(--prism-muted); max-width: 70ch; }
 
+        .demo {
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--prism-space-3) var(--prism-space-6);
+            margin: var(--prism-space-6) 0 0; padding: var(--prism-space-4) var(--prism-space-6); background: var(--prism-surface-raised);
+            border: 1px solid var(--prism-accent); border-radius: var(--prism-radius-lg);
+        }
+        .demo h2 { margin: 0; font-size: 1.125rem; }
+        .demo p { margin: var(--prism-space-1) 0 0; color: var(--prism-muted); font-size: 0.875rem; }
 
-        .cta {
-            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px;
-            margin: 16px 0 0; padding: 16px 20px; background: var(--panel-2);
-            border: 1px solid var(--accent); border-radius: 12px;
-        }
-        .cta h2 { margin: 0; font-size: 1.125rem; }
-        .cta p { margin: 4px 0 0; color: var(--muted); font-size: 0.875rem; }
-        button.cta-btn {
-            background: var(--accent); border-color: var(--accent); color: #04121f;
-            font-weight: 700; font-size: 1rem; padding: 10px 22px; min-height: 44px;
-        }
-        button.cta-btn:hover { background: #7dd3fc; border-color: #7dd3fc; }
-
-        .toolbar {
-            display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 16px 0;
-        }
-        .toolbar .label { color: var(--muted); font-size: 0.8125rem; }
-        .seg { display: flex; flex-wrap: wrap; gap: 8px; }
-        button {
-            font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line);
-            border-radius: 8px; padding: 8px 14px; cursor: pointer; min-height: 40px;
-        }
-        button:hover { border-color: var(--accent); }
-        button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-        button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #04121f; font-weight: 600; }
+        .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--prism-space-3) var(--prism-space-4); margin: var(--prism-space-4) 0; }
+        .toolbar .label { color: var(--prism-muted); font-size: 0.875rem; font-weight: 500; }
+        .seg { display: flex; flex-wrap: wrap; gap: var(--prism-space-2); }
         .spacer { flex: 1; }
-        .status { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.8125rem; }
-        .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--low); }
-        .dot.paused { background: var(--elevated); }
-        .dot.error { background: var(--high); }
-        .badge {
-            border: 1px solid var(--accent); color: var(--accent); border-radius: 999px;
-            padding: 2px 10px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em;
-        }
-        .blurb { margin: 0 0 16px; color: var(--muted); font-size: 0.875rem; min-height: 1.3em; }
+        .status { display: inline-flex; align-items: center; gap: var(--prism-space-2); color: var(--prism-muted); font-size: 0.875rem; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--prism-accent); }
+        .dot.paused { background: var(--prism-muted); }
+        .dot.error { background: transparent; border: 2px solid var(--prism-muted); }
+        .blurb { margin: 0 0 var(--prism-space-4); color: var(--prism-muted); font-size: 0.875rem; min-height: 1.3em; }
+        .notice { margin-bottom: var(--prism-space-4); }
 
-        .grid { display: grid; gap: 16px; }
-        .row-1 { grid-template-columns: minmax(260px, 340px) 1fr; }
+        .grid { display: grid; gap: var(--prism-space-4); }
+        .row-1 { grid-template-columns: minmax(280px, 360px) 1fr; }
         @media (max-width: 800px) { .row-1 { grid-template-columns: 1fr; } }
-        .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
-        .card h2 { margin: 0 0 12px; font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 
         .risk { text-align: center; }
-        .risk[data-band="low"] { --band: var(--low); }
-        .risk[data-band="elevated"] { --band: var(--elevated); }
-        .risk[data-band="high"] { --band: var(--high); }
-        .ring { position: relative; width: 168px; height: 168px; margin: 4px auto 12px; }
+        .risk[data-band="none"] { --band: var(--prism-muted); }
+        .risk[data-band="low"] { --band: var(--prism-risk-low); }
+        .risk[data-band="elevated"] { --band: var(--prism-risk-elevated); }
+        .risk[data-band="high"] { --band: var(--prism-risk-high); border-color: var(--prism-risk-high); }
+        .ring { position: relative; width: 168px; height: 168px; margin: var(--prism-space-1) auto var(--prism-space-3); }
         .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-        .ring .track { stroke: var(--line); }
+        .ring .track { stroke: var(--prism-border); }
         .ring .value { stroke: var(--band); transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease; }
         .ring .num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .ring .num b { font-size: 3rem; line-height: 1; font-variant-numeric: tabular-nums; }
-        .ring .num small { color: var(--muted); font-size: 0.75rem; }
+        .ring .num b { font-family: var(--prism-font-data); font-weight: 600; font-size: 3.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
+        .ring .num small { color: var(--prism-muted); font-size: 0.875rem; }
         .chip {
-            display: inline-block; padding: 4px 14px; border-radius: 999px; font-weight: 700;
+            display: inline-block; padding: 4px 14px; border-radius: var(--prism-radius-sm); font-weight: 600;
             border: 2px solid var(--band); color: var(--band);
         }
-        .action { margin: 12px 0 0; font-size: 0.9375rem; }
+        .alert-title { margin: var(--prism-space-3) 0 0; padding: var(--prism-space-2) var(--prism-space-3); text-align: left; font-weight: 600;
+            color: var(--prism-risk-high); border-left: 4px solid var(--prism-risk-high); background: var(--prism-surface-raised); border-radius: var(--prism-radius-sm); }
+        .alert-title[hidden] { display: none; }
+        .action { margin: var(--prism-space-3) 0 0; font-size: 1rem; text-align: left; }
+        .disclaimer { margin: var(--prism-space-4) 0 0; padding-top: var(--prism-space-3); border-top: 1px solid var(--prism-border); color: var(--prism-muted); font-size: 0.875rem; text-align: left; }
 
-        .why p { margin: 0 0 12px; font-size: 1.0625rem; }
-        .drivers { display: grid; gap: 10px; margin-top: 16px; }
-        .driver { display: grid; grid-template-columns: 120px 1fr 44px; align-items: center; gap: 10px; font-size: 0.875rem; }
-        .driver .bar { height: 10px; background: var(--panel-2); border-radius: 999px; overflow: hidden; }
-        .driver .bar i { display: block; height: 100%; width: 0; background: var(--low); border-radius: 999px; transition: width 0.5s ease, background 0.3s ease; }
-        .driver .bar i.elevated { background: var(--elevated); }
-        .driver .bar i.high { background: var(--high); }
-        .driver .stress { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
-        .why .hint { color: var(--muted); font-size: 0.8125rem; margin: 18px 0 0; }
+        .why p { margin: 0 0 var(--prism-space-3); font-size: 1.0625rem; }
+        .drivers { display: grid; gap: 10px; margin-top: var(--prism-space-4); }
+        .driver { display: grid; grid-template-columns: 130px 1fr 44px; align-items: center; gap: 10px; font-size: 0.9375rem; }
+        .driver .bar { height: 10px; background: var(--prism-surface-raised); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-sm); overflow: hidden; }
+        .driver .bar i { display: block; height: 100%; width: 0; background: var(--prism-risk-low); transition: width 0.5s ease, background 0.3s ease; }
+        .driver .bar i.elevated { background: var(--prism-risk-elevated); }
+        .driver .bar i.high { background: var(--prism-risk-high); }
+        .driver .stress { text-align: right; font-family: var(--prism-font-data); font-weight: 500; font-variant-numeric: tabular-nums; color: var(--prism-text); }
+        .why .hint { color: var(--prism-muted); font-size: 0.875rem; margin: var(--prism-space-4) 0 0; }
 
-        .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
-        .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
-        .tile.flag { border-color: var(--elevated); }
-        .tile.flag.high { border-color: var(--high); }
-        .tile .name { color: var(--muted); font-size: 0.8125rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; }
-        .tile .tag { color: var(--elevated); font-weight: 600; font-size: 0.75rem; }
-        .tile.high .tag { color: var(--high); }
-        .tile .val { font-size: 1.75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-        .tile .val small { font-size: 0.875rem; color: var(--muted); font-weight: 400; margin-left: 4px; }
-        .tile .sub { color: var(--muted); font-size: 0.75rem; min-height: 1.1em; }
+        .section-title { margin: var(--prism-space-8) 0 var(--prism-space-1); font-size: 1.25rem; }
+        .section-note { margin: 0; color: var(--prism-muted); font-size: 0.875rem; }
+        .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--prism-space-3); margin-top: var(--prism-space-4); }
+        .tile { background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-lg); padding: 14px 16px; }
+        .tile.flag { border-color: var(--prism-risk-elevated); }
+        .tile.flag.high { border-color: var(--prism-risk-high); }
+        .tile .name { color: var(--prism-muted); font-size: 0.875rem; font-weight: 500; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; }
+        .tile .tag { color: var(--prism-risk-elevated); font-weight: 600; font-size: 0.8125rem; }
+        .tile.high .tag { color: var(--prism-risk-high); }
+        .tile .val { font-family: var(--prism-font-data); font-size: 1.75rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .tile .val small { font-family: var(--prism-font-ui); font-size: 0.875rem; color: var(--prism-muted); font-weight: 400; margin-left: 4px; }
+        .tile .sub { color: var(--prism-muted); font-size: 0.8125rem; min-height: 1.1em; }
         .tile svg { width: 100%; height: 34px; margin-top: 6px; display: block; }
-        .tile polyline { fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
-        .tile circle { fill: var(--accent); }
+        .tile polyline { fill: none; stroke: var(--prism-accent); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+        .tile circle { fill: var(--prism-accent); }
 
-        .chart { margin-top: 16px; }
+        .chart { margin-top: var(--prism-space-4); }
         .chart svg { width: 100%; height: auto; display: block; }
-        .chart .cap { color: var(--muted); font-size: 0.75rem; margin: 6px 0 0; }
+        .chart text { font-family: var(--prism-font-data); }
+        .chart .cap { color: var(--prism-muted); font-size: 0.875rem; margin: 6px 0 0; }
 
-        footer { margin-top: 24px; color: var(--muted); font-size: 0.8125rem; display: grid; gap: 8px; }
+        footer { margin-top: var(--prism-space-6); color: var(--prism-muted); font-size: 0.875rem; display: grid; gap: var(--prism-space-2); }
         footer p { margin: 0; }
-        footer strong { color: var(--text); }
-        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+        footer strong { color: var(--prism-text); }
         @media (max-width: 480px) {
-            .card { padding: 16px; }
-            .cta { padding: 14px 16px; }
-            button.cta-btn { width: 100%; }
-            .driver { grid-template-columns: 96px 1fr 36px; gap: 8px; }
-            .tile { padding: 12px; }
+            .card { padding: var(--prism-space-4); }
+            .demo { padding: 14px var(--prism-space-4); }
+            .demo .btn { width: 100%; }
+            .driver { grid-template-columns: 100px 1fr 40px; gap: var(--prism-space-2); }
+            .tile { padding: var(--prism-space-3); }
             .tile .val { font-size: 1.5rem; }
             .spacer { display: none; }
-        }
-        @media (pointer: coarse) {
-            button { min-height: 44px; }
         }
         @media (prefers-reduced-motion: reduce) {
             .ring .value, .driver .bar i { transition: none; }
@@ -155,64 +109,68 @@
 </head>
 <body data-endpoint="{{ url('/api/readings') }}" data-cycle="{{ $cycle }}">
 @include('partials.skip-link')
+@include('partials.app-header', ['active' => 'dashboard', 'machine' => true])
 <div class="wrap">
-    <header class="top">
-        <div class="brand">
-            <h1>{{ config('app.name', 'PRISM') }}</h1>
-            <p>Predictive Real-time Infrastructure Sensor Monitoring</p>
-        </div>
-        <div class="machine">
-            <strong>Milling Machine M-01</strong>
-            <span>Product quality variant L</span>
-        </div>
-    </header>
-
     <main id="main" tabindex="-1">
-    <section class="cta" aria-labelledby="cta-title">
+    <div class="page-head">
+        <h1>Machine Risk Analysis</h1>
+        <p>Simulated readings for one milling machine. Choose a situation to see the predicted failure risk and the reason for it.</p>
+    </div>
+
+    <section class="demo" aria-labelledby="demo-title">
         <div>
-            <h2 id="cta-title">See PRISM catch a failure before it happens.</h2>
-            <p>Run the worn tool demo. Watch the risk score climb and read the plain-English reason.</p>
+            <h2 id="demo-title">Worn tool demo</h2>
+            <p>Run the worn tool situation. Watch the predicted risk score climb and read the plain-English reason.</p>
         </div>
-        <button type="button" class="cta-btn" id="cta-run">Run the failure demo</button>
+        <button type="button" class="btn btn--primary" id="cta-run">Run the failure demo</button>
     </section>
 
     <div class="toolbar">
         <span class="label" id="scenario-label">Simulated situation</span>
         <div class="seg" role="group" aria-labelledby="scenario-label">
             @foreach ($scenarios as $key => $scenario)
-                <button type="button" data-scenario="{{ $key }}" data-blurb="{{ $scenario['blurb'] }}" aria-pressed="{{ $loop->first ? 'true' : 'false' }}">{{ $scenario['label'] }}</button>
+                <button type="button" class="btn" data-scenario="{{ $key }}" data-blurb="{{ $scenario['blurb'] }}" aria-pressed="{{ $loop->first ? 'true' : 'false' }}">{{ $scenario['label'] }}</button>
             @endforeach
         </div>
         <span class="spacer"></span>
         <span class="badge">SIMULATED DATA</span>
         <span class="status"><i class="dot" id="dot"></i><span id="status-text">Starting</span></span>
-        <button type="button" id="pause">Pause</button>
+        <button type="button" class="btn" id="pause">Pause</button>
     </div>
     <p class="blurb" id="blurb"></p>
 
+    <div class="notice" id="error-notice" role="status" hidden>
+        <strong>Unable to Complete Analysis</strong>
+        <p>Check the connection and try again. PRISM retries automatically.</p>
+    </div>
+
     <div class="grid row-1">
-        <section class="card risk" id="risk" data-band="low" aria-labelledby="risk-title">
+        <section class="card risk" id="risk" data-band="none" aria-labelledby="risk-title">
             <h2 id="risk-title">Failure risk score</h2>
             <div class="ring">
                 <svg viewBox="0 0 120 120" aria-hidden="true">
                     <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="10"></circle>
                     <circle class="value" id="ring" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73"></circle>
                 </svg>
-                <div class="num"><b id="score">0</b><small>out of 100</small></div>
+                <div class="num"><b id="score">--</b><small>out of 100</small></div>
             </div>
-            <span class="chip" id="band">Low</span>
-            <p class="action" id="action"></p>
+            <span class="chip" id="band">No Assessment Yet</span>
+            <p class="alert-title" id="alert-title" hidden>High Predicted Failure Risk</p>
+            <p class="action" id="action">Waiting for the first simulated reading.</p>
+            <p class="disclaimer">PRISM supports technician decisions. Confirm findings through inspection.</p>
         </section>
 
         <section class="card why" aria-labelledby="why-title">
             <h2 id="why-title">Why this score</h2>
-            <p id="why">Waiting for the first reading.</p>
+            <p id="why">Analyzing readings...</p>
             <div class="drivers" id="drivers" role="group" aria-label="Stress on each failure mode"></div>
             <p class="hint">Each bar shows how close the readings are to the limit for that failure mode. 100 means the limit is crossed. The score is the highest bar.</p>
         </section>
     </div>
 
-    <div class="tiles" id="tiles"></div>
+    <h2 class="section-title" id="sensors-title">Sensor Readings</h2>
+    <p class="section-note">Simulated values. Temperatures show in °C with the kelvin value beneath.</p>
+    <div class="tiles" id="tiles" role="group" aria-labelledby="sensors-title"></div>
 
     <section class="card chart" aria-labelledby="chart-title">
         <h2 id="chart-title">Risk score over the last 30 readings</h2>
@@ -220,15 +178,18 @@
         <p class="cap" id="cycle">Reading 0 of {{ $cycle }}. The demo restarts after reading {{ $cycle }}, as if the tool were changed.</p>
     </section>
 
+
     <div class="sr-only" role="status" id="sr-status"></div>
+    <div class="sr-only" role="alert" id="sr-alert"></div>
     </main>
 
     <footer>
         <p><strong>How the score works.</strong> PRISM runs six checks: tool wear, heat buildup, power draw, overstrain, vibration and machine run hours. The score is the highest result, from 0 to 100. The first four checks were tested on the 10,000 AI4I records (18 random-failure records left out, because no reading predicts them): none of the 7,448 Low records failed, 2.1% of the 1,889 Elevated records failed, and 45.0% of the 645 High records failed.</p>
         <p><strong>Data.</strong> Every reading on this page is simulated. Baselines and limits for temperature, speed, torque and tool wear come from the AI4I 2020 Predictive Maintenance Dataset (Matzka, 2020, UCI Machine Learning Repository, CC BY 4.0). AI4I has no vibration or machine run hours. Those two readings are invented for this demo and their checks are not tested on real failures. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) are the ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</p>
         <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.</p>
+        <p><strong>About PRISM.</strong> Predictive Real-time Infrastructure Sensor Monitoring. Machine Risk, Made Clear.</p>
         <p><strong>Next.</strong> More machines, live sensor feeds and alerts are on the roadmap.</p>
-        <p><a href="{{ url('/terms') }}" style="color: var(--accent)">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}" style="color: var(--accent)">Privacy Policy</a> &middot; <a href="{{ url('/faq') }}" style="color: var(--accent)">FAQ</a></p>
+        <p><a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a> &middot; <a href="{{ url('/faq') }}">FAQ</a></p>
     </footer>
 </div>
 
@@ -265,6 +226,7 @@
         risk: $('risk'), ring: $('ring'), score: $('score'), band: $('band'), action: $('action'),
         why: $('why'), drivers: $('drivers'), tiles: $('tiles'), chart: $('chart'), cycle: $('cycle'),
         dot: $('dot'), statusText: $('status-text'), pause: $('pause'), blurb: $('blurb'), sr: $('sr-status'),
+        srAlert: $('sr-alert'), alertTitle: $('alert-title'), errorNotice: $('error-notice'),
     };
     const scenarioButtons = Array.from(document.querySelectorAll('[data-scenario]'));
 
@@ -295,7 +257,7 @@
             const row = document.createElement('div');
             row.className = 'driver';
             row.id = 'driver-' + k;
-            row.innerHTML = '<span></span><div class="bar"><i></i></div><span class="stress">0</span>';
+            row.innerHTML = '<span></span><div class="bar"><i></i></div><span class="stress"><span class="n">0</span><span class="sr-only"></span></span>';
             el.drivers.appendChild(row);
         });
     }
@@ -326,19 +288,19 @@
         const x = (i) => L + (i * (W - L - R)) / (MAX_POINTS - 1);
         const y = (v) => T + (1 - v / 100) * (H - T - B);
         let out = '';
-        out += '<rect x="' + L + '" y="' + y(100) + '" width="' + (W - L - R) + '" height="' + (y(70) - y(100)) + '" fill="#f87171" fill-opacity="0.12"></rect>';
-        out += '<rect x="' + L + '" y="' + y(70) + '" width="' + (W - L - R) + '" height="' + (y(40) - y(70)) + '" fill="#fbbf24" fill-opacity="0.10"></rect>';
-        out += '<rect x="' + L + '" y="' + y(40) + '" width="' + (W - L - R) + '" height="' + (y(0) - y(40)) + '" fill="#34d399" fill-opacity="0.08"></rect>';
+        out += '<rect x="' + L + '" y="' + y(100) + '" width="' + (W - L - R) + '" height="' + (y(70) - y(100)) + '" fill="#F87171" fill-opacity="0.12"></rect>';
+        out += '<rect x="' + L + '" y="' + y(70) + '" width="' + (W - L - R) + '" height="' + (y(40) - y(70)) + '" fill="#FBBF24" fill-opacity="0.10"></rect>';
+        out += '<rect x="' + L + '" y="' + y(40) + '" width="' + (W - L - R) + '" height="' + (y(0) - y(40)) + '" fill="#34D399" fill-opacity="0.08"></rect>';
         [[0, '0'], [40, '40'], [70, '70'], [100, '100']].forEach((t) => {
-            out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t[0]) + '" y2="' + y(t[0]) + '" stroke="#26355a" stroke-width="1"></line>';
-            out += '<text x="' + (L - 6) + '" y="' + (y(t[0]) + 4) + '" text-anchor="end" font-size="11" fill="#a3b3d1">' + t[1] + '</text>';
+            out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t[0]) + '" y2="' + y(t[0]) + '" stroke="#26355A" stroke-width="1"></line>';
+            out += '<text x="' + (L - 6) + '" y="' + (y(t[0]) + 4) + '" text-anchor="end" font-size="12" fill="#A3B3D1">' + t[1] + '</text>';
         });
         const pts = scores.map((v, i) => x(i).toFixed(1) + ',' + y(v).toFixed(1));
         if (scores.length > 1) {
-            out += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#38bdf8" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></polyline>';
+            out += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#8AB4F8" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></polyline>';
         }
         const i = scores.length - 1;
-        out += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(scores[i]).toFixed(1) + '" r="4" fill="#38bdf8"></circle>';
+        out += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(scores[i]).toFixed(1) + '" r="4" fill="#8AB4F8"></circle>';
         return out;
     }
 
@@ -363,6 +325,7 @@
         el.score.textContent = risk.score;
         el.ring.style.strokeDashoffset = (RING * (1 - risk.score / 100)).toFixed(2);
         el.band.textContent = risk.band_label + ' risk';
+        el.alertTitle.hidden = risk.band !== 'high';
         el.action.textContent = risk.action;
         el.why.textContent = risk.explanation;
 
@@ -372,7 +335,8 @@
             const bar = row.querySelector('i');
             bar.style.width = d.stress + '%';
             bar.className = bandOf(d.stress) === 'low' ? '' : bandOf(d.stress);
-            row.querySelector('.stress').textContent = d.stress;
+            row.querySelector('.stress .n').textContent = d.stress;
+            row.querySelector('.stress .sr-only').textContent = ' out of 100, ' + bandOf(d.stress);
         });
 
         SENSORS.forEach((s) => {
@@ -399,13 +363,22 @@
 
         if (risk.band !== lastBand) {
             lastBand = risk.band;
-            el.sr.textContent = 'Risk is now ' + risk.band_label + '. ' + risk.action;
+            // A new high-risk result is announced as an alert. Other changes use the polite status region.
+            // Routine re-renders in the same band announce nothing.
+            if (risk.band === 'high') {
+                el.sr.textContent = '';
+                el.srAlert.textContent = 'High predicted failure risk. ' + risk.action;
+            } else {
+                el.srAlert.textContent = '';
+                el.sr.textContent = 'Risk is now ' + risk.band_label + '. ' + risk.action;
+            }
         }
     }
 
     function setStatus(kind) {
         el.dot.className = 'dot' + (kind === 'live' ? '' : ' ' + kind);
-        el.statusText.textContent = kind === 'live' ? 'Live' : (kind === 'paused' ? 'Paused' : 'Connection lost, retrying');
+        el.statusText.textContent = kind === 'live' ? 'Simulated feed running' : (kind === 'paused' ? 'Paused' : 'Connection lost, retrying');
+        el.errorNotice.hidden = kind !== 'error';
     }
 
     async function step() {
@@ -419,6 +392,7 @@
             const data = await res.json();
             if (mine !== generation) { return; }
             state.history.push(data);
+            window.prismLatest = data; // read by the Explain this reading panel
             if (state.history.length > MAX_POINTS) { state.history.shift(); }
             state.tick += 1;
             render();

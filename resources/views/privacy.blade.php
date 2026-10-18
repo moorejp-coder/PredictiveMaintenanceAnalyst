@@ -3,29 +3,24 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0b1220">
     <title>Privacy Policy | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="How PRISM handles data. PRISM has no accounts, no forms and no analytics.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
+    @include('partials.brand-head')
     <style>
-        :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8; }
-        * { box-sizing: border-box; }
-        main:focus { outline: none; }
-        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
-        body { margin:0; background:var(--bg); color:var(--text); line-height:1.6;
-               font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+        body { line-height: 1.6; }
         .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
-        h1 { margin: 0 0 4px; font-size: 1.6rem; letter-spacing: 0.04em; }
-        h2 { margin: 32px 0 8px; font-size: 1.1rem; padding-top: 16px; border-top: 1px solid var(--line); }
-        p, li { color: var(--muted); }
+        h1 { margin: 0 0 4px; font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }
+        h2 { margin: 32px 0 8px; font-size: 1.25rem; padding-top: 16px; border-top: 1px solid var(--prism-border); }
+        p, li { color: var(--prism-muted); }
         li { margin-bottom: 6px; }
-        strong { color: var(--text); }
-        a { color: var(--accent); }
-        .meta { color: var(--muted); font-size: 0.875rem; margin: 0 0 16px; }
-        .summary { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px 18px 8px; }
+        strong { color: var(--prism-text); }
+        a { color: var(--prism-accent); }
+        .meta { color: var(--prism-muted); font-size: 0.875rem; margin: 0 0 16px; }
+        .summary { background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 10px; padding: 4px 18px 8px; }
         table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.9rem; }
-        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--muted); }
-        th { color: var(--text); }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--prism-border); vertical-align: top; color: var(--prism-muted); }
+        th { color: var(--prism-text); }
         @media (max-width: 560px) {
             table { font-size: 0.8125rem; }
             th, td { padding: 6px 6px; overflow-wrap: anywhere; }
@@ -35,6 +30,7 @@
 </head>
 <body>
 @include('partials.skip-link')
+@include('partials.app-header')
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM Privacy Policy</h1>
@@ -46,6 +42,7 @@
             <li>PRISM has no accounts, sign-in, forms or comment boxes.</li>
             <li>You do not enter personal data. Every sensor reading on the dashboard is simulated.</li>
             <li>PRISM uses no analytics, advertising, tracking pixels or third-party scripts.</li>
+            <li>If you press Explain this reading, PRISM's server sends the simulated score result (numbers and labels, no personal data) to Anthropic's API and shows the reply.</li>
             <li>PRISM does not sell or share your data.</li>
             <li>The site currently loads over HTTP, which is not encrypted.</li>
         </ul>
@@ -64,7 +61,7 @@
         <tr><td>Security cookie</td><td>A cookie named <code>XSRF-TOKEN</code>. The framework sets it to guard against forged requests.</td><td>Security.</td></tr>
     </table>
     <p>PRISM has no database. It stores no user records.</p>
-    <p>Both cookies are strictly necessary for the site to work, so PRISM does not ask for cookie consent. A short notice tells you about them. Your choice to dismiss the notice is stored in your browser (local storage), not in a cookie, and is never sent to PRISM. <button type="button" onclick="window.prismCookieNotice &amp;&amp; window.prismCookieNotice.open()" style="background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit">Show the cookie notice again</button>.</p>
+    <p>Both cookies are strictly necessary for the site to work, so PRISM does not ask for cookie consent. A short notice tells you about them. Your choice to dismiss the notice is stored in your browser (local storage), not in a cookie, and is never sent to PRISM. <button type="button" onclick="window.prismCookieNotice &amp;&amp; window.prismCookieNotice.open()" style="background:none;border:0;padding:0;color:var(--prism-accent);text-decoration:underline;cursor:pointer;font:inherit">Show the cookie notice again</button>.</p>
 
     <h2>3. How PRISM uses information</h2>
     <ul>
@@ -95,6 +92,7 @@
 
     <h2>9. Third-party links</h2>
     <p>The dashboard cites outside sources, including the UCI Machine Learning Repository. Those sites have their own privacy policies.</p>
+    <p>When you press Explain this reading, PRISM's server sends the simulated score result to Anthropic's API. PRISM sends no text typed by a visitor. Anthropic has its own privacy policy.</p>
 
     <h2>10. Changes</h2>
     <p>The roadmap includes live sensor feeds and alerts. Those features would collect new data. PRISM will update this policy before it collects anything new. The effective date at the top shows the latest version.</p>

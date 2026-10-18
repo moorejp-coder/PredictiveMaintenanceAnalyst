@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" role="img" aria-label="PRISM">
+  <title>PRISM</title>
+  <rect width="96" height="96" rx="18" fill="#111A2E"/>
+  <g stroke="#8AB4F8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 48 H34"/>
+    <path d="M34 48 L52 22 H78"/>
+    <path d="M34 48 L52 39 H78"/>
+    <path d="M34 48 L52 57 H78"/>
+    <path d="M34 48 L52 74 H78"/>
+  </g>
+  <g fill="#8AB4F8">
+    <circle cx="78" cy="22" r="5"/>
+    <circle cx="78" cy="39" r="5"/>
+    <circle cx="78" cy="57" r="5"/>
+    <circle cx="78" cy="74" r="5"/>
+  </g>
+</svg>

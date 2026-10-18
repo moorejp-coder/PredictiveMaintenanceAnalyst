@@ -3,32 +3,28 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0b1220">
     <title>Terms and Conditions | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="The terms for using PRISM, a demo predictive maintenance dashboard that runs on simulated readings.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
+    @include('partials.brand-head')
     <style>
-        :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8; }
-        * { box-sizing: border-box; }
-        main:focus { outline: none; }
-        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
-        body { margin:0; background:var(--bg); color:var(--text); line-height:1.6;
-               font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+        body { line-height: 1.6; }
         .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
-        h1 { margin: 0 0 4px; font-size: 1.6rem; letter-spacing: 0.04em; }
-        h2 { margin: 32px 0 8px; font-size: 1.1rem; padding-top: 16px; border-top: 1px solid var(--line); }
-        p, li { color: var(--muted); }
+        h1 { margin: 0 0 4px; font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }
+        h2 { margin: 32px 0 8px; font-size: 1.25rem; padding-top: 16px; border-top: 1px solid var(--prism-border); }
+        p, li { color: var(--prism-muted); }
         li { margin-bottom: 6px; }
-        strong { color: var(--text); }
-        a { color: var(--accent); }
-        .meta { color: var(--muted); font-size: 0.875rem; margin: 0 0 16px; }
-        .summary { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px 18px 8px; }
-        .safety { background: var(--panel); border: 1px solid var(--accent); border-radius: 10px; padding: 12px 18px; margin: 16px 0; }
-        .safety p { margin: 0; color: var(--text); }
+        strong { color: var(--prism-text); }
+        a { color: var(--prism-accent); }
+        .meta { color: var(--prism-muted); font-size: 0.875rem; margin: 0 0 16px; }
+        .summary { background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 10px; padding: 4px 18px 8px; }
+        .safety { background: var(--prism-surface); border: 1px solid var(--prism-accent); border-radius: 10px; padding: 12px 18px; margin: 16px 0; }
+        .safety p { margin: 0; color: var(--prism-text); }
     </style>
 </head>
 <body>
 @include('partials.skip-link')
+@include('partials.app-header')
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM Terms and Conditions</h1>
@@ -92,7 +88,7 @@
     <p>PRISM may change, pause or shut down at any time without notice. The live site is a contest entry and may be taken offline when the contest ends.</p>
 
     <h2>10. Third-party services and links</h2>
-    <p>PRISM runs on Amazon Web Services and cites outside sources. Those services and sites have their own terms. James Moore is not responsible for them.</p>
+    <p>PRISM runs on Amazon Web Services, uses Anthropic's API for the optional Explain this reading feature, and cites outside sources. Those services and sites have their own terms. James Moore is not responsible for them.</p>
 
     <h2>11. Changes to these terms</h2>
     <p>These terms may change. The effective date at the top shows the latest version. If you keep using PRISM after a change, you accept the new terms.</p>
