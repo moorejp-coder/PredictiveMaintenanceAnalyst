@@ -10,6 +10,7 @@
     <style>
         :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8; }
         * { box-sizing: border-box; }
+        main:focus { outline: none; }
         html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
         body { margin:0; background:var(--bg); color:var(--text); line-height:1.6;
                font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
@@ -27,7 +28,8 @@
     </style>
 </head>
 <body>
-<div class="wrap">
+@include('partials.skip-link')
+<main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM Terms and Conditions</h1>
     <p class="meta">Effective October 18, 2026</p>
@@ -100,7 +102,7 @@
 
     <h2>13. Contact</h2>
     <p>James Moore, [CONTACT EMAIL]</p>
-</div>
+</main>
 @include('partials.cookie-notice')
 </body>
 </html>

@@ -22,6 +22,7 @@
             --band: var(--low);
         }
         * { box-sizing: border-box; }
+        main:focus { outline: none; }
         html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
         body {
             margin: 0;
@@ -110,7 +111,7 @@
         .driver .bar i { display: block; height: 100%; width: 0; background: var(--low); border-radius: 999px; transition: width 0.5s ease, background 0.3s ease; }
         .driver .bar i.elevated { background: var(--elevated); }
         .driver .bar i.high { background: var(--high); }
-        .driver output { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+        .driver .stress { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
         .why .hint { color: var(--muted); font-size: 0.8125rem; margin: 18px 0 0; }
 
         .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
@@ -153,6 +154,7 @@
     </style>
 </head>
 <body data-endpoint="{{ url('/api/readings') }}" data-cycle="{{ $cycle }}">
+@include('partials.skip-link')
 <div class="wrap">
     <header class="top">
         <div class="brand">
@@ -165,6 +167,7 @@
         </div>
     </header>
 
+    <main id="main" tabindex="-1">
     <section class="cta" aria-labelledby="cta-title">
         <div>
             <h2 id="cta-title">See PRISM catch a failure before it happens.</h2>
@@ -183,7 +186,7 @@
         <span class="spacer"></span>
         <span class="badge">SIMULATED DATA</span>
         <span class="status"><i class="dot" id="dot"></i><span id="status-text">Starting</span></span>
-        <button type="button" id="pause" aria-pressed="false">Pause</button>
+        <button type="button" id="pause">Pause</button>
     </div>
     <p class="blurb" id="blurb"></p>
 
@@ -204,7 +207,7 @@
         <section class="card why" aria-labelledby="why-title">
             <h2 id="why-title">Why this score</h2>
             <p id="why">Waiting for the first reading.</p>
-            <div class="drivers" id="drivers" aria-label="Stress on each failure mode"></div>
+            <div class="drivers" id="drivers" role="group" aria-label="Stress on each failure mode"></div>
             <p class="hint">Each bar shows how close the readings are to the limit for that failure mode. 100 means the limit is crossed. The score is the highest bar.</p>
         </section>
     </div>
@@ -218,6 +221,7 @@
     </section>
 
     <div class="sr-only" role="status" id="sr-status"></div>
+    </main>
 
     <footer>
         <p><strong>How the score works.</strong> PRISM runs six checks: tool wear, heat buildup, power draw, overstrain, vibration and machine run hours. The score is the highest result, from 0 to 100. The first four checks were tested on the 10,000 AI4I records (18 random-failure records left out, because no reading predicts them): none of the 7,448 Low records failed, 2.1% of the 1,889 Elevated records failed, and 45.0% of the 645 High records failed.</p>
@@ -291,7 +295,7 @@
             const row = document.createElement('div');
             row.className = 'driver';
             row.id = 'driver-' + k;
-            row.innerHTML = '<span></span><div class="bar"><i></i></div><output>0</output>';
+            row.innerHTML = '<span></span><div class="bar"><i></i></div><span class="stress">0</span>';
             el.drivers.appendChild(row);
         });
     }
@@ -368,7 +372,7 @@
             const bar = row.querySelector('i');
             bar.style.width = d.stress + '%';
             bar.className = bandOf(d.stress) === 'low' ? '' : bandOf(d.stress);
-            row.querySelector('output').textContent = d.stress;
+            row.querySelector('.stress').textContent = d.stress;
         });
 
         SENSORS.forEach((s) => {
@@ -445,7 +449,6 @@
     el.pause.addEventListener('click', () => {
         state.paused = !state.paused;
         el.pause.textContent = state.paused ? 'Resume' : 'Pause';
-        el.pause.setAttribute('aria-pressed', state.paused ? 'true' : 'false');
         setStatus(state.paused ? 'paused' : 'live');
         if (!state.paused) { step(); }
     });

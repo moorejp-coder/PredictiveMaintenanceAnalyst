@@ -11,6 +11,7 @@
         :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8;
                 --ok:#34d399; --partial:#fbbf24; --none:#f87171; }
         * { box-sizing: border-box; }
+        main:focus { outline: none; }
         html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; scroll-behavior: smooth; }
         body { margin:0; background:var(--bg); color:var(--text); line-height:1.6;
                font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
@@ -41,12 +42,13 @@
         details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin: 8px 0; }
         summary { cursor: pointer; padding: 12px 16px; font-weight: 600; color: var(--text); list-style: none; display: flex; gap: 10px; align-items: baseline; }
         summary::-webkit-details-marker { display: none; }
-        summary::before { content: "+"; color: var(--accent); font-weight: 700; width: 1ch; flex: none; }
-        details[open] > summary::before { content: "-"; }
+        summary::before { content: "+"; content: "+" / ""; color: var(--accent); font-weight: 700; width: 1ch; flex: none; }
+        details[open] > summary::before { content: "-"; content: "-" / ""; }
         summary:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         .answer { padding: 0 16px 12px 40px; }
         .answer p { margin: 8px 0; }
         .src { font-size: 0.8125rem; }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
         .tools { display: flex; gap: 8px; margin: 16px 0 0; }
         button { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 0.875rem; cursor: pointer; }
         button:hover { border-color: var(--accent); }
@@ -54,7 +56,8 @@
     </style>
 </head>
 <body>
-<div class="wrap">
+@include('partials.skip-link')
+<main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM FAQ</h1>
     <p class="meta">Updated October 18, 2026</p>
@@ -74,7 +77,7 @@
 
     <h2 style="border:0;margin-top:24px">Status at a glance</h2>
     <table>
-        <tr><th>Area</th><th>Status</th><th>Short answer</th></tr>
+        <tr><th scope="col">Area</th><th scope="col">Status</th><th scope="col">Short answer</th></tr>
         <tr><td><a href="#scope">1. In-scope definition</a></td><td><span class="tag ok">Defined</span></td><td>One simulated milling machine. Six checks. One score from 0 to 100.</td></tr>
         <tr><td><a href="#limits">2. Out-of-scope control</a></td><td><span class="tag ok">Enforced by design</span></td><td>PRISM takes no actions and writes no data. Every sentence comes from a fixed template.</td></tr>
         <tr><td><a href="#escalation">3. Escalation rule</a></td><td><span class="tag partial">Partly built</span></td><td>High and Elevated scores point you to a technician. No "unsure" state exists yet.</td></tr>
@@ -95,7 +98,7 @@
         <div class="answer">
             <p>PRISM scores failure risk for one simulated milling machine, M-01. PRISM runs six checks: tool wear, heat buildup, power draw, overstrain, vibration and machine run hours. Each check gives a stress value from 0 to 1. The score is the highest stress, shown from 0 to 100. PRISM then shows a band, a plain-English reason and one fixed action.</p>
             <table>
-                <tr><th>Score</th><th>Band</th><th>Action shown</th></tr>
+                <tr><th scope="col">Score</th><th scope="col">Band</th><th scope="col">Action shown</th></tr>
                 <tr><td>0 to 39</td><td>Low</td><td>No action needed. Keep monitoring.</td></tr>
                 <tr><td>40 to 69</td><td>Elevated</td><td>Schedule an inspection at the next stop.</td></tr>
                 <tr><td>70 to 100</td><td>High</td><td>Stop the machine and inspect it now.</td></tr>
@@ -125,7 +128,7 @@
         <div class="answer">
             <p>The four checks built on AI4I limits (tool wear, heat, power and overstrain) were tested on the 10,000 AI4I records. The 18 random-failure records were left out.</p>
             <table>
-                <tr><th>Band</th><th>Records</th><th>Failed</th><th>Failure rate</th></tr>
+                <tr><th scope="col">Band</th><th scope="col">Records</th><th scope="col">Failed</th><th scope="col">Failure rate</th></tr>
                 <tr><td>Low</td><td>7,448</td><td>0</td><td>0 / 7,448 = 0.0%</td></tr>
                 <tr><td>Elevated</td><td>1,889</td><td>40</td><td>40 / 1,889 = 2.1%</td></tr>
                 <tr><td>High</td><td>645</td><td>290</td><td>290 / 645 = 45.0%</td></tr>
@@ -328,7 +331,7 @@
     </details>
 
     <p style="margin-top:32px"><a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a> &middot; <a href="{{ url('/') }}">Dashboard</a></p>
-</div>
+</main>
 
 <script>
     (function () {

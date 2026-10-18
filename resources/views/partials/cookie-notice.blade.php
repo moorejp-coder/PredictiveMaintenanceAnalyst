@@ -5,6 +5,7 @@
                          border-radius: 10px; padding: 14px 16px; font: 0.875rem/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
                          box-shadow: 0 8px 24px rgba(0,0,0,.4); }
         #cookie-notice[hidden] { display: none; }
+        html:has(#cookie-notice:not([hidden])) { scroll-padding-bottom: 200px; }
         #cookie-notice p { margin: 0 0 10px; color: #a3b3d1; }
         #cookie-notice a { color: #38bdf8; }
         #cookie-notice button { background: #38bdf8; color: #0b1220; border: 0; border-radius: 6px; padding: 8px 16px;

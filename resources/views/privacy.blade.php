@@ -10,6 +10,7 @@
     <style>
         :root { --bg:#0b1220; --panel:#111a2e; --line:#26355a; --text:#e8eefb; --muted:#a3b3d1; --accent:#38bdf8; }
         * { box-sizing: border-box; }
+        main:focus { outline: none; }
         html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
         body { margin:0; background:var(--bg); color:var(--text); line-height:1.6;
                font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
@@ -33,7 +34,8 @@
     </style>
 </head>
 <body>
-<div class="wrap">
+@include('partials.skip-link')
+<main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM Privacy Policy</h1>
     <p class="meta">Effective October 18, 2026</p>
@@ -56,7 +58,7 @@
     <p><strong>Information you give PRISM.</strong> None. The dashboard has demo controls that send a scenario name and a reading number to the server so it can return a simulated reading. These values contain no personal information. PRISM does not store them.</p>
     <p><strong>Information collected automatically.</strong></p>
     <table>
-        <tr><th>Item</th><th>What it is</th><th>Why</th></tr>
+        <tr><th scope="col">Item</th><th scope="col">What it is</th><th scope="col">Why</th></tr>
         <tr><td>Server logs</td><td>Your IP address, the date and time, the page requested, your browser type and the response code. The web server and the hosting platform record these when you load a page.</td><td>To run the site, fix errors and protect against abuse.</td></tr>
         <tr><td>Session cookie</td><td>A cookie named <code>prism-session</code>. The framework (Laravel) sets it. It holds a random session ID. It expires after 120 minutes of inactivity.</td><td>Standard framework behavior. PRISM does not use it to identify you or track you.</td></tr>
         <tr><td>Security cookie</td><td>A cookie named <code>XSRF-TOKEN</code>. The framework sets it to guard against forged requests.</td><td>Security.</td></tr>
@@ -100,7 +102,7 @@
     <h2>11. Contact</h2>
     <p>James Moore, [CONTACT EMAIL]</p>
     <p>See also the <a href="{{ url('/terms') }}">Terms and Conditions</a>.</p>
-</div>
+</main>
 @include('partials.cookie-notice')
 </body>
 </html>
