@@ -7,16 +7,25 @@
 <section class="card ai" id="ai-panel" aria-labelledby="ai-title"
          data-diagnosis="{{ url('/api/diagnosis') }}" data-order="{{ url('/api/work-order') }}">
     <style>
-        .ai { margin-top: 16px; }
+        .ai { margin-top: 12px; border: 2px solid var(--prism-accent, #8ab4f8); background: var(--prism-surface-raised, var(--prism-surface)); }
+        .ai-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; }
+        .ai-head h2 { margin: 0; font-size: 1.25rem; }
+        .ai-head p { margin: 4px 0 0; }
+        .ai-cta { font-size: 1.0625rem; min-height: 52px; padding-left: 28px; padding-right: 28px; }
+        @media (max-width: 480px) { .ai-cta { width: 100%; } }
         .ai h3 { font-size: 0.9375rem; margin: 14px 0 4px; }
         .ai ul, .ai ol { margin: 6px 0 0; padding-left: 20px; }
         .ai p { margin: 6px 0 0; }
         .ai .ai-note { color: var(--prism-muted, var(--muted, #a3b3d1)); font-size: 0.8125rem; }
         .ai [hidden] { display: none; }
     </style>
-    <h2 id="ai-title">Explain this reading</h2>
-    <p class="ai-note">Two short AI calls. The first names the likely cause. The second drafts a work order. If the AI is slow or unavailable, PRISM shows its built-in explanation instead.</p>
-    <p><button type="button" id="ai-run">Explain this reading</button></p>
+    <div class="ai-head">
+        <div>
+            <h2 id="ai-title">Explain this reading</h2>
+            <p class="ai-note">Get the likely cause and a drafted work order for the current reading. If the AI is slow or unavailable, PRISM shows its built-in explanation instead.</p>
+        </div>
+        <button type="button" class="btn btn--primary ai-cta" id="ai-run">Explain this reading</button>
+    </div>
     <div aria-live="polite">
         <p class="ai-note" id="ai-status"></p>
         <div id="ai-diagnosis" hidden>
@@ -79,6 +88,7 @@
             const latest = window.prismLatest;
             if (!latest) { $('ai-status').textContent = 'Wait for the first reading, then try again.'; return; }
             btn.disabled = true;
+            btn.setAttribute('aria-busy', 'true');
             $('ai-diagnosis').hidden = true;
             $('ai-order').hidden = true;
             $('ai-meta').textContent = '';
@@ -102,6 +112,7 @@
                 $('ai-status').textContent = 'This step is not available right now. The score and reason above still apply.';
             } finally {
                 btn.disabled = false;
+                btn.removeAttribute('aria-busy');
             }
         });
     })();

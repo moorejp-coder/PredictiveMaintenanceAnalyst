@@ -9,20 +9,13 @@
     @include('partials.brand-head')
     <style>
         :root { --band: var(--prism-risk-low); }
-        .wrap { max-width: 1120px; margin: 0 auto; padding: var(--prism-space-6) max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+        .wrap { max-width: 1120px; margin: 0 auto; padding: var(--prism-space-4) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 
-        .page-head h1 { margin: 0 0 var(--prism-space-1); font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }
-        .page-head p { margin: 0; color: var(--prism-muted); max-width: 70ch; }
+        .page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--prism-space-2) var(--prism-space-6); }
+        .page-head h1 { margin: 0 0 var(--prism-space-1); font-size: clamp(1.375rem, 1.25rem + 0.6vw, 1.625rem); }
+        .page-head p { margin: 0; color: var(--prism-muted); max-width: 70ch; font-size: 0.9375rem; }
 
-        .demo {
-            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--prism-space-3) var(--prism-space-6);
-            margin: var(--prism-space-6) 0 0; padding: var(--prism-space-4) var(--prism-space-6); background: var(--prism-surface-raised);
-            border: 1px solid var(--prism-accent); border-radius: var(--prism-radius-lg);
-        }
-        .demo h2 { margin: 0; font-size: 1.125rem; }
-        .demo p { margin: var(--prism-space-1) 0 0; color: var(--prism-muted); font-size: 0.875rem; }
-
-        .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--prism-space-3) var(--prism-space-4); margin: var(--prism-space-4) 0; }
+        .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--prism-space-3) var(--prism-space-4); margin: var(--prism-space-3) 0 var(--prism-space-2); }
         .toolbar .label { color: var(--prism-muted); font-size: 0.875rem; font-weight: 500; }
         .seg { display: flex; flex-wrap: wrap; gap: var(--prism-space-2); }
         .spacer { flex: 1; }
@@ -30,76 +23,80 @@
         .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--prism-accent); }
         .dot.paused { background: var(--prism-muted); }
         .dot.error { background: transparent; border: 2px solid var(--prism-muted); }
-        .blurb { margin: 0 0 var(--prism-space-4); color: var(--prism-muted); font-size: 0.875rem; min-height: 1.3em; }
-        .notice { margin-bottom: var(--prism-space-4); }
+        .blurb { margin: 0 0 var(--prism-space-3); color: var(--prism-muted); font-size: 0.875rem; min-height: 1.3em; }
+        .notice { margin-bottom: var(--prism-space-3); }
 
-        .grid { display: grid; gap: var(--prism-space-4); }
+        .grid { display: grid; gap: var(--prism-space-3); }
         .row-1 { grid-template-columns: minmax(280px, 360px) 1fr; }
         @media (max-width: 800px) { .row-1 { grid-template-columns: 1fr; } }
 
-        .risk { text-align: center; }
+        .risk { text-align: center; padding: var(--prism-space-4); }
         .risk[data-band="none"] { --band: var(--prism-muted); }
         .risk[data-band="low"] { --band: var(--prism-risk-low); }
         .risk[data-band="elevated"] { --band: var(--prism-risk-elevated); }
         .risk[data-band="high"] { --band: var(--prism-risk-high); border-color: var(--prism-risk-high); }
-        .ring { position: relative; width: 168px; height: 168px; margin: var(--prism-space-1) auto var(--prism-space-3); }
+        .ring { position: relative; width: 128px; height: 128px; margin: 0 auto var(--prism-space-2); }
         .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
         .ring .track { stroke: var(--prism-border); }
         .ring .value { stroke: var(--band); transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease; }
         .ring .num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .ring .num b { font-family: var(--prism-font-data); font-weight: 600; font-size: 3.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
+        .ring .num b { font-family: var(--prism-font-data); font-weight: 600; font-size: 2.75rem; line-height: 1; font-variant-numeric: tabular-nums; }
         .ring .num small { color: var(--prism-muted); font-size: 0.875rem; }
         .chip {
             display: inline-block; padding: 4px 14px; border-radius: var(--prism-radius-sm); font-weight: 600;
             border: 2px solid var(--band); color: var(--band);
         }
-        .alert-title { margin: var(--prism-space-3) 0 0; padding: var(--prism-space-2) var(--prism-space-3); text-align: left; font-weight: 600;
+        .alert-title { margin: var(--prism-space-2) 0 0; padding: var(--prism-space-2) var(--prism-space-3); text-align: left; font-weight: 600;
             color: var(--prism-risk-high); border-left: 4px solid var(--prism-risk-high); background: var(--prism-surface-raised); border-radius: var(--prism-radius-sm); }
         .alert-title[hidden] { display: none; }
-        .action { margin: var(--prism-space-3) 0 0; font-size: 1rem; text-align: left; }
-        .disclaimer { margin: var(--prism-space-4) 0 0; padding-top: var(--prism-space-3); border-top: 1px solid var(--prism-border); color: var(--prism-muted); font-size: 0.875rem; text-align: left; }
+        .action { margin: var(--prism-space-2) 0 0; font-size: 0.9375rem; text-align: left; }
+        .disclaimer { margin: var(--prism-space-3) 0 0; padding-top: var(--prism-space-2); border-top: 1px solid var(--prism-border); color: var(--prism-muted); font-size: 0.8125rem; text-align: left; }
 
-        .why p { margin: 0 0 var(--prism-space-3); font-size: 1.0625rem; }
-        .drivers { display: grid; gap: 10px; margin-top: var(--prism-space-4); }
-        .driver { display: grid; grid-template-columns: 130px 1fr 44px; align-items: center; gap: 10px; font-size: 0.9375rem; }
+        .why { padding: var(--prism-space-4); }
+        .why p { margin: 0 0 var(--prism-space-2); font-size: 1rem; }
+        .drivers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px var(--prism-space-6); margin-top: var(--prism-space-3); }
+        @media (max-width: 1000px) { .drivers { grid-template-columns: 1fr; } }
+        .driver { display: grid; grid-template-columns: 110px 1fr 36px; align-items: center; gap: 8px; font-size: 0.875rem; }
         .driver .bar { height: 10px; background: var(--prism-surface-raised); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-sm); overflow: hidden; }
         .driver .bar i { display: block; height: 100%; width: 0; background: var(--prism-risk-low); transition: width 0.5s ease, background 0.3s ease; }
         .driver .bar i.elevated { background: var(--prism-risk-elevated); }
         .driver .bar i.high { background: var(--prism-risk-high); }
         .driver .stress { text-align: right; font-family: var(--prism-font-data); font-weight: 500; font-variant-numeric: tabular-nums; color: var(--prism-text); }
-        .why .hint { color: var(--prism-muted); font-size: 0.875rem; margin: var(--prism-space-4) 0 0; }
+        .why .hint { color: var(--prism-muted); font-size: 0.8125rem; margin: var(--prism-space-3) 0 0; }
 
-        .section-title { margin: var(--prism-space-8) 0 var(--prism-space-1); font-size: 1.25rem; }
+        .section-title { margin: var(--prism-space-4) 0 var(--prism-space-1); font-size: 1.0625rem; }
         .section-note { margin: 0; color: var(--prism-muted); font-size: 0.875rem; }
-        .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--prism-space-3); margin-top: var(--prism-space-4); }
-        .tile { background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-lg); padding: 14px 16px; }
+        .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--prism-space-2); margin-top: var(--prism-space-2); }
+        .tile { background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-lg); padding: 8px 12px; }
         .tile.flag { border-color: var(--prism-risk-elevated); }
         .tile.flag.high { border-color: var(--prism-risk-high); }
         .tile .name { color: var(--prism-muted); font-size: 0.875rem; font-weight: 500; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; }
         .tile .tag { color: var(--prism-risk-elevated); font-weight: 600; font-size: 0.8125rem; }
         .tile.high .tag { color: var(--prism-risk-high); }
-        .tile .val { font-family: var(--prism-font-data); font-size: 1.75rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .tile .val { font-family: var(--prism-font-data); font-size: 1.375rem; font-weight: 500; font-variant-numeric: tabular-nums; }
         .tile .val small { font-family: var(--prism-font-ui); font-size: 0.875rem; color: var(--prism-muted); font-weight: 400; margin-left: 4px; }
-        .tile .sub { color: var(--prism-muted); font-size: 0.8125rem; min-height: 1.1em; }
-        .tile svg { width: 100%; height: 34px; margin-top: 6px; display: block; }
+        .tile .sub { color: var(--prism-muted); font-size: 0.75rem; min-height: 1.1em; }
+        .tile svg { width: 100%; height: 24px; margin-top: 2px; display: block; }
         .tile polyline { fill: none; stroke: var(--prism-accent); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
         .tile circle { fill: var(--prism-accent); }
 
-        .chart { margin-top: var(--prism-space-4); }
+        .row-2 { grid-template-columns: 1fr 1fr; margin-top: var(--prism-space-3); align-items: start; }
+        @media (max-width: 800px) { .row-2 { grid-template-columns: 1fr; } }
+        .row-2 .ai { margin-top: 0; }
+        .chart { padding: var(--prism-space-4); margin-top: var(--prism-space-3); }
         .chart svg { width: 100%; height: auto; display: block; }
         .chart text { font-family: var(--prism-font-data); }
-        .chart .cap { color: var(--prism-muted); font-size: 0.875rem; margin: 6px 0 0; }
+        .chart .cap { color: var(--prism-muted); font-size: 0.8125rem; margin: 4px 0 0; }
 
-        footer { margin-top: var(--prism-space-6); color: var(--prism-muted); font-size: 0.875rem; display: grid; gap: var(--prism-space-2); }
+        footer { margin-top: var(--prism-space-4); color: var(--prism-muted); font-size: 0.875rem; display: grid; gap: var(--prism-space-2); }
         footer p { margin: 0; }
         footer strong { color: var(--prism-text); }
         @media (max-width: 480px) {
             .card { padding: var(--prism-space-4); }
-            .demo { padding: 14px var(--prism-space-4); }
-            .demo .btn { width: 100%; }
+            .page-head .btn { width: 100%; }
             .driver { grid-template-columns: 100px 1fr 40px; gap: var(--prism-space-2); }
             .tile { padding: var(--prism-space-3); }
-            .tile .val { font-size: 1.5rem; }
+            .tile .val { font-size: 1.25rem; }
             .spacer { display: none; }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -113,17 +110,12 @@
 <div class="wrap">
     <main id="main" tabindex="-1">
     <div class="page-head">
-        <h1>Machine Risk Analysis</h1>
-        <p>Simulated readings for one milling machine. Choose a situation to see the predicted failure risk and the reason for it.</p>
-    </div>
-
-    <section class="demo" aria-labelledby="demo-title">
         <div>
-            <h2 id="demo-title">Worn tool demo</h2>
-            <p>Run the worn tool situation. Watch the predicted risk score climb and read the plain-English reason.</p>
+            <h1>Machine Risk Analysis</h1>
+            <p>Simulated readings for one milling machine. Pick a situation to see the predicted failure risk and the reason.</p>
         </div>
-        <button type="button" class="btn btn--primary" id="cta-run">Run the failure demo</button>
-    </section>
+        <button type="button" class="btn" id="cta-run">Run the failure demo</button>
+    </div>
 
     <div class="toolbar">
         <span class="label" id="scenario-label">Simulated situation</span>
@@ -168,17 +160,19 @@
         </section>
     </div>
 
+    @include('partials.ai-panel')
+
     <h2 class="section-title" id="sensors-title">Sensor Readings</h2>
     <p class="section-note">Simulated values. Temperatures show in °C with the kelvin value beneath.</p>
     <div class="tiles" id="tiles" role="group" aria-labelledby="sensors-title"></div>
 
     <section class="card chart" aria-labelledby="chart-title">
         <h2 id="chart-title">Risk score over the last 30 readings</h2>
-        <svg id="chart" viewBox="0 0 640 170" role="img" aria-label="Line chart of the risk score for the last 30 readings. Waiting for the first reading." aria-describedby="cycle"></svg>
+        <svg id="chart" viewBox="0 0 640 130" role="img" aria-label="Line chart of the risk score for the last 30 readings. Waiting for the first reading." aria-describedby="cycle"></svg>
         <p class="cap" id="cycle">Reading 0 of {{ $cycle }}. The demo restarts after reading {{ $cycle }}, as if the tool were changed.</p>
     </section>
 
-    @include('partials.ai-panel')
+    
 
     <div class="sr-only" role="status" id="sr-status"></div>
     <div class="sr-only" role="alert" id="sr-alert"></div>
@@ -186,8 +180,7 @@
 
     <footer>
         <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.</p>
-        <p>How the score works, where the data comes from and what is next: see the <a href="{{ url('/faq') }}">FAQ</a>. Every reading on this page is simulated.</p>
-        <p><a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a> &middot; <a href="{{ url('/faq') }}">FAQ</a></p>
+        <p>Every reading on this page is simulated. <a href="{{ url('/faq') }}">FAQ</a> &middot; <a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a></p>
     </footer>
 </div>
 
@@ -277,12 +270,12 @@
     let chartWidth = 640;
     function measureChart() {
         const w = Math.round(el.chart.getBoundingClientRect().width);
-        chartWidth = Math.max(260, Math.min(640, w || 640));
-        el.chart.setAttribute('viewBox', '0 0 ' + chartWidth + ' 170');
+        chartWidth = Math.max(260, Math.min(1040, w || 640));
+        el.chart.setAttribute('viewBox', '0 0 ' + chartWidth + ' 130');
     }
 
     function chartSvg(scores) {
-        const W = chartWidth, H = 170, L = 34, R = 10, T = 10, B = 14;
+        const W = chartWidth, H = 130, L = 34, R = 10, T = 8, B = 10;
         const x = (i) => L + (i * (W - L - R)) / (MAX_POINTS - 1);
         const y = (v) => T + (1 - v / 100) * (H - T - B);
         let out = '';
