@@ -33,6 +33,10 @@ class DashboardController extends Controller
             'tick' => (int) $data['tick'],
             'reading' => $reading,
             'risk' => (new RiskScorer('L'))->score($reading),
-        ])->header('X-Robots-Tag', 'noindex');
+        ])
+            ->header('X-Robots-Tag', 'noindex')
+            // The same scenario and tick always give the same reading, so the
+            // browser can reuse a response for an hour.
+            ->header('Cache-Control', 'public, max-age=3600');
     }
 }

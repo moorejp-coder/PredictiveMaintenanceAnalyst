@@ -2,10 +2,24 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Support\CanonicalUrl;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 Route::get('/', [DashboardController::class, 'index']);
-Route::get('/api/readings', [DashboardController::class, 'readings']);
+// The dashboard polls this route every 1.2 seconds. It reads no session or
+// cookie, so skip that middleware and avoid a session file write per poll.
+Route::get('/api/readings', [DashboardController::class, 'readings'])
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+    ]);
 Route::view('/privacy', 'privacy');
 Route::view('/terms', 'terms');
 Route::view('/faq', 'faq');

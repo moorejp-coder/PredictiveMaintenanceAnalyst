@@ -34,6 +34,15 @@ class DashboardTest extends TestCase
             ->assertJsonFragment(['key' => 'run_hours']);
     }
 
+    public function test_readings_endpoint_is_cacheable_and_sets_no_cookies(): void
+    {
+        $response = $this->getJson('/api/readings?scenario=healthy&tick=3')->assertOk();
+
+        $this->assertStringContainsString('max-age=3600', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('public', (string) $response->headers->get('Cache-Control'));
+        $response->assertHeaderMissing('Set-Cookie');
+    }
+
     public function test_readings_endpoint_rejects_an_unknown_scenario(): void
     {
         $this->getJson('/api/readings?scenario=nope&tick=0')->assertStatus(422);

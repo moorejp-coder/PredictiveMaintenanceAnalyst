@@ -409,7 +409,7 @@
     }
 
     async function step() {
-        if (state.paused || inflight) { return; }
+        if (state.paused || inflight || document.hidden) { return; }
         inflight = true;
         const mine = generation;
         try {
@@ -464,6 +464,9 @@
         window.clearTimeout(resizeTimer);
         resizeTimer = window.setTimeout(render, 150);
     });
+
+    // Stop polling while the tab is hidden. Fetch again as soon as it is visible.
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { step(); } });
 
     buildStatic();
     selectScenario(state.scenario);
