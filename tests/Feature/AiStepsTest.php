@@ -51,7 +51,8 @@ class AiStepsTest extends TestCase
             ->assertJsonPath('tokens.output', 40);
 
         Http::assertSent(fn ($request) => $request->hasHeader('x-api-key', 'test-key')
-            && $request['max_tokens'] === 220
+            // 220 output tokens plus 1,024 of thinking headroom added by AiClient.
+            && $request['max_tokens'] === 220 + 1024
             && strlen(json_encode($request['messages'])) < 2000);
     }
 
