@@ -28,7 +28,7 @@ The rules do the math. AI explains the result in plain words, only when a visito
 - Call 1, Diagnose (`app/Services/Ai/Diagnoser.php`): sends the score, the band, the drivers at 40 or above, the fact sentences the checks already wrote, and the derived metrics. Gets back a likely cause and one or two physical checks.
 - Call 2, Work order (`app/Services/Ai/WorkOrderStep.php`): sends the diagnosis from call 1. Gets back a title and steps. Code sets the priority from the band. The model does not.
 - Neither call sees the scoring rules or the reading history. The server rebuilds the reading from the scenario and tick, so no visitor text reaches a prompt.
-- Each call is capped at 220 or 260 output tokens, has an 8 second timeout, and is not retried. A test checks the input stays under 1,500 characters. The page shows the token counts the API reports.
+- Each call asks for 220 or 260 output tokens, plus 1,024 tokens of thinking headroom, so the request sends a max_tokens of 1,244 or 1,284. Each call has an 8 second timeout, and is not retried. A test checks the input stays under 1,500 characters. The page shows the token counts the API reports.
 - If the key is missing, the API is slow, the API errors, or the reply does not parse, the page shows the built-in explanation from the checks. Good replies are cached for an hour. Fallbacks are cached for a minute.
 - Both routes are rate limited to 30 requests a minute.
 
