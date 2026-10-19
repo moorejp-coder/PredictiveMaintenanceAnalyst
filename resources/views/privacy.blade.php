@@ -34,7 +34,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM Privacy Policy</h1>
-    <p class="meta">Effective October 18, 2026</p>
+    <p class="meta">Effective October 19, 2026</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Summary</h2>
@@ -98,7 +98,7 @@
     <p>The roadmap includes live sensor feeds and alerts. Those features would collect new data. PRISM will update this policy before it collects anything new. The effective date at the top shows the latest version.</p>
 
     <h2>11. Contact</h2>
-    <p>James Moore, [CONTACT EMAIL]</p>
+    <p>James Moore, <a href="mailto:moorejp@cua.edu">moorejp@cua.edu</a></p>
     <p>See also the <a href="{{ url('/terms') }}">Terms and Conditions</a>.</p>
 </main>
 @include('partials.cookie-notice')

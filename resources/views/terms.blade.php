@@ -28,7 +28,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM Terms and Conditions</h1>
-    <p class="meta">Effective October 18, 2026</p>
+    <p class="meta">Effective October 19, 2026</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Summary</h2>
@@ -57,6 +57,7 @@
         <li><strong>Readings are simulated.</strong> PRISM does not connect to any real machine or sensor.</li>
         <li><strong>The score is rule-based.</strong> It uses limits drawn from the AI4I 2020 Predictive Maintenance Dataset, which is synthetic data.</li>
         <li><strong>Some checks are untested.</strong> AI4I has no vibration or machine run hours column. Those two readings are invented for this demo, and their checks are not tested on real failures.</li>
+        <li><strong>AI text is optional.</strong> When you press Explain this reading and the score is Elevated or High, PRISM asks an AI model to restate the result as a likely cause and a draft work order. The AI does not change the score. AI text can be wrong, so the score and the safety notice rule.</li>
         <li><strong>PRISM flags risk under current conditions.</strong> It does not forecast a failure date.</li>
     </ul>
 
@@ -68,7 +69,7 @@
     <ul>
         <li>Use PRISM for any unlawful purpose.</li>
         <li>Probe, scan or test the site for weaknesses, or try to get around any security measure.</li>
-        <li>Overload the site, including with automated or repeated requests to the readings endpoint.</li>
+        <li>Overload the site, including with automated or repeated requests to the readings endpoint or to the Explain this reading feature.</li>
         <li>Copy, scrape or resell the site as a service, or present it as your own work.</li>
         <li>Upload or transmit malicious code.</li>
     </ul>
@@ -97,7 +98,7 @@
     <p>The laws of the District of Columbia, United States, govern these terms, without regard to conflict of law rules. Any dispute goes to the courts located in the District of Columbia, unless the law requires otherwise.</p>
 
     <h2>13. Contact</h2>
-    <p>James Moore, [CONTACT EMAIL]</p>
+    <p>James Moore, <a href="mailto:moorejp@cua.edu">moorejp@cua.edu</a></p>
 </main>
 @include('partials.cookie-notice')
 </body>

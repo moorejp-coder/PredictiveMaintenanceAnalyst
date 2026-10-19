@@ -55,7 +55,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM FAQ</h1>
-    <p class="meta">Updated October 18, 2026</p>
+    <p class="meta">Updated October 19, 2026</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Read this first</h2>
@@ -74,7 +74,7 @@
     <table>
         <tr><th scope="col">Area</th><th scope="col">Status</th><th scope="col">Short answer</th></tr>
         <tr><td><a href="#scope">1. In-scope definition</a></td><td><span class="tag ok">Defined</span></td><td>One simulated milling machine. Six checks. One score from 0 to 100.</td></tr>
-        <tr><td><a href="#limits">2. Out-of-scope control</a></td><td><span class="tag ok">Enforced by design</span></td><td>PRISM takes no actions and writes no data. Every sentence comes from a fixed template.</td></tr>
+        <tr><td><a href="#limits">2. Out-of-scope control</a></td><td><span class="tag ok">Enforced by design</span></td><td>PRISM takes no actions and writes no data. Every default sentence comes from a fixed template.</td></tr>
         <tr><td><a href="#escalation">3. Escalation rule</a></td><td><span class="tag partial">Partly built</span></td><td>High and Elevated scores point you to a technician. No "unsure" state exists yet.</td></tr>
         <tr><td><a href="#ownership">4. Ownership and maintenance</a></td><td><span class="tag ok">Defined</span></td><td>James Moore owns, runs and maintains PRISM.</td></tr>
         <tr><td><a href="#lifecycle">5. Lifecycle</a></td><td><span class="tag partial">Partly defined</span></td><td>Contest demo. Not ready for real equipment.</td></tr>
@@ -138,7 +138,7 @@
         <summary>Where does the data come from?</summary>
         <div class="answer">
             <p>Every reading on the dashboard is simulated. Baselines and limits for temperature, speed, torque and tool wear come from the AI4I 2020 Predictive Maintenance Dataset (Matzka, 2020, UCI Machine Learning Repository, CC BY 4.0).</p>
-            <p>AI4I has no vibration or machine run hours. Those two readings are invented for this demo and their checks are not tested on real failures. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) are the ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</p>
+            <p>AI4I has no vibration or machine run hours. Those two readings are invented for this demo and their checks are not tested on real failures. The vibration limits PRISM uses (1.4 and 4.5 mm/s RMS) are ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</p>
             <p class="src">Sources: <code>config/prism.php</code>, <code>README.md</code>.</p>
         </div>
     </details>
@@ -157,7 +157,7 @@
         <div class="answer">
             <p>No. PRISM is not an autonomous agent. The score and every default sentence come from fixed templates in the check classes under <code>app/Services/Checks</code>. Only three action lines exist (see the table in section 1).</p>
             <p>When a visitor presses Explain this reading and the band is Elevated or High, two optional AI calls restate that result: a likely-cause note and a draft work order. The AI sees only the score result. It cannot act, send or change anything, and code sets the work order priority. AI text can be wrong, so the score and the safety disclaimer rule. If the AI is slow, off or returns unusable text, the fixed text shows.</p>
-            <p>PRISM has no tool to act with. PRISM has no write endpoint, no database, no email and no link to a machine. The routes are read-only: <code>/</code>, <code>/api/readings</code>, <code>/api/diagnosis</code>, <code>/api/work-order</code>, <code>/privacy</code>, <code>/terms</code> and <code>/faq</code>.</p>
+            <p>PRISM has no tool to act with. PRISM has no write endpoint, no database, no email and no link to a machine. The routes are read-only: <code>/</code>, <code>/api/readings</code>, <code>/api/diagnosis</code>, <code>/api/work-order</code>, <code>/privacy</code>, <code>/terms</code>, <code>/faq</code> and <code>/sitemap.xml</code>.</p>
             <p class="src">Sources: <code>routes/web.php</code>, <code>app/Http/Controllers/DashboardController.php</code>.</p>
         </div>
     </details>
@@ -170,7 +170,7 @@
                 <li><code>scenario</code> must be one of four names: <code>worn_tool</code>, <code>overheating</code>, <code>overload</code> or <code>healthy</code>.</li>
                 <li><code>tick</code> must be a whole number from 0 to 1,000,000.</li>
             </ul>
-            <p>Anything else returns an HTTP 422 error. PRISM does not guess at bad input. An automated test covers the unknown-scenario case.</p>
+            <p>The AI routes take the same two values. Anything else is rejected, and a JSON request gets an HTTP 422 error. PRISM does not guess at bad input. An automated test covers the unknown-scenario case.</p>
             <p class="src">Sources: <code>DashboardController.php</code>, <code>tests/Feature/DashboardTest.php</code>.</p>
         </div>
     </details>
@@ -247,7 +247,7 @@
         <div class="answer">
             <ul>
                 <li><strong>Scoring limits.</strong> The values in <code>config/prism.php</code>. The AI4I limits are fixed. The vibration limits (1.4 and 4.5 mm/s RMS) follow ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</li>
-                <li><strong>Terms and Privacy Policy.</strong> Both carry an effective date of October 18, 2026. Any new data collection means a new Privacy Policy first.</li>
+                <li><strong>Terms and Privacy Policy.</strong> Both carry an effective date of October 19, 2026. Any new data collection means a new Privacy Policy first.</li>
                 <li><strong>HTTPS.</strong> Not set up. The live site loads over HTTP.</li>
             </ul>
         </div>
@@ -256,7 +256,7 @@
     <details>
         <summary>How do I report a problem or ask a question?</summary>
         <div class="answer">
-            <p>Contact James Moore. Contact details are in section 11 of the <a href="{{ url('/privacy') }}">Privacy Policy</a>.</p>
+            <p>Email James Moore at <a href="mailto:moorejp@cua.edu">moorejp@cua.edu</a>. The same address is in section 11 of the <a href="{{ url('/privacy') }}">Privacy Policy</a> and section 13 of the <a href="{{ url('/terms') }}">Terms</a>.</p>
         </div>
     </details>
 
@@ -296,8 +296,8 @@
     <details>
         <summary>What is on the roadmap?</summary>
         <div class="answer">
-            <p>The roadmap lists more machines, live sensor feeds and alerts. The scorer class is built to be swapped for a trained model without changing the page. Roadmap items are not commitments. Live feeds and alerts would collect new data, so the Privacy Policy would change first.</p>
-            <p class="src">Sources: <code>RiskScorer.php</code> comments, <a href="{{ url('/privacy') }}">Privacy Policy</a> section 10.</p>
+            <p>The Privacy Policy names live sensor feeds and alerts as roadmap items. The scorer class is built to be swapped for a trained model without changing the page. Roadmap items are not commitments. Live feeds and alerts would collect new data, so the Privacy Policy would change first.</p>
+            <p class="src">Sources: <a href="{{ url('/privacy') }}">Privacy Policy</a> section 10, <code>RiskScorer.php</code> comments.</p>
         </div>
     </details>
 
@@ -337,8 +337,8 @@
     <details>
         <summary>How much traffic is acceptable?</summary>
         <div class="answer">
-            <p>Do not send automated or repeated requests to the readings endpoint. The Terms list this under acceptable use, and PRISM reserves the right to block access for anyone who breaks the rules.</p>
-            <p class="src">Source: <a href="{{ url('/terms') }}">Terms</a> section 5.</p>
+            <p>Do not send automated or repeated requests to the readings endpoint or the Explain this reading feature. The Terms list this under acceptable use, and PRISM reserves the right to block access for anyone who breaks the rules. The two AI routes are limited to 30 requests a minute.</p>
+            <p class="src">Sources: <a href="{{ url('/terms') }}">Terms</a> section 5, <code>routes/web.php</code>.</p>
         </div>
     </details>
 
