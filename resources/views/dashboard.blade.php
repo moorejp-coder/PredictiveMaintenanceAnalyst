@@ -91,7 +91,6 @@
 
         .fold > summary { cursor: pointer; }
         .section-title { display: list-item; }
-        .chart .fold > summary { font-weight: 600; font-size: 1rem; margin-bottom: var(--prism-space-3); }
         footer { margin-top: var(--prism-space-4); color: var(--prism-muted); font-size: 0.875rem; display: grid; gap: var(--prism-space-2); }
         footer p { margin: 0; }
         footer strong { color: var(--prism-text); }
@@ -161,11 +160,9 @@
     <div class="grid row-2">
     @include('partials.ai-panel')
     <section class="card chart" aria-labelledby="chart-title">
-        <details class="fold" id="fold-chart" open>
-        <summary id="chart-title">Risk score over the last 30 readings</summary>
+        <h2 id="chart-title">Risk score over the last 30 readings</h2>
         <svg id="chart" viewBox="0 0 640 84" role="img" aria-label="Line chart of the risk score for the last 30 readings. Waiting for the first reading." aria-describedby="cycle"></svg>
         <p class="cap" id="cycle">Reading 0 of {{ $cycle }}. The demo restarts after reading {{ $cycle }}, as if the tool were changed.</p>
-        </details>
     </section>
     </div>
 
