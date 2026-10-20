@@ -150,13 +150,14 @@
         <li>The risk chart has a text description and a "View the chart data as a table" control.</li>
         <li>Band changes are announced through a status region. A High score is announced as an alert.</li>
         <li>Pop-ups use the native dialog element, return focus when closed, and close with the Escape key.</li>
+        <li>Light and dark themes. PRISM follows your system setting, and a switch in the header overrides it. Your choice is saved in your browser.</li>
         <li>Animations stop when your system asks for reduced motion.</li>
         <li>Pause control for the simulated feed.</li>
         <li>Layouts fit narrow phone screens. At 200% and 400% browser zoom the layout reflows, and the two pop-ups scroll up and down inside the window.</li>
     </ul>
     <p><strong>Known gaps:</strong></p>
     <ul>
-        <li>The theme is dark only. There is no light theme.</li>
+        <li>The live Lighthouse scores above were measured in the dark theme. On a local copy, the light theme also scored 100. Its contrast ratios were calculated (see docs/BRAND.md).</li>
         <li>No independent audit and no test with people who use assistive technology. Only VoiceOver on macOS was tried. Lighthouse checks only a subset of issues.</li>
         <li>The live site loads over HTTP.</li>
     </ul>

@@ -42,6 +42,47 @@
     --prism-font-data: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+/* Light theme. Same tokens, new values. Used when the visitor's system asks for
+   light, or when the header switch sets data-theme="light". The switch wins:
+   data-theme="dark" keeps the dark values even on a light system.
+   Contrast ratios are listed in docs/BRAND.md. */
+:root[data-theme="light"] {
+    color-scheme: light;
+    --prism-bg: #F6F8FC;
+    --prism-surface: #FFFFFF;
+    --prism-surface-raised: #EAEFF8;
+    --prism-border: #AEBAD3;
+    --prism-accent: #1A4FBF;
+    --prism-accent-hover: #153F99;
+    --prism-accent-pressed: #10337D;
+    --prism-accent-ink: #FFFFFF;
+    --prism-text: #0F1A30;
+    --prism-muted: #46557A;
+    --prism-disabled-text: #6B7893;
+    --prism-risk-low: #047857;
+    --prism-risk-elevated: #955300;
+    --prism-risk-high: #B42318;
+}
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+        color-scheme: light;
+        --prism-bg: #F6F8FC;
+        --prism-surface: #FFFFFF;
+        --prism-surface-raised: #EAEFF8;
+        --prism-border: #AEBAD3;
+        --prism-accent: #1A4FBF;
+        --prism-accent-hover: #153F99;
+        --prism-accent-pressed: #10337D;
+        --prism-accent-ink: #FFFFFF;
+        --prism-text: #0F1A30;
+        --prism-muted: #46557A;
+        --prism-disabled-text: #6B7893;
+        --prism-risk-low: #047857;
+        --prism-risk-elevated: #955300;
+        --prism-risk-high: #B42318;
+    }
+}
+
 /* Base */
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: dark; }
@@ -82,6 +123,7 @@ a:hover { color: var(--prism-accent-hover); }
 
 /* App header */
 .prism-header { background: var(--prism-bg); border-bottom: 1px solid var(--prism-border); }
+.theme-toggle { margin-left: auto; min-height: 44px; }
 .prism-header__inner {
     max-width: 1120px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: var(--prism-space-2) var(--prism-space-6);
     padding: var(--prism-space-2) max(16px, env(safe-area-inset-right)) var(--prism-space-2) max(16px, env(safe-area-inset-left));

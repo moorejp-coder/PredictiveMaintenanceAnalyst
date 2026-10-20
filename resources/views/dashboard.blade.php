@@ -359,24 +359,29 @@
         el.chart.setAttribute('viewBox', '0 0 ' + chartWidth + ' 84');
     }
 
+    // Chart colors come from the active theme's CSS tokens.
+    function themeColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
     function chartSvg(scores) {
         const W = chartWidth, H = 84, L = 34, R = 10, T = 8, B = 10;
+        const cHigh = themeColor('--prism-risk-high'), cElev = themeColor('--prism-risk-elevated'), cLow = themeColor('--prism-risk-low');
+        const cGrid = themeColor('--prism-border'), cMuted = themeColor('--prism-muted'), cLine = themeColor('--prism-accent');
         const x = (i) => L + (i * (W - L - R)) / (MAX_POINTS - 1);
         const y = (v) => T + (1 - v / 100) * (H - T - B);
         let out = '';
-        out += '<rect x="' + L + '" y="' + y(100) + '" width="' + (W - L - R) + '" height="' + (y(70) - y(100)) + '" fill="#F87171" fill-opacity="0.12"></rect>';
-        out += '<rect x="' + L + '" y="' + y(70) + '" width="' + (W - L - R) + '" height="' + (y(40) - y(70)) + '" fill="#FBBF24" fill-opacity="0.10"></rect>';
-        out += '<rect x="' + L + '" y="' + y(40) + '" width="' + (W - L - R) + '" height="' + (y(0) - y(40)) + '" fill="#34D399" fill-opacity="0.08"></rect>';
+        out += '<rect x="' + L + '" y="' + y(100) + '" width="' + (W - L - R) + '" height="' + (y(70) - y(100)) + '" fill="' + cHigh + '" fill-opacity="0.12"></rect>';
+        out += '<rect x="' + L + '" y="' + y(70) + '" width="' + (W - L - R) + '" height="' + (y(40) - y(70)) + '" fill="' + cElev + '" fill-opacity="0.10"></rect>';
+        out += '<rect x="' + L + '" y="' + y(40) + '" width="' + (W - L - R) + '" height="' + (y(0) - y(40)) + '" fill="' + cLow + '" fill-opacity="0.08"></rect>';
         [[0, '0'], [40, '40'], [70, '70'], [100, '100']].forEach((t) => {
-            out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t[0]) + '" y2="' + y(t[0]) + '" stroke="#26355A" stroke-width="1"></line>';
-            out += '<text x="' + (L - 6) + '" y="' + (y(t[0]) + 4) + '" text-anchor="end" font-size="12" fill="#A3B3D1">' + t[1] + '</text>';
+            out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t[0]) + '" y2="' + y(t[0]) + '" stroke="' + cGrid + '" stroke-width="1"></line>';
+            out += '<text x="' + (L - 6) + '" y="' + (y(t[0]) + 4) + '" text-anchor="end" font-size="12" fill="' + cMuted + '">' + t[1] + '</text>';
         });
         const pts = scores.map((v, i) => x(i).toFixed(1) + ',' + y(v).toFixed(1));
         if (scores.length > 1) {
-            out += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#8AB4F8" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></polyline>';
+            out += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + cLine + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></polyline>';
         }
         const i = scores.length - 1;
-        out += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(scores[i]).toFixed(1) + '" r="4" fill="#8AB4F8"></circle>';
+        out += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(scores[i]).toFixed(1) + '" r="4" fill="' + cLine + '"></circle>';
         return out;
     }
 
@@ -598,6 +603,9 @@
         setStatus(state.paused ? 'paused' : 'live');
         if (!state.paused) { step(); }
     });
+
+    // Redraw the chart when the theme changes.
+    window.addEventListener('prism-theme', () => { if (state.history.length) { render(); } });
 
     let resizeTimer = null;
     window.addEventListener('resize', () => {

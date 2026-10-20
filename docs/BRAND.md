@@ -75,3 +75,34 @@ Scale: page heading 28 to 32 px, section 20 to 24 px, card heading 16 px, body 1
 
 ## Writing
 Short, direct, factual, action-oriented. Lead with the finding. Explain causes in plain English. Separate predictions from confirmed conditions. Give a next step only when the scorer supplies one. Leave the decision to the technician. No marketing language in the dashboard.
+
+## Light theme
+
+PRISM follows the visitor's system setting (`prefers-color-scheme`). A switch in the header overrides it and saves the choice in the browser. The logo mark uses `--prism-accent` and the wordmark uses `--prism-text`, so both follow the active theme. The brand rule allowing white backgrounds with the ink logo (above) covers the light surface.
+
+| Token | Dark | Light |
+| --- | --- | --- |
+| --prism-bg | #0B1220 | #F6F8FC |
+| --prism-surface | #111A2E | #FFFFFF |
+| --prism-surface-raised | #172340 | #EAEFF8 |
+| --prism-border | #26355A | #AEBAD3 |
+| --prism-accent | #8AB4F8 | #1A4FBF |
+| --prism-accent-hover | #A9C7FA | #153F99 |
+| --prism-accent-pressed | #7AA5EE | #10337D |
+| --prism-accent-ink | #0B1220 | #FFFFFF |
+| --prism-text | #E8EEFB | #0F1A30 |
+| --prism-muted | #A3B3D1 | #46557A |
+| --prism-disabled-text | #8494B5 | #6B7893 |
+| --prism-risk-low | #34D399 | #047857 |
+| --prism-risk-elevated | #FBBF24 | #955300 |
+| --prism-risk-high | #F87171 | #B42318 |
+
+Measured contrast for the light theme (WCAG 2.2 relative luminance formula, calculated by script on October 20, 2026. The author then checked the light theme by eye in a browser on the same day: High score view, AI pop-up, override form, FAQ and AI use pages). Values are on bg, surface and surface-raised in that order.
+- Text: 16.3, 17.3, 15.0
+- Muted text: 7.0, 7.4, 6.4
+- Accent (links, focus outline): 6.8, 7.2, 6.2
+- Button text (white on accent): 7.2 (hover 9.5, pressed 11.7)
+- Low: 5.2, 5.5, 4.8
+- Elevated: 5.6, 6.0, 5.2
+- High: 6.2, 6.6, 5.7
+- Border #AEBAD3: 1.83 on bg. As in the dark theme, the border is decorative. Controls carry a text label and a focus outline.
