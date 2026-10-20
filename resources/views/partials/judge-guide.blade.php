@@ -44,7 +44,7 @@
                 <span>On a High score, press "Keep running anyway" to record an override. Type a made-up name. Then read <a href="{{ url('/ai') }}">AI use</a> for the limits and the test results.</span>
             </li>
         </ol>
-        <p class="guide-foot">The rules set the score. The AI only explains it. A qualified technician decides what to do. Press the Guide button in the toolbar to open this tour again.</p>
+        <p class="guide-foot">The rules set the score. The AI only explains it. A qualified technician decides what to do. Press "Open the guide" beside the page title to open this tour again.</p>
         <div class="guide-actions">
             <button type="button" class="btn btn--primary" id="guide-close" autofocus>Start exploring</button>
         </div>

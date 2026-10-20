@@ -141,6 +141,7 @@
     <main id="main" tabindex="-1">
     <div class="page-head">
         <h1>Machine Risk Analysis</h1>
+        <button type="button" class="btn" id="guide-open" aria-haspopup="dialog">Open the guide</button>
     </div>
 
     <div class="toolbar">
@@ -151,7 +152,6 @@
             @endforeach
         </div>
         <span class="spacer"></span>
-        <button type="button" class="btn" id="guide-open" aria-haspopup="dialog">Guide</button>
         <span class="badge">SIMULATED DATA</span>
         <span class="status"><i class="dot" id="dot"></i><span id="status-text">Starting</span></span>
         <button type="button" class="btn" id="pause">Pause</button>
