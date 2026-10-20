@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Support\CanonicalUrl;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\JudgeSeeder;
@@ -11,6 +12,13 @@ use Tests\TestCase;
 class LoginTest extends TestCase
 {
     use RefreshDatabase;
+
+    /** The sign-in is off by default, so these tests turn it on. */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['prism.require_login' => true]);
+    }
 
     private function judge(string $password = 'correct-horse-battery'): User
     {
@@ -39,6 +47,13 @@ class LoginTest extends TestCase
         foreach (['/login', '/ai', '/faq', '/privacy', '/terms', '/sitemap.xml'] as $path) {
             $this->get($path)->assertOk();
         }
+    }
+
+    public function test_the_sitemap_leaves_out_the_dashboard_while_the_sign_in_is_on(): void
+    {
+        $this->get('/sitemap.xml')
+            ->assertSee(url('/faq'), false)
+            ->assertDontSee('<loc>'.CanonicalUrl::for('/').'</loc>', false);
     }
 
     public function test_the_login_page_has_labeled_fields_and_is_not_indexed(): void

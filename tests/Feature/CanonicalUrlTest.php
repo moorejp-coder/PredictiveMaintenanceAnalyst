@@ -47,7 +47,7 @@ class CanonicalUrlTest extends TestCase
 
         $this->get('/sitemap.xml')
             ->assertSee('<loc>https://prism.example.com/faq</loc>', false)
-            ->assertDontSee('<loc>https://prism.example.com</loc>', false);
+            ->assertSee('<loc>https://prism.example.com</loc>', false);
     }
 
     public function test_api_readings_is_marked_noindex(): void

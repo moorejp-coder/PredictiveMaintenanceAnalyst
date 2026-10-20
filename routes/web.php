@@ -5,21 +5,25 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AiFeedbackController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OverrideController;
+use App\Http\Middleware\RequireLogin;
 use App\Http\Middleware\RequireOverrideLogPassword;
 use App\Support\CanonicalUrl;
 use Illuminate\Support\Facades\Route;
 
-// Sign in. There is no sign-up page. The judge account comes from JudgeSeeder.
+// Sign in. Built but switched off until REQUIRE_LOGIN=true (see
+// config/prism.php). With it off, /login goes back to / and the POST routes
+// return 404. There is no sign-up page. The judge account comes from JudgeSeeder.
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'show'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 });
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// The dashboard and every route it calls need a signed-in user. The pages
-// about AI use, the FAQ, Privacy and Terms stay public below. The readings
-// poll now starts the session, because the login check reads it.
-Route::middleware('auth')->group(function () {
+// With REQUIRE_LOGIN on, the dashboard and every route it calls need a
+// signed-in user. With it off they are public. The pages about AI use, the
+// FAQ, Privacy and Terms are always public. The routes start the session
+// either way, because the gate reads it.
+Route::middleware(RequireLogin::class)->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
     Route::get('/api/readings', [DashboardController::class, 'readings']);
     // Two small AI calls, run only when a visitor presses "Explain this reading".
@@ -45,8 +49,11 @@ Route::view('/terms', 'terms');
 Route::view('/faq', 'faq');
 
 Route::get('/sitemap.xml', function () {
-    // The dashboard at / needs a sign-in, so it is not listed.
+    // With the sign-in on, the dashboard at / is not public, so it is not listed.
     $paths = ['/ai', '/faq', '/privacy', '/terms'];
+    if (! config('prism.require_login')) {
+        array_unshift($paths, '/');
+    }
 
     $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";

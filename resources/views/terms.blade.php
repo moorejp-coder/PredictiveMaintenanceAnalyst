@@ -37,7 +37,7 @@
             <li>PRISM supports a qualified technician. It does not replace an inspection.</li>
             <li>Do not use PRISM to make safety, repair or production decisions about real equipment.</li>
             <li>PRISM is provided as is, with no warranty.</li>
-            <li>PRISM has no sign-up. Only the contest judge account signs in. By using the site you accept these terms.</li>
+            <li>@if (config('prism.require_login'))PRISM has no sign-up. Only the contest judge account signs in.@else PRISM has no accounts.@endif By using the site you accept these terms.</li>
         </ul>
     </div>
 

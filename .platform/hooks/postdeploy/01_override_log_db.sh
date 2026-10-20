@@ -19,9 +19,10 @@ php artisan migrate --force || echo "PRISM: migrate failed. The override log is 
 
 # Create or update the judge account from JUDGE_EMAIL and JUDGE_PASSWORD (set
 # in the Elastic Beanstalk console). With either missing, no account is made
-# and nobody can sign in. A rebuilt server loses the SQLite file, so this
-# runs on every deploy.
-php artisan db:seed --class=JudgeSeeder --force || echo "PRISM: judge account was not created. Nobody can sign in."
+# and nobody can sign in once REQUIRE_LOGIN=true. A rebuilt server loses the
+# SQLite file, so this runs on every deploy. With REQUIRE_LOGIN off, the
+# account is unused.
+php artisan db:seed --class=JudgeSeeder --force || echo "PRISM: judge account was not created. Nobody can sign in if REQUIRE_LOGIN is true."
 
 # The web server user must be able to write the file and its folder.
 chown -R webapp:webapp "$DATA_DIR" || true

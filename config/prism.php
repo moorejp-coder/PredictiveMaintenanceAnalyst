@@ -71,6 +71,12 @@ return [
     // Password for the /overrides review page. Leave unset and the page returns 404.
     'override_log_password' => env('OVERRIDE_LOG_PASSWORD'),
 
+    // Sign-in gate. Off by default: the dashboard is public and /login goes
+    // back to /. Set REQUIRE_LOGIN=true (an Elastic Beanstalk property) with
+    // JUDGE_EMAIL and JUDGE_PASSWORD to turn it on. Planned for after HTTPS,
+    // because a password sent over HTTP is readable on the network.
+    'require_login' => (bool) env('REQUIRE_LOGIN', false),
+
     // The one judge account. JudgeSeeder reads these. Set them as Elastic
     // Beanstalk environment properties, never in the code. With either
     // JUDGE_EMAIL or JUDGE_PASSWORD missing, no account exists.
