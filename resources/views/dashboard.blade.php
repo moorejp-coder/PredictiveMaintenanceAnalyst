@@ -49,12 +49,15 @@
         }
         .alert-title { margin: var(--prism-space-2) 0 0; padding: var(--prism-space-2) var(--prism-space-3); text-align: left; font-weight: 600;
             color: var(--prism-risk-high); border-left: 4px solid var(--prism-risk-high); background: var(--prism-surface-raised); border-radius: var(--prism-radius-sm); }
-        .alert-title[hidden] { display: none; }
+        /* Hidden but still in the layout, so the card keeps one height when the band changes. */
+        .alert-title[hidden] { display: block; visibility: hidden; }
         .action { margin: var(--prism-space-2) 0 0; font-size: 0.9375rem; text-align: left; }
         .disclaimer { margin: var(--prism-space-3) 0 0; padding-top: var(--prism-space-2); border-top: 1px solid var(--prism-border); color: var(--prism-muted); font-size: 0.8125rem; text-align: left; }
 
         .why { padding: var(--prism-space-4); }
         .why p { margin: 0 0 var(--prism-space-2); font-size: 1rem; }
+        /* Room for three lines, so the bars below do not move when the text changes. */
+        .why #why { min-height: 4.65em; }
         .drivers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px var(--prism-space-6); margin-top: var(--prism-space-3); }
         @media (max-width: 480px) { .drivers { grid-template-columns: 1fr; } }
         .driver { display: grid; grid-template-columns: 110px 1fr 36px; align-items: center; gap: 8px; font-size: 0.875rem; }
@@ -92,9 +95,9 @@
         .chart .cap { color: var(--prism-muted); font-size: 0.8125rem; margin: 4px 0 0; }
 
         .override { margin-top: var(--prism-space-3); text-align: left; }
-        .override[hidden] { display: none; }
+        .override[hidden] { display: block; visibility: hidden; }
         .override .note { margin: var(--prism-space-1) 0 0; color: var(--prism-muted); font-size: 0.8125rem; }
-        .override .logged { margin: var(--prism-space-2) 0 0; font-size: 0.875rem; overflow-wrap: anywhere; }
+        .override .logged { margin: var(--prism-space-2) 0 0; font-size: 0.875rem; overflow-wrap: anywhere; min-height: 2.6em; }
         .ov-modal { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 2px solid var(--prism-risk-high); border-radius: 12px; background: var(--prism-surface-raised, var(--prism-surface, #fff)); color: inherit; overflow: auto; }
         .ov-modal::backdrop { background: rgba(0, 0, 0, 0.6); }
         .ov-inner { padding: 20px 24px 24px; }
