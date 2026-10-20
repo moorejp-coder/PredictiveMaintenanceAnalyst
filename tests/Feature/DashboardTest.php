@@ -19,6 +19,17 @@ class DashboardTest extends TestCase
             ->assertSee('Failure risk score');
     }
 
+    public function test_dashboard_shows_the_start_here_guide_with_real_button_names(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Start here: a four step tour of PRISM')
+            ->assertSee('Worn tool')
+            ->assertSee('Explain this reading')
+            ->assertSee('Keep running anyway')
+            ->assertSee('Every reading is simulated');
+    }
+
     public function test_readings_endpoint_returns_a_reading_and_a_risk_score(): void
     {
         $this->getJson('/api/readings?scenario=overheating&tick=45')

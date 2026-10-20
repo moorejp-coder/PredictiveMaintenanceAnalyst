@@ -143,6 +143,8 @@
         <h1>Machine Risk Analysis</h1>
     </div>
 
+    @include('partials.judge-guide')
+
     <div class="toolbar">
         <span class="label" id="scenario-label">Simulated situation</span>
         <div class="seg" role="group" aria-labelledby="scenario-label">
