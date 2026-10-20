@@ -68,6 +68,9 @@ return [
         'cap' => 0.5,
     ],
 
+    // Password for the /overrides review page. Leave unset and the page returns 404.
+    'override_log_password' => env('OVERRIDE_LOG_PASSWORD'),
+
     'bands' => [
         'elevated_from' => 40,
         'high_from' => 70,

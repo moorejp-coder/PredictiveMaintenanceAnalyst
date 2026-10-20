@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\OverrideController;
+use App\Http\Middleware\RequireOverrideLogPassword;
 use App\Support\CanonicalUrl;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -30,6 +32,13 @@ Route::get('/api/diagnosis', [AiController::class, 'diagnosis'])
 Route::get('/api/work-order', [AiController::class, 'workOrder'])
     ->withoutMiddleware($stateless)
     ->middleware('throttle:30,1');
+// Override log. An operator who keeps a machine running after the High
+// "Stop the machine" warning records who, why and which reading. The write
+// uses the normal session and CSRF check. The review page needs a password.
+Route::post('/api/overrides', [OverrideController::class, 'store'])
+    ->middleware('throttle:10,1');
+Route::get('/overrides', [OverrideController::class, 'index'])
+    ->middleware(RequireOverrideLogPassword::class);
 Route::view('/privacy', 'privacy');
 Route::view('/terms', 'terms');
 Route::view('/faq', 'faq');

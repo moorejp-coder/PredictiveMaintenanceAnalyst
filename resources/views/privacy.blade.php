@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Privacy Policy | {{ config('app.name', 'PRISM') }}</title>
-    <meta name="description" content="How PRISM handles data. PRISM has no accounts, no forms and no analytics.">
+    <meta name="description" content="How PRISM handles data. PRISM has no accounts and no analytics. One form records a name and a reason when an operator overrides a stop warning.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     @include('partials.brand-head')
     <style>
@@ -39,8 +39,8 @@
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Summary</h2>
         <ul>
-            <li>PRISM has no accounts, sign-in, forms or comment boxes.</li>
-            <li>You do not enter personal data. Every sensor reading on the dashboard is simulated.</li>
+            <li>PRISM has no accounts or sign-in. One form, the override log, asks for a name and a reason.</li>
+            <li>Every sensor reading on the dashboard is simulated. The override form asks for your name. Enter nothing else personal.</li>
             <li>PRISM uses no analytics, advertising, tracking pixels or third-party scripts.</li>
             <li>If you press Explain this reading, PRISM's server sends the simulated score result (numbers and labels, no personal data) to Anthropic's API and shows the reply.</li>
             <li>PRISM does not sell or share your data.</li>
@@ -52,7 +52,7 @@
     <p>PRISM (Predictive Real-time Infrastructure Sensor Monitoring) is a student project built by James Moore for the CUA Busch School AI Vibe Coding Contest, Fall 2026. James Moore operates it. The Catholic University of America does not operate this site and does not receive data from it.</p>
 
     <h2>2. What PRISM collects</h2>
-    <p><strong>Information you give PRISM.</strong> None. The dashboard has demo controls that send a scenario name and a reading number to the server so it can return a simulated reading. These values contain no personal information. PRISM does not store them.</p>
+    <p><strong>Information you give PRISM.</strong> The dashboard has demo controls that send a scenario name and a reading number to the server so it can return a simulated reading. PRISM does not store these values. When PRISM says to stop the machine and you choose to keep it running, a form asks for your name and your reason. PRISM stores both, with the time, the machine, the risk score and the simulated reading. PRISM does not check that the name is yours.</p>
     <p><strong>Information collected automatically.</strong></p>
     <table>
         <tr><th scope="col">Item</th><th scope="col">What it is</th><th scope="col">Why</th></tr>
@@ -60,12 +60,13 @@
         <tr><td>Session cookie</td><td>A cookie named <code>prism-session</code>. The framework (Laravel) sets it. It holds a random session ID. It expires after 120 minutes of inactivity.</td><td>Standard framework behavior. PRISM does not use it to identify you or track you.</td></tr>
         <tr><td>Security cookie</td><td>A cookie named <code>XSRF-TOKEN</code>. The framework sets it to guard against forged requests.</td><td>Security.</td></tr>
     </table>
-    <p>PRISM has no database. It stores no user records.</p>
+    <p>PRISM stores one kind of record: the override log. It holds the name and reason you type. A password protects the page that lists the log.</p>
     <p>Both cookies are strictly necessary for the site to work, so PRISM does not ask for cookie consent. A short notice tells you about them. Your choice to dismiss the notice is stored in your browser (local storage), not in a cookie, and is never sent to PRISM. <button type="button" onclick="window.prismCookieNotice &amp;&amp; window.prismCookieNotice.open()" style="background:none;border:0;padding:0;color:var(--prism-accent);text-decoration:underline;cursor:pointer;font:inherit">Show the cookie notice again</button>.</p>
 
     <h2>3. How PRISM uses information</h2>
     <ul>
         <li>To serve the dashboard and return simulated readings.</li>
+        <li>To keep a record of who kept a machine running after a stop warning, when, and why.</li>
         <li>To keep the site secure and working.</li>
     </ul>
     <p>PRISM does not use information for advertising, profiling or automated decisions about you.</p>
@@ -75,15 +76,15 @@
     <p>PRISM does not sell your information. PRISM does not share it with anyone else, except where the law requires disclosure.</p>
 
     <h2>5. Retention</h2>
-    <p>PRISM sets no custom retention period for server logs. Logs stay on the hosting server until the platform rotates them or the server is replaced or shut down. Session cookies expire after 120 minutes of inactivity. You can delete cookies in your browser settings at any time.</p>
+    <p>PRISM sets no custom retention period for server logs. Logs stay on the hosting server until the platform rotates them or the server is replaced or shut down. Session cookies expire after 120 minutes of inactivity. You can delete cookies in your browser settings at any time. Override log entries have no deletion schedule. They stay until James Moore removes them or the server is replaced or shut down.</p>
 
     <h2>6. Security</h2>
-    <p>The live site currently loads over HTTP, not HTTPS. Anyone on your network path could read traffic between your browser and PRISM. Do not enter sensitive information into any page. PRISM has no field that asks for it.</p>
+    <p>The live site currently loads over HTTP, not HTTPS. Anyone on your network path could read traffic between your browser and PRISM. Do not enter sensitive information into any page. The only fields ask for a name and a reason. Enter nothing else personal.</p>
 
     <h2>7. Your choices and rights</h2>
     <ul>
         <li>Block or delete cookies in your browser. The dashboard still works.</li>
-        <li>Contact the address below to ask what PRISM holds about you, or to ask for deletion of log entries tied to your IP address. PRISM will respond within 30 days.</li>
+        <li>Contact the address below to ask what PRISM holds about you, or to ask for deletion of override log entries you made or log entries tied to your IP address. PRISM will respond within 30 days.</li>
         <li>Residents of some places (such as California, Virginia and the European Economic Area) have additional legal rights over personal data. Contact the address below to exercise them.</li>
     </ul>
 

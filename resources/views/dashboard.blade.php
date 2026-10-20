@@ -6,6 +6,7 @@
     <title>Milling Machine Failure Risk Dashboard | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="PRISM shows a failure-risk score and a plain-English reason for one milling machine, using simulated temperature, vibration and run-hour readings.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('partials.brand-head')
     <style>
         :root { --band: var(--prism-risk-low); }
@@ -89,6 +90,24 @@
         .chart text { font-family: var(--prism-font-data); }
         .chart .cap { color: var(--prism-muted); font-size: 0.8125rem; margin: 4px 0 0; }
 
+        .override { margin-top: var(--prism-space-3); text-align: left; }
+        .override[hidden] { display: none; }
+        .override .note { margin: var(--prism-space-1) 0 0; color: var(--prism-muted); font-size: 0.8125rem; }
+        .override .logged { margin: var(--prism-space-2) 0 0; font-size: 0.875rem; overflow-wrap: anywhere; }
+        .ov-modal { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 2px solid var(--prism-risk-high); border-radius: 12px; background: var(--prism-surface-raised, var(--prism-surface, #fff)); color: inherit; overflow: auto; }
+        .ov-modal::backdrop { background: rgba(0, 0, 0, 0.6); }
+        .ov-inner { padding: 20px 24px 24px; }
+        .ov-inner h2 { margin: 0 0 var(--prism-space-2); font-size: 1.25rem; }
+        .ov-inner p { margin: 0 0 var(--prism-space-3); }
+        .ov-inner [hidden] { display: none; }
+        .ov-field { display: grid; gap: 4px; margin-bottom: var(--prism-space-3); }
+        .ov-field label { font-weight: 600; font-size: 0.9375rem; }
+        .ov-field input, .ov-field textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; color: var(--prism-text); background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-sm); }
+        .ov-field textarea { min-height: 96px; resize: vertical; }
+        .ov-field .help { color: var(--prism-muted); font-size: 0.8125rem; }
+        .ov-error { color: var(--prism-risk-high); font-weight: 600; margin: 0 0 var(--prism-space-3); }
+        .ov-actions { display: flex; flex-wrap: wrap; gap: var(--prism-space-2); justify-content: flex-end; }
+
         .fold > summary { cursor: pointer; }
         .section-title { display: list-item; }
         footer { margin-top: var(--prism-space-4); color: var(--prism-muted); font-size: 0.875rem; display: grid; gap: var(--prism-space-2); }
@@ -106,7 +125,7 @@
         }
     </style>
 </head>
-<body data-endpoint="{{ url('/api/readings') }}" data-cycle="{{ $cycle }}">
+<body data-endpoint="{{ url('/api/readings') }}" data-overrides="{{ url('/api/overrides') }}" data-cycle="{{ $cycle }}">
 @include('partials.skip-link')
 @include('partials.app-header', ['active' => 'dashboard', 'machine' => true])
 <div class="wrap">
@@ -147,6 +166,11 @@
             <span class="chip" id="band">No Assessment Yet</span>
             <p class="alert-title" id="alert-title" hidden>High Predicted Failure Risk</p>
             <p class="action" id="action">Waiting for the first simulated reading.</p>
+            <div class="override" id="override" hidden>
+                <button type="button" class="btn" id="override-open" aria-haspopup="dialog">Keep running anyway</button>
+                <p class="note">If you keep the machine running, PRISM records your name, the time, and your reason.</p>
+                <p class="logged" id="override-logged" role="status"></p>
+            </div>
             <p class="disclaimer">PRISM supports technician decisions. Confirm findings through inspection.</p>
         </section>
 
@@ -174,6 +198,35 @@
 
 
     
+
+    <dialog class="ov-modal" id="override-modal" aria-labelledby="override-title">
+        <div class="ov-inner">
+            <h2 id="override-title">Keep the machine running?</h2>
+            <p id="override-summary"></p>
+            <form id="override-form" novalidate>
+                <div class="ov-field">
+                    <label for="override-name">Your name</label>
+                    <input type="text" id="override-name" name="operator_name" autocomplete="name" maxlength="100" required>
+                </div>
+                <div class="ov-field">
+                    <label for="override-reason">Why are you keeping it running?</label>
+                    <textarea id="override-reason" name="reason" maxlength="500" required aria-describedby="override-reason-help"></textarea>
+                    <span class="help" id="override-reason-help">At least 10 characters. Up to 500.</span>
+                </div>
+                <p class="ov-error" id="override-error" role="alert" hidden></p>
+                <div class="ov-actions">
+                    <button type="button" class="btn" id="override-cancel">Cancel. I will stop the machine.</button>
+                    <button type="submit" class="btn btn--primary" id="override-submit">Record and keep running</button>
+                </div>
+            </form>
+            <div id="override-done" hidden>
+                <p id="override-done-text" role="status"></p>
+                <div class="ov-actions">
+                    <button type="button" class="btn btn--primary" id="override-close">Close</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
 
     <div class="sr-only" role="status" id="sr-status"></div>
     <div class="sr-only" role="alert" id="sr-alert"></div>
@@ -220,6 +273,16 @@
         srAlert: $('sr-alert'), alertTitle: $('alert-title'), errorNotice: $('error-notice'),
     };
     const scenarioButtons = Array.from(document.querySelectorAll('[data-scenario]'));
+
+    // Override log: shown only while PRISM says to stop the machine.
+    const ov = {
+        box: $('override'), open: $('override-open'), logged: $('override-logged'), modal: $('override-modal'),
+        form: $('override-form'), summary: $('override-summary'), name: $('override-name'), reason: $('override-reason'),
+        error: $('override-error'), submit: $('override-submit'), cancel: $('override-cancel'),
+        done: $('override-done'), doneText: $('override-done-text'), close: $('override-close'),
+    };
+    const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+    let ovTarget = null;
 
     const state = { scenario: scenarioButtons[0].dataset.scenario, tick: 0, history: [], paused: false };
     let generation = 0;
@@ -317,6 +380,7 @@
         el.ring.style.strokeDashoffset = (RING * (1 - risk.score / 100)).toFixed(2);
         el.band.textContent = risk.band_label + ' risk';
         el.alertTitle.hidden = risk.band !== 'high';
+        ov.box.hidden = risk.band !== 'high';
         el.action.textContent = risk.action;
         el.why.textContent = risk.explanation;
 
@@ -399,6 +463,7 @@
         generation += 1;
         inflight = false;
         lastBand = null;
+        ov.logged.textContent = '';
         state.scenario = key;
         state.tick = 0;
         state.history = [];
@@ -411,6 +476,71 @@
     }
 
     scenarioButtons.forEach((b) => b.addEventListener('click', () => selectScenario(b.dataset.scenario)));
+
+    function ovShowError(message) {
+        ov.error.textContent = message;
+        ov.error.hidden = false;
+    }
+
+    ov.open.addEventListener('click', () => {
+        const latest = state.history[state.history.length - 1];
+        if (!latest || latest.risk.band !== 'high') { return; }
+        // Log the reading the operator is looking at now, not a later one.
+        ovTarget = { scenario: latest.scenario, tick: latest.tick };
+        ov.summary.textContent = 'Reading ' + ((latest.tick % CYCLE) + 1) + ' of ' + CYCLE + ', risk score ' +
+            latest.risk.score + ' out of 100. PRISM says: ' + latest.risk.action;
+        ov.error.hidden = true;
+        ov.form.hidden = false;
+        ov.done.hidden = true;
+        ov.modal.showModal();
+        ov.name.focus();
+    });
+    ov.cancel.addEventListener('click', () => ov.modal.close());
+    ov.close.addEventListener('click', () => ov.modal.close());
+    ov.modal.addEventListener('click', (e) => { if (e.target === ov.modal) { ov.modal.close(); } });
+    ov.modal.addEventListener('close', () => { if (!ov.box.hidden) { ov.open.focus(); } });
+
+    ov.form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!ovTarget) { return; }
+        const operator = ov.name.value.trim();
+        const reason = ov.reason.value.trim();
+        if (operator.length < 2) { ovShowError('Enter your name.'); ov.name.focus(); return; }
+        if (reason.length < 10) { ovShowError('Give a reason of at least 10 characters.'); ov.reason.focus(); return; }
+
+        ov.error.hidden = true;
+        ov.submit.disabled = true;
+        ov.submit.setAttribute('aria-busy', 'true');
+        try {
+            const res = await fetch(body.dataset.overrides, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: JSON.stringify({ operator_name: operator, reason: reason, scenario: ovTarget.scenario, tick: ovTarget.tick }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                let message = 'The override was not saved. Try again, or stop the machine.';
+                if (res.status === 422 && data.errors) { message = Object.values(data.errors)[0][0]; }
+                else if (res.status === 422 && data.message) { message = data.message; }
+                else if (res.status === 429) { message = 'Too many entries. Wait a minute and try again.'; }
+                else if (res.status === 419) { message = 'This page expired. Reload it and try again.'; }
+                ovShowError(message);
+                return;
+            }
+            const when = new Date(data.recorded_at).toLocaleString();
+            ov.form.hidden = true;
+            ov.done.hidden = false;
+            ov.doneText.textContent = 'Recorded as entry ' + data.id + ' at ' + when + '. PRISM still says to stop the machine and inspect it.';
+            ov.logged.textContent = 'Override recorded: ' + operator + ', ' + when + '.';
+            ov.reason.value = '';
+            ov.close.focus();
+        } catch (err) {
+            ovShowError('The override was not saved. Check the connection, or stop the machine.');
+        } finally {
+            ov.submit.disabled = false;
+            ov.submit.removeAttribute('aria-busy');
+        }
+    });
     el.pause.addEventListener('click', () => {
         state.paused = !state.paused;
         el.pause.textContent = state.paused ? 'Resume' : 'Pause';

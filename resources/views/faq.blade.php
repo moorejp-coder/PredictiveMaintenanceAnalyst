@@ -111,7 +111,7 @@
                 <li><strong>Score random failure.</strong> In AI4I, random failures occur with a 0.1 percent probability independent of every parameter, so no reading predicts them.</li>
                 <li><strong>Learn from data.</strong> The score is rule-based. No trained model runs today.</li>
                 <li><strong>Send alerts, email or messages.</strong> Alerts are on the roadmap only.</li>
-                <li><strong>Store data.</strong> PRISM has no accounts, no forms and no database.</li>
+                <li><strong>Store data.</strong> PRISM has no accounts. It stores one thing: the override log of who kept a machine running after a stop warning.</li>
                 <li><strong>Give engineering, maintenance or safety advice.</strong> See Terms section 4.</li>
             </ul>
             <p class="src">Sources: <code>README.md</code>, <a href="{{ url('/terms') }}">Terms</a> and <a href="{{ url('/privacy') }}">Privacy Policy</a>.</p>
@@ -157,7 +157,7 @@
         <div class="answer">
             <p>No. PRISM is not an autonomous agent. The score and every default sentence come from fixed templates in the check classes under <code>app/Services/Checks</code>. Only three action lines exist (see the table in section 1).</p>
             <p>When a visitor presses Explain this reading and the band is Elevated or High, two optional AI calls restate that result: a likely-cause note and a draft work order. The AI sees only the score result. It cannot act, send or change anything, and code sets the work order priority. AI text can be wrong, so the score and the safety disclaimer rule. If the AI is slow, off or returns unusable text, the fixed text shows.</p>
-            <p>PRISM has no tool to act with. PRISM has no write endpoint, no database, no email and no link to a machine. The routes are read-only: <code>/</code>, <code>/api/readings</code>, <code>/api/diagnosis</code>, <code>/api/work-order</code>, <code>/privacy</code>, <code>/terms</code>, <code>/faq</code> and <code>/sitemap.xml</code>.</p>
+            <p>PRISM has no tool to act with. PRISM has no email and no link to a machine. Its only write is the override log, <code>POST /api/overrides</code>, which records a decision and changes nothing on a machine. The other routes are read-only: <code>/</code>, <code>/api/readings</code>, <code>/api/diagnosis</code>, <code>/api/work-order</code>, <code>/privacy</code>, <code>/terms</code>, <code>/faq</code> and <code>/sitemap.xml</code>. A password protects <code>/overrides</code>, the page that lists the log.</p>
             <p class="src">Sources: <code>routes/web.php</code>, <code>app/Http/Controllers/DashboardController.php</code>.</p>
         </div>
     </details>
@@ -221,6 +221,7 @@
         <summary>Who receives an escalation?</summary>
         <div class="answer">
             <p>A qualified maintenance professional at your site. PRISM has no ticket, page, email or chat route. PRISM shows the instruction on screen and stops there.</p>
+            <p>If an operator keeps a machine running after a High score, PRISM asks for a name and a reason and records them in the override log, with the time and the reading. PRISM does not verify the name, and the log does not notify anyone.</p>
         </div>
     </details>
 
@@ -304,7 +305,7 @@
     <details>
         <summary>What happens to data when PRISM shuts down?</summary>
         <div class="answer">
-            <p>PRISM has no database, so no user records exist to move or delete. Server logs stay on the host until the platform rotates them or the server is replaced or shut down.</p>
+            <p>PRISM has no user accounts. The override log lives in a file on the host, so a replaced or shut-down server erases it unless it was exported first. Server logs stay on the host until the platform rotates them or the server is replaced or shut down.</p>
             <p class="src">Source: <a href="{{ url('/privacy') }}">Privacy Policy</a> sections 2 and 5.</p>
         </div>
     </details>
