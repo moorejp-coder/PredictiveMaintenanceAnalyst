@@ -45,8 +45,8 @@
                 <h2 id="ai-modal-title">Explain this reading</h2>
                 <button type="button" class="btn ai-close" id="ai-close" aria-label="Close">Close</button>
             </div>
-            <span class="ai-label">AI-GENERATED</span>
-            <p class="ai-warn">AI can be wrong. A qualified technician decides what to do. The score above comes from fixed rules, not from the AI.</p>
+            <span class="ai-label" id="ai-label" hidden></span>
+            <p class="ai-warn" id="ai-warn" hidden></p>
             <div aria-live="polite">
                 <p class="ai-note" id="ai-status"></p>
                 <div id="ai-diagnosis" hidden>
@@ -81,6 +81,25 @@
 
         const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
         let rated = null; // { latest, diagnosis, order } for the answer on screen
+
+        // The label says what produced the answer. It never claims AI when PRISM used its built-in text.
+        function showLabel(d, w) {
+            const usedAi = (r) => r.source === 'ai' || r.source === 'cache';
+            const label = $('ai-label');
+            const warn = $('ai-warn');
+            if (usedAi(d) && usedAi(w)) {
+                label.textContent = 'AI-GENERATED';
+                warn.textContent = 'AI can be wrong. A qualified technician decides what to do. The score above comes from fixed rules, not from the AI.';
+            } else if (!usedAi(d) && !usedAi(w)) {
+                label.textContent = 'RULE-BASED, NO AI USED';
+                warn.textContent = 'This answer comes from PRISM\'s fixed rules, not from the AI. A qualified technician decides what to do.';
+            } else {
+                label.textContent = 'PART AI-GENERATED';
+                warn.textContent = 'One part of this answer is AI-generated and one part comes from fixed rules. AI can be wrong. A qualified technician decides what to do.';
+            }
+            label.hidden = false;
+            warn.hidden = false;
+        }
 
         function sourceOf(result) {
             return (result.source === 'ai' || result.source === 'cache') ? result.source : 'rules';
@@ -161,6 +180,8 @@
             $('ai-order').hidden = true;
             $('ai-meta').textContent = '';
             $('ai-feedback').hidden = true;
+            $('ai-label').hidden = true;
+            $('ai-warn').hidden = true;
             rated = null;
             $('ai-status').textContent = 'Reading the numbers...';
             try {
@@ -178,6 +199,7 @@
 
                 $('ai-status').textContent = '';
                 $('ai-meta').textContent = 'Likely cause: ' + label(d) + '. Work order: ' + label(w) + '.';
+                showLabel(d, w);
                 rated = { latest: latest, diagnosis: d, order: w };
                 $('ai-fb-status').textContent = '';
                 $('ai-fb-helpful').disabled = false;

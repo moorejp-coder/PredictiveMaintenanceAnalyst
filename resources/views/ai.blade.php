@@ -77,7 +77,7 @@
 
     <h2 id="oversight">3. Human oversight</h2>
     <ul>
-        <li>Every AI answer carries an "AI-GENERATED" label and a reminder that a technician decides.</li>
+        <li>Every AI answer carries an "AI-GENERATED" label and a reminder that a technician decides. When PRISM shows its built-in explanation instead, the label reads "RULE-BASED, NO AI USED".</li>
         <li>The AI cannot change the score, the band or the action. Those come from the rules.</li>
         <li>PRISM has no tool to act on a machine. It sends no alerts and changes nothing outside its own page.</li>
         <li>When PRISM says to stop and an operator keeps running, the override log records a name, a reason and the time. Someone with the password reviews the log.</li>

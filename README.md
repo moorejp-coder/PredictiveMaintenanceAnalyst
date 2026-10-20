@@ -69,7 +69,7 @@ Set `ANTHROPIC_API_KEY` in `.env` (local) or as an Elastic Beanstalk environment
 
 Ethical AI
 - Rules score the machine. The AI only explains, on request. It cannot change the score, the band or the action. Code sets the work order priority.
-- Every AI answer shows an "AI-GENERATED" label and a reminder that a qualified technician decides.
+- Every AI answer shows an "AI-GENERATED" label and a reminder that a qualified technician decides. When PRISM falls back to its built-in text, the label reads "RULE-BASED, NO AI USED" so it never claims AI that did not run.
 - The dashboard shows how often a High score was right in the AI4I test (291 of 645, 45.1%), so the score is not read as certain. The numbers live in `config/prism.php` under `backtest` and must match `php artisan prism:backtest`.
 - A visitor rates an AI answer Helpful or Wrong. The route is `POST /api/ai-feedback`. It accepts fixed choices only. The table `ai_feedback` stores the rating, the step, the source, the scenario, the reading number and the time. It stores no name, no free text and no IP address. The override log page shows the counts.
 - The page `/ai` maps PRISM to the NIST AI Risk Management Framework functions (Govern, Map, Measure, Manage). The mapping is mine. NIST has not reviewed PRISM.
