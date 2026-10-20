@@ -29,13 +29,15 @@ PRISM is for the maintenance technician at a small machine shop who runs CNC mil
 - Readings come from `app/Services/SensorSimulator.php`. The same scenario and reading number always give the same reading.
 - AI4I has no vibration or machine run hours column. Those two readings are simulated, and their checks are not backtested. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) are the ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.
 - Run hours alone never score above 50 (Elevated). Tool wear alone never scores above 60.
-- Backtest of the four AI4I checks (tool wear, heat, power, overstrain) on the 10,000 AI4I records (18 random-failure records left out): 0 of 7,448 Low records failed, 40 of 1,889 Elevated (2.1%), 290 of 645 High (45.0%).
+- Backtest of the four AI4I checks (tool wear, heat, power, overstrain) on the 10,000 AI4I records. A record counts as failed when its Machine failure label is 1. 18 records are left out (see below). Low: 6 of 7,448 failed (0.1%). Elevated: 42 of 1,889 failed (2.2%). High: 291 of 645 failed (45.1%).
+- Reproduce the figures with `php artisan prism:backtest`. The dataset file is `data/ai4i2020.csv`. The command also prints failures by AI4I failure mode.
 
 Read the backtest with three limits in mind:
 - The rules use limits taken from AI4I, and the test runs on AI4I. The backtest checks that the rules agree with the dataset labels. It does not show how they perform on a real machine.
 - AI4I is synthetic data. It was generated to mirror real milling data.
-- 45.0% means 355 of the 645 High records did not fail in the data.
-- The backtest was run outside this repository. The script and the dataset are not included here, so these figures cannot be reproduced from this repo.
+- 45.1% means 354 of the 645 High records did not fail in the data.
+- 9 of the 339 labeled failures have no failure mode flagged in the dataset. 6 of them land in Low, 2 in Elevated and 1 in High. No check can explain a failure with no cause recorded.
+- The 18 records left out are flagged random failure (RNF) but carry a Machine failure label of 0. Random failure cannot be predicted from any reading. Scoring them too (`php artisan prism:backtest --keep-random`) puts 13 in Low, 4 in Elevated and 1 in High, with no added failures: Low 6 of 7,461 (0.1%), Elevated 42 of 1,893 (2.2%), High 291 of 646 (45.0%).
 
 ## Override log
 
