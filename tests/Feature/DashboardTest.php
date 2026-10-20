@@ -34,6 +34,17 @@ class DashboardTest extends TestCase
             ->assertJsonFragment(['key' => 'run_hours']);
     }
 
+    public function test_rotational_speed_is_in_the_driver_breakdown_but_not_scored(): void
+    {
+        $this->getJson('/api/readings?scenario=overheating&tick=59')
+            ->assertOk()
+            ->assertJsonFragment(['key' => 'speed', 'label' => 'Rotational speed', 'scored' => false]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('context only and is not scored');
+    }
+
     public function test_readings_endpoint_is_cacheable_and_sets_no_cookies(): void
     {
         $response = $this->getJson('/api/readings?scenario=healthy&tick=3')->assertOk();

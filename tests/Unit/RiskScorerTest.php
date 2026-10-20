@@ -96,6 +96,45 @@ class RiskScorerTest extends TestCase
         $this->assertSame(0, $result['score']);
     }
 
+    public function test_rotational_speed_is_a_context_driver_that_never_changes_the_score(): void
+    {
+        // AI4I UDI 2: no failure, at 1,408 rpm. Speed sits close to the 1,380 rpm
+        // heat limit, but the temperature gap is fine, so the score stays 0.
+        $result = (new RiskScorer('L'))->score($this->reading(298.2, 308.7, 1408, 46.3, 3));
+        $drivers = array_column($result['drivers'], null, 'key');
+
+        $this->assertSame(0, $result['score']);
+        $this->assertCount(7, $result['drivers']);
+        $this->assertSame('Rotational speed', $drivers['speed']['label']);
+        $this->assertSame(72, $drivers['speed']['stress']);
+        $this->assertFalse($drivers['speed']['scored']);
+    }
+
+    public function test_the_score_is_the_highest_scored_driver_and_ignores_speed(): void
+    {
+        foreach ([
+            $this->reading(300.0, 310.0, 1540, 40.0, 20),
+            $this->reading(302.3, 310.9, 1377, 46.8, 166),
+            $this->reading(298.9, 309.1, 2861, 4.6, 143),
+            $this->reading(300.0, 310.0, 1390, 40.0, 20),
+        ] as $row) {
+            $result = (new RiskScorer('L'))->score($row);
+            $scored = array_filter($result['drivers'], fn ($d) => $d['scored']);
+
+            $this->assertCount(6, $scored);
+            $this->assertSame($result['score'], max(array_column($scored, 'stress')));
+        }
+    }
+
+    public function test_context_driver_is_left_out_of_the_ai_inputs(): void
+    {
+        $result = (new RiskScorer('L'))->score($this->reading(300.0, 310.0, 1390, 40.0, 20));
+
+        $this->assertSame(0, $result['score']);
+        $this->assertSame([], \App\Services\Ai\Diagnoser::input($result)['drivers']);
+        $this->assertSame([], \App\Services\Ai\WorkOrderStep::input($result, ['cause' => 'x', 'checks' => []])['drivers']);
+    }
+
     public function test_score_is_always_between_0_and_100(): void
     {
         $result = (new RiskScorer('L'))->score($this->reading(300.0, 310.0, 3000, 90.0, 300));

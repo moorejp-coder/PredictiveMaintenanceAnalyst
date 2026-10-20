@@ -62,6 +62,7 @@
         .driver .bar i { display: block; height: 100%; width: 0; background: var(--prism-risk-low); transition: width 0.5s ease, background 0.3s ease; }
         .driver .bar i.elevated { background: var(--prism-risk-elevated); }
         .driver .bar i.high { background: var(--prism-risk-high); }
+        .driver .bar i.context { background: var(--prism-muted); }
         .driver .stress { text-align: right; font-family: var(--prism-font-data); font-weight: 500; font-variant-numeric: tabular-nums; color: var(--prism-text); }
         .why .hint { color: var(--prism-muted); font-size: 0.8125rem; margin: var(--prism-space-3) 0 0; }
 
@@ -178,6 +179,7 @@
             <h2 id="why-title">Why this score</h2>
             <p id="why">Analyzing readings...</p>
             <div class="drivers" id="drivers" role="group" aria-label="Stress on each failure mode"></div>
+            <p class="hint">The score is the highest of the six colored bars. The gray rotational speed bar is context only and is not scored. It shows how close speed is to the {{ number_format(config('prism.heat.speed_limit_rpm')) }} rpm heat limit.</p>
         </section>
     </div>
 
@@ -257,7 +259,7 @@
           main: (v) => v.toFixed(2), sub: () => 'RMS velocity' },
         { key: 'run_hours', label: 'Machine run hours', unit: 'h', drivers: ['run_hours'],
           main: (v) => Math.round(v).toLocaleString('en-US'), sub: () => 'since last overhaul' },
-        { key: 'rotational_speed_rpm', label: 'Rotational speed', unit: 'rpm', drivers: ['heat', 'power'],
+        { key: 'rotational_speed_rpm', label: 'Rotational speed', unit: 'rpm', drivers: ['heat'], tag: 'Feeds heat risk',
           main: (v) => Math.round(v).toLocaleString('en-US'), sub: () => '' },
         { key: 'torque_nm', label: 'Torque', unit: 'Nm', drivers: ['power', 'overstrain'],
           main: (v) => v.toFixed(1), sub: () => '' },
@@ -307,7 +309,7 @@
             el.tiles.appendChild(tile);
         });
         el.drivers.innerHTML = '';
-        ['tool_wear', 'heat', 'power', 'overstrain', 'vibration', 'run_hours'].forEach((k) => {
+        ['tool_wear', 'heat', 'power', 'overstrain', 'vibration', 'run_hours', 'speed'].forEach((k) => {
             const row = document.createElement('div');
             row.className = 'driver';
             row.id = 'driver-' + k;
@@ -388,10 +390,15 @@
             const row = $('driver-' + d.key);
             row.children[0].textContent = d.label;
             const bar = row.querySelector('i');
+            const scored = d.scored !== false;
             bar.style.width = d.stress + '%';
-            bar.className = bandOf(d.stress) === 'low' ? '' : bandOf(d.stress);
+            // A context bar (rotational speed) is gray and never uses a risk color.
+            bar.className = !scored ? 'context' : (bandOf(d.stress) === 'low' ? '' : bandOf(d.stress));
+            row.title = scored ? '' : 'Context only. Not part of the score.';
             row.querySelector('.stress .n').textContent = d.stress;
-            row.querySelector('.stress .sr-only').textContent = ' out of 100, ' + bandOf(d.stress);
+            row.querySelector('.stress .sr-only').textContent = scored
+                ? ' out of 100, ' + bandOf(d.stress)
+                : ' out of 100, context only, not part of the score';
         });
 
         SENSORS.forEach((s) => {
@@ -406,7 +413,7 @@
                 .reduce((m, d) => Math.max(m, d.stress), 0);
             const b = bandOf(worst);
             tile.className = 'tile' + (b === 'low' ? '' : ' flag ' + b);
-            tile.querySelector('.tag').textContent = b === 'low' ? '' : 'Driving the risk';
+            tile.querySelector('.tag').textContent = b === 'low' ? '' : (s.tag || 'Driving the risk');
         });
 
         const scores = state.history.map((h) => h.risk.score);

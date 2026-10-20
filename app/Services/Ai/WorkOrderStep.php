@@ -27,7 +27,8 @@ final class WorkOrderStep extends AiStep
     {
         $drivers = [];
         foreach ($risk['drivers'] as $driver) {
-            if ($driver['stress'] >= 40) {
+            // Context-only drivers (rotational speed) are not failure modes.
+            if (($driver['scored'] ?? true) && $driver['stress'] >= 40) {
                 $drivers[] = $driver['label'];
             }
         }

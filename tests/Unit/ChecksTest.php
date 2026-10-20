@@ -6,6 +6,7 @@ use App\Services\Checks\HeatCheck;
 use App\Services\Checks\OverstrainCheck;
 use App\Services\Checks\PowerCheck;
 use App\Services\Checks\RunHoursCheck;
+use App\Services\Checks\SpeedCheck;
 use App\Services\Checks\ToolWearCheck;
 use App\Services\Checks\VibrationCheck;
 use App\Services\Limits;
@@ -35,6 +36,15 @@ class ChecksTest extends TestCase
         $keys = array_map(fn ($check) => $check->key(), (new RiskScorer('L'))->checks());
 
         $this->assertSame(['tool_wear', 'heat', 'power', 'overstrain', 'vibration', 'run_hours'], $keys);
+    }
+
+    public function test_speed_check_reaches_full_stress_at_the_heat_speed_limit(): void
+    {
+        $check = new SpeedCheck(Limits::all()['heat']);
+
+        $this->assertEqualsWithDelta(1.0, $check->stress($this->reading(300.0, 310.0, 1380, 40.0, 20)), 1e-9);
+        $this->assertEqualsWithDelta(0.5, $check->stress($this->reading(300.0, 310.0, 1430, 40.0, 20)), 1e-9);
+        $this->assertEqualsWithDelta(0.0, $check->stress($this->reading(300.0, 310.0, 1540, 40.0, 20)), 1e-9);
     }
 
     public function test_limits_load_from_the_config_file_without_booting_laravel(): void

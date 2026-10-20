@@ -7,6 +7,7 @@ use App\Services\Checks\HeatCheck;
 use App\Services\Checks\OverstrainCheck;
 use App\Services\Checks\PowerCheck;
 use App\Services\Checks\RunHoursCheck;
+use App\Services\Checks\SpeedCheck;
 use App\Services\Checks\ToolWearCheck;
 use App\Services\Checks\VibrationCheck;
 
@@ -27,6 +28,10 @@ use App\Services\Checks\VibrationCheck;
  * Each check gets a stress value from 0 to 1, where 1 means the limit is
  * crossed. The score is the highest stress, shown from 0 to 100.
  * A machine learning model can replace this class later without changing the page.
+ *
+ * Rotational speed is reported as a seventh driver for context. It has no
+ * limit of its own, so it is marked scored = false and never changes the
+ * score, the explanation or the AI input.
  */
 final class RiskScorer
 {
@@ -35,6 +40,9 @@ final class RiskScorer
 
     /** @var array<string, array<string, mixed>> */
     private readonly array $limits;
+
+    /** Context only. Not in the scored list. */
+    private readonly SpeedCheck $speed;
 
     /** @param  array<string, array<string, mixed>>|null  $limits  Defaults to config/prism.php. */
     public function __construct(string $quality = 'L', ?array $limits = null)
@@ -50,6 +58,8 @@ final class RiskScorer
             new VibrationCheck($this->limits['vibration']),
             new RunHoursCheck($this->limits['run_hours']),
         ];
+
+        $this->speed = new SpeedCheck($this->limits['heat']);
     }
 
     /** @return list<Check> */
@@ -60,7 +70,7 @@ final class RiskScorer
 
     /**
      * @param  array{air_temp_k: float, process_temp_k: float, rotational_speed_rpm: float, torque_nm: float, tool_wear_min: float, vibration_mm_s?: float, run_hours?: float}  $reading
-     * @return array{score: int, band: string, band_label: string, action: string, explanation: string, drivers: list<array{key: string, label: string, stress: int}>, metrics: array<string, float>}
+     * @return array{score: int, band: string, band_label: string, action: string, explanation: string, drivers: list<array{key: string, label: string, stress: int, scored: bool}>, metrics: array<string, float>}
      */
     public function score(array $reading): array
     {
@@ -82,8 +92,17 @@ final class RiskScorer
                 'key' => $key,
                 'label' => $byKey[$key]->label(),
                 'stress' => (int) round(100 * $value),
+                'scored' => true,
             ];
         }
+
+        // Context only: how close speed is to the heat rule's speed limit.
+        $drivers[] = [
+            'key' => $this->speed->key(),
+            'label' => $this->speed->label(),
+            'stress' => (int) round(100 * $this->speed->stress($reading)),
+            'scored' => false,
+        ];
 
         arsort($stress);
         $lines = [];
