@@ -140,7 +140,7 @@
     </table>
 
     <h2 id="accessibility">8. Accessibility</h2>
-    <p>The goal is WCAG 2.2 Level AA. PRISM has not had an independent audit, and this page does not claim conformance. On October 20, 2026, Lighthouse gave the live dashboard and this page an accessibility score of 100 in desktop and mobile modes. The same day, the author walked the dashboard with VoiceOver on macOS and with the keyboard only, in Chrome, and found no issues.</p>
+    <p>The goal is WCAG 2.2 Level AA. PRISM has not had an independent audit, and this page does not claim conformance. On October 20, 2026, Lighthouse gave the live pages the author tested, including the dashboard and this page, an accessibility score of 100 in desktop and mobile modes and in both the light and dark themes. The same day, the author walked the dashboard with VoiceOver on macOS and with the keyboard only, in Chrome, and found no issues.</p>
     <p><strong>Built in today:</strong></p>
     <ul>
         <li>A skip link and a main landmark on every page.</li>
@@ -157,7 +157,7 @@
     </ul>
     <p><strong>Known gaps:</strong></p>
     <ul>
-        <li>The live Lighthouse scores above were measured in the dark theme. On a local copy, the light theme also scored 100. Its contrast ratios were calculated (see docs/BRAND.md).</li>
+        <li>The Lighthouse scores are the author's own runs, not an independent audit. The light theme's contrast ratios were calculated (see docs/BRAND.md).</li>
         <li>No independent audit and no test with people who use assistive technology. Only VoiceOver on macOS was tried. Lighthouse checks only a subset of issues.</li>
         <li>The live site loads over HTTP.</li>
     </ul>

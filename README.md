@@ -76,7 +76,7 @@ Ethical AI
 - Privacy Policy and FAQ list both stored records: the override log and AI answer ratings.
 
 Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
-- Lighthouse accessibility audit, October 20, 2026, on the live site: 100 on the dashboard and 100 on `/ai`, in desktop and mobile modes. An earlier run on a local copy also gave 100 on both (Lighthouse 13.4.1, axe-core 4.12.1). On a local copy, the light theme also scored 100 (author's report, October 20, 2026). Lighthouse checks only a subset of issues. The author also walked the dashboard with VoiceOver on macOS and with the keyboard only (Chrome) on October 20, 2026 and found no issues. At 200% and 400% browser zoom the layout reflows and the two pop-ups scroll vertically inside the window.
+- Lighthouse accessibility audit, October 20, 2026, on the live site: 100 on every page the author tested, including the dashboard and `/ai`, in desktop and mobile modes and in both the light and dark themes. An earlier run on a local copy also gave 100 on both (Lighthouse 13.4.1, axe-core 4.12.1). Lighthouse checks only a subset of issues. The author also walked the dashboard with VoiceOver on macOS and with the keyboard only (Chrome) on October 20, 2026 and found no issues. At 200% and 400% browser zoom the layout reflows and the two pop-ups scroll vertically inside the window.
 - Skip link, main landmark, a visible focus outline and native dialogs that return focus.
 - Risk bands appear as words, not color alone.
 - Each stress bar is a labeled `role="meter"` with a value and a band.
