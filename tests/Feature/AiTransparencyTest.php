@@ -10,6 +10,12 @@ class AiTransparencyTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->signIn();
+    }
+
     public function test_ai_page_loads_and_states_the_key_facts(): void
     {
         $this->get('/ai')

@@ -6,6 +6,12 @@ use Tests\TestCase;
 
 class DashboardTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->signIn();
+    }
+
     public function test_dashboard_page_loads(): void
     {
         $this->get('/')
@@ -50,7 +56,7 @@ class DashboardTest extends TestCase
         $response = $this->getJson('/api/readings?scenario=healthy&tick=3')->assertOk();
 
         $this->assertStringContainsString('max-age=3600', (string) $response->headers->get('Cache-Control'));
-        $this->assertStringContainsString('public', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
         $response->assertHeaderMissing('Set-Cookie');
     }
 

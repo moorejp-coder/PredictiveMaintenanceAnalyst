@@ -8,6 +8,12 @@ use Tests\TestCase;
 
 class CanonicalUrlTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->signIn();
+    }
+
     public function test_canonical_drops_query_string(): void
     {
         $html = $this->get('/faq?utm_source=x&ref=y')->assertOk()->getContent();
@@ -41,7 +47,7 @@ class CanonicalUrlTest extends TestCase
 
         $this->get('/sitemap.xml')
             ->assertSee('<loc>https://prism.example.com/faq</loc>', false)
-            ->assertSee('<loc>https://prism.example.com</loc>', false);
+            ->assertDontSee('<loc>https://prism.example.com</loc>', false);
     }
 
     public function test_api_readings_is_marked_noindex(): void

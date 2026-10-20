@@ -71,6 +71,15 @@ return [
     // Password for the /overrides review page. Leave unset and the page returns 404.
     'override_log_password' => env('OVERRIDE_LOG_PASSWORD'),
 
+    // The one judge account. JudgeSeeder reads these. Set them as Elastic
+    // Beanstalk environment properties, never in the code. With either
+    // JUDGE_EMAIL or JUDGE_PASSWORD missing, no account exists.
+    'judge' => [
+        'name' => env('JUDGE_NAME', 'Contest Judge'),
+        'email' => env('JUDGE_EMAIL'),
+        'password' => env('JUDGE_PASSWORD'),
+    ],
+
     // Backtest of the four AI4I checks on the 10,000 AI4I records, 18 random
     // failure records left out. Reproduce with `php artisan prism:backtest`.
     // Keep these in step with the README. Shown on the dashboard and /ai.

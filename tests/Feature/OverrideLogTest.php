@@ -10,6 +10,12 @@ class OverrideLogTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->signIn();
+    }
+
     /** @return array<string, mixed> */
     private function payload(array $overrides = []): array
     {

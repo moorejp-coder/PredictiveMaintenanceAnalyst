@@ -14,11 +14,23 @@ PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It 
 - Offers four simulated situations (worn tool, overheating, overload, healthy) to show how the score reacts.
 - "Explain this reading" asks Claude for a likely cause and a drafted work order. A built-in explanation shows if the AI is slow or off (see AI steps).
 - Records an override when an operator keeps a machine running after PRISM says to stop it (see Override log).
+- Needs a sign-in for the dashboard and its `/api/` routes (see Sign in and the judge account). The pages `/ai`, `/faq`, `/privacy` and `/terms` stay public.
 - Includes a FAQ, Terms and Conditions and a Privacy Policy. Each says what PRISM does not do.
 - Explains its AI use on the page `/ai`: where AI runs, what it receives, who decides, the backtest limits, a NIST AI RMF mapping and an accessibility statement.
 - Labels every AI answer "AI-GENERATED" and lets a visitor rate it Helpful or Wrong (see Ethical AI, accessibility and sources).
 
 Safety disclaimer: PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.
+
+## Sign in and the judge account
+
+The dashboard and every `/api/` route need a sign-in. The pages `/ai`, `/faq`, `/privacy`, `/terms` and `/login` do not.
+
+- PRISM uses Laravel's built-in session login with no added package. There is no sign-up page. Logins are limited to 5 tries a minute, and the session is renewed at sign-in.
+- The one account is the judge account. `database/seeders/JudgeSeeder.php` creates it from the environment properties `JUDGE_EMAIL` and `JUDGE_PASSWORD` (optional `JUDGE_NAME`). With either one missing, no account exists and nobody can sign in. No credential is in the code or in this repository.
+- On Elastic Beanstalk, set those properties in the console, as for `APP_KEY`. The deploy hook `.platform/hooks/postdeploy/01_override_log_db.sh` runs the seeder after every migrate, so a rebuilt server gets the account back. To change the password, change the property and deploy again.
+- The account stores a name, an email address and a password hash. Every reading is simulated, so the account holds no real personal data. The override form asks judges to type made-up names.
+- Judge credentials go out by a one-time secret link, never by plain email (contest rule).
+- Limit: the site loads over HTTP today, so the password travels unencrypted. Use a password you use nowhere else. HTTPS is blocked until AWS verifies the account for CloudFront.
 
 ## The problem
 
@@ -50,7 +62,7 @@ When PRISM says "Stop the machine and inspect it now," the dashboard shows a "Ke
 - Each entry stores the name, the reason, the time, the machine, the risk score, the action shown and the reading.
 - The review page `/overrides` lists the newest 200 entries. It asks for a password: sign in with any user name and the value of the `OVERRIDE_LOG_PASSWORD` environment property. With no password set, the page returns 404.
 - The write route is limited to 10 requests a minute.
-- Limits: PRISM has no sign-in, so the name is whatever the operator types and is not verified. The log sends no notification to anyone. The log is a SQLite file on the host, so a replaced or rebuilt server erases it.
+- Limits: the name is whatever the operator types and is not tied to the sign-in account, so it is not verified. The log sends no notification to anyone. The log is a SQLite file on the host, so a replaced or rebuilt server erases it.
 
 ## AI steps
 
@@ -73,7 +85,7 @@ Ethical AI
 - The dashboard shows how often a High score was right in the AI4I test (291 of 645, 45.1%), so the score is not read as certain. The numbers live in `config/prism.php` under `backtest` and must match `php artisan prism:backtest`.
 - A visitor rates an AI answer Helpful or Wrong. The route is `POST /api/ai-feedback`. It accepts fixed choices only. The table `ai_feedback` stores the rating, the step, the source, the scenario, the reading number and the time. It stores no name, no free text and no IP address. The override log page shows the counts.
 - The page `/ai` maps PRISM to the NIST AI Risk Management Framework functions (Govern, Map, Measure, Manage). The mapping is mine. NIST has not reviewed PRISM.
-- Privacy Policy and FAQ list both stored records: the override log and AI answer ratings.
+- Privacy Policy and FAQ list the stored records: the judge account, the override log and AI answer ratings.
 
 Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
 - Lighthouse accessibility audit, October 20, 2026, on the live site: 100 on every page the author tested, including the dashboard and `/ai`, in desktop and mobile modes and in both the light and dark themes. An earlier run on a local copy also gave 100 on both (Lighthouse 13.4.1, axe-core 4.12.1). Lighthouse checks only a subset of issues. The author also walked the dashboard with VoiceOver on macOS and with the keyboard only (Chrome) on October 20, 2026 and found no issues. At 200% and 400% browser zoom the layout reflows and the two pop-ups scroll vertically inside the window.
@@ -84,7 +96,7 @@ Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
 - Band changes use a status region. A new High score uses an alert.
 - Light and dark themes. PRISM follows the system setting, and a header switch overrides it (choice saved in the browser, `localStorage` key `prism-theme`). Colors are CSS tokens in `public/css/prism.css`. The chart reads its colors from the same tokens. Light theme contrast ratios are in `docs/BRAND.md`.
 - Animations stop under reduced motion.
-- Known gaps: no independent audit, no test with people who use assistive technology, only VoiceOver tried, HTTP only.
+- Known gaps: no independent audit, no test with people who use assistive technology, only VoiceOver tried, HTTP only (the sign-in password also travels over HTTP until HTTPS is live).
 
 Fields PRISM draws on
 - Data science: AI4I 2020 dataset (Matzka, 2020).
@@ -116,9 +128,10 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 1. `composer install`
 2. `cp .env.example .env && php artisan key:generate`
 3. `touch database/database.sqlite && php artisan migrate` (creates the override log and AI feedback tables)
-4. Optional: set `OVERRIDE_LOG_PASSWORD` and `ANTHROPIC_API_KEY` in `.env`
-5. `php artisan serve`
-6. Open http://127.0.0.1:8000/
+4. Set `JUDGE_EMAIL` and `JUDGE_PASSWORD` in `.env`, then run `php artisan db:seed --class=JudgeSeeder`. Without them nobody can sign in.
+5. Optional: set `OVERRIDE_LOG_PASSWORD` and `ANTHROPIC_API_KEY` in `.env`
+6. `php artisan serve`
+7. Open http://127.0.0.1:8000/ and sign in
 
 ## What PRISM aims to deliver
 

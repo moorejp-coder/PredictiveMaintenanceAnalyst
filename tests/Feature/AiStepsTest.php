@@ -18,6 +18,7 @@ class AiStepsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->signIn();
         Cache::flush();
         config(['services.anthropic.key' => 'test-key']);
         // The client is a singleton, so rebuild it after the config change.

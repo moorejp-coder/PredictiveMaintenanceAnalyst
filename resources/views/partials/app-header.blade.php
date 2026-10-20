@@ -17,6 +17,12 @@
             </div>
         @endif
         <button type="button" class="btn theme-toggle" id="theme-toggle">Switch to light theme</button>
+        @auth
+            <form method="POST" action="{{ url('/logout') }}">
+                @csrf
+                <button type="submit" class="btn">Sign out</button>
+            </form>
+        @endauth
     </div>
     <script>
         (function () {

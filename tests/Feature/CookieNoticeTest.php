@@ -6,6 +6,12 @@ use Tests\TestCase;
 
 class CookieNoticeTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->signIn();
+    }
+
     public function test_every_page_includes_the_cookie_notice(): void
     {
         foreach (['/', '/ai', '/faq', '/privacy', '/terms'] as $path) {

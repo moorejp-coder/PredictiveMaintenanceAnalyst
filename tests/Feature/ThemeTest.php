@@ -6,6 +6,12 @@ use Tests\TestCase;
 
 class ThemeTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->signIn();
+    }
+
     public function test_every_page_with_the_header_has_a_theme_switch(): void
     {
         foreach (['/', '/ai', '/faq'] as $path) {

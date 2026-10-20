@@ -499,6 +499,7 @@
         try {
             const url = endpoint + '?scenario=' + encodeURIComponent(state.scenario) + '&tick=' + state.tick;
             const res = await fetch(url, { headers: { Accept: 'application/json' } });
+            if (res.status === 401) { window.location.reload(); return; } // session ended: the reload lands on the sign-in page
             if (!res.ok) { throw new Error('HTTP ' + res.status); }
             const data = await res.json();
             if (mine !== generation) { return; }
@@ -580,6 +581,7 @@
                 else if (res.status === 422 && data.message) { message = data.message; }
                 else if (res.status === 429) { message = 'Too many entries. Wait a minute and try again.'; }
                 else if (res.status === 419) { message = 'This page expired. Reload it and try again.'; }
+                else if (res.status === 401) { message = 'Your session ended. Reload the page and sign in again.'; }
                 ovShowError(message);
                 return;
             }

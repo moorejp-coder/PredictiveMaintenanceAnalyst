@@ -7,6 +7,12 @@ use Tests\TestCase;
 
 class MetaTagsTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->signIn();
+    }
+
     public static function pages(): array
     {
         return [

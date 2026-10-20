@@ -36,7 +36,8 @@ class DashboardController extends Controller
         ])
             ->header('X-Robots-Tag', 'noindex')
             // The same scenario and tick always give the same reading, so the
-            // browser can reuse a response for an hour.
-            ->header('Cache-Control', 'public, max-age=3600');
+            // browser can reuse a response for an hour. The route needs a
+            // sign-in, so only the browser may keep it, never a shared cache.
+            ->header('Cache-Control', 'private, max-age=3600');
     }
 }

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Privacy Policy | {{ config('app.name', 'PRISM') }}</title>
-    <meta name="description" content="How PRISM handles data. PRISM has no accounts and no analytics. One form records a name and a reason when an operator overrides a stop warning.">
+    <meta name="description" content="How PRISM handles data. PRISM has one contest judge sign-in and no analytics. One form records a name and a reason when an operator overrides a stop warning.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     @include('partials.brand-head')
     <style>
@@ -39,7 +39,7 @@
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Summary</h2>
         <ul>
-            <li>PRISM has no accounts or sign-in. One form, the override log, asks for a name and a reason.</li>
+            <li>PRISM has no sign-up. It has one contest judge account, and the dashboard needs that sign-in. One form, the override log, asks for a name and a reason.</li>
             <li>Every sensor reading on the dashboard is simulated. The override form asks for your name. Enter nothing else personal.</li>
             <li>PRISM uses no analytics, advertising, tracking pixels or third-party scripts.</li>
             <li>If you press Explain this reading, PRISM's server sends the simulated score result (numbers and labels, no personal data) to Anthropic's API and shows the reply.</li>
@@ -60,7 +60,7 @@
         <tr><td>Session cookie</td><td>A cookie named <code>prism-session</code>. The framework (Laravel) sets it. It holds a random session ID. It expires after 120 minutes of inactivity.</td><td>Standard framework behavior. PRISM does not use it to identify you or track you.</td></tr>
         <tr><td>Security cookie</td><td>A cookie named <code>XSRF-TOKEN</code>. The framework sets it to guard against forged requests.</td><td>Security.</td></tr>
     </table>
-    <p>PRISM stores two kinds of record. The first is the override log. It holds the name and reason you type. A password protects the page that lists the log. The second is a rating of an AI answer, if you press Helpful or Wrong. It holds the rating, the step, the source, the scenario, the reading number and the time. It holds no name, no free text and no IP address.</p>
+    <p>PRISM stores three kinds of record. The first is the judge account. It holds a name, an email address and a password stored as a hash. The server creates it from private settings, and no other account exists. The second is the override log. It holds the name and reason you type. A password protects the page that lists the log. The third is a rating of an AI answer, if you press Helpful or Wrong. It holds the rating, the step, the source, the scenario, the reading number and the time. It holds no name, no free text and no IP address.</p>
     <p>Both cookies are strictly necessary for the site to work, so PRISM does not ask for cookie consent. A short notice tells you about them. Your choice to dismiss the notice is stored in your browser (local storage), not in a cookie, and is never sent to PRISM. <button type="button" onclick="window.prismCookieNotice &amp;&amp; window.prismCookieNotice.open()" style="background:none;border:0;padding:0;color:var(--prism-accent);text-decoration:underline;cursor:pointer;font:inherit">Show the cookie notice again</button>.</p>
 
     <h2>3. How PRISM uses information</h2>
