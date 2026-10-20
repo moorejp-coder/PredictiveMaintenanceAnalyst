@@ -140,7 +140,7 @@
     </table>
 
     <h2 id="accessibility">8. Accessibility</h2>
-    <p>The goal is WCAG 2.2 Level AA. PRISM has not had an independent audit, and this page does not claim conformance. On October 20, 2026, Lighthouse 13.4.1 gave the dashboard (mobile emulation) an accessibility score of 100 and gave this page 100, run on a local copy.</p>
+    <p>The goal is WCAG 2.2 Level AA. PRISM has not had an independent audit, and this page does not claim conformance. On October 20, 2026, Lighthouse gave the live dashboard and this page an accessibility score of 100 in desktop and mobile modes. The same day, the author walked the dashboard with VoiceOver on macOS and with the keyboard only, in Chrome, and found no issues.</p>
     <p><strong>Built in today:</strong></p>
     <ul>
         <li>A skip link and a main landmark on every page.</li>
@@ -152,12 +152,12 @@
         <li>Pop-ups use the native dialog element, return focus when closed, and close with the Escape key.</li>
         <li>Animations stop when your system asks for reduced motion.</li>
         <li>Pause control for the simulated feed.</li>
-        <li>Layouts fit narrow phone screens.</li>
+        <li>Layouts fit narrow phone screens. At 200% and 400% browser zoom the layout reflows, and the two pop-ups scroll up and down inside the window.</li>
     </ul>
     <p><strong>Known gaps:</strong></p>
     <ul>
         <li>The theme is dark only. There is no light theme.</li>
-        <li>No manual or screen reader audit has been done. Lighthouse checks only a subset of issues.</li>
+        <li>No independent audit and no test with people who use assistive technology. Only VoiceOver on macOS was tried. Lighthouse checks only a subset of issues.</li>
         <li>The live site loads over HTTP.</li>
     </ul>
     <p>To report a barrier, write to <a href="mailto:moorejp@cua.edu">moorejp@cua.edu</a>.</p>

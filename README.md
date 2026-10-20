@@ -76,14 +76,14 @@ Ethical AI
 - Privacy Policy and FAQ list both stored records: the override log and AI answer ratings.
 
 Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
-- Lighthouse accessibility audit, October 20, 2026, on the live site: 100 on the dashboard and 100 on `/ai`, in desktop and mobile modes. An earlier run on a local copy also gave 100 on both (Lighthouse 13.4.1, axe-core 4.12.1). Lighthouse checks only a subset of issues. Its manual-check items and a screen reader test are not done.
+- Lighthouse accessibility audit, October 20, 2026, on the live site: 100 on the dashboard and 100 on `/ai`, in desktop and mobile modes. An earlier run on a local copy also gave 100 on both (Lighthouse 13.4.1, axe-core 4.12.1). Lighthouse checks only a subset of issues. The author also walked the dashboard with VoiceOver on macOS and with the keyboard only (Chrome) on October 20, 2026 and found no issues. At 200% and 400% browser zoom the layout reflows and the two pop-ups scroll vertically inside the window.
 - Skip link, main landmark, a visible focus outline and native dialogs that return focus.
 - Risk bands appear as words, not color alone.
 - Each stress bar is a labeled `role="meter"` with a value and a band.
 - The risk chart keeps its text description and adds a "View the chart data as a table" control. The table fills only while open, so screen readers are not interrupted every 1.2 seconds.
 - Band changes use a status region. A new High score uses an alert.
 - Animations stop under reduced motion.
-- Known gaps: dark theme only, no manual or screen reader audit, HTTP only.
+- Known gaps: dark theme only, no independent audit, no test with people who use assistive technology, only VoiceOver tried, HTTP only.
 
 Fields PRISM draws on
 - Data science: AI4I 2020 dataset (Matzka, 2020).
