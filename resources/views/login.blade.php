@@ -37,6 +37,10 @@
         <h1>Sign in</h1>
         <p class="lead">Sign in to open the PRISM dashboard for milling machine M-01.</p>
 
+        @if (session('status'))
+            <div class="notice" role="status" style="margin-bottom: var(--prism-space-4)"><strong>{{ session('status') }}</strong></div>
+        @endif
+
         @if ($errors->any())
             <div class="error" id="login-error" role="alert">
                 <strong>Could not sign in.</strong>
@@ -62,7 +66,7 @@
         </form>
 
         <div class="help">
-            <p>Contest judges: your email and password arrive by a one-time secret link. PRISM has no sign-up page.</p>
+            <p>Contest judges: sign in with the email address that received your invite. If you have not chosen a password yet, open the link in that email first. PRISM has no sign-up page.</p>
             <p>Every reading in the dashboard is simulated. Use the form fields with made-up names only.</p>
             <p>This site loads over HTTP today, so use a password you use nowhere else. Read about <a href="{{ url('/ai') }}">how PRISM uses AI</a>, the <a href="{{ url('/privacy') }}">privacy policy</a> or the <a href="{{ url('/faq') }}">FAQ</a> without signing in.</p>
         </div>

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 /**
  * Creates or updates the one judge account from environment properties:
@@ -18,7 +19,7 @@ class JudgeSeeder extends Seeder
 {
     public function run(): void
     {
-        $email = trim((string) config('prism.judge.email'));
+        $email = Str::lower(trim((string) config('prism.judge.email')));
         $password = (string) config('prism.judge.password');
 
         if ($email === '' || $password === '') {
@@ -27,11 +28,15 @@ class JudgeSeeder extends Seeder
             return;
         }
 
-        // The User model hashes the password on save.
-        User::updateOrCreate(
-            ['email' => $email],
-            ['name' => (string) config('prism.judge.name'), 'password' => $password],
-        );
+        // The User model hashes the password on save. email_verified_at is
+        // not mass assignable, so set the fields directly. A seeded account
+        // counts as ready, so the invite page lists it as Active.
+        $user = User::firstOrNew(['email' => $email]);
+        $user->forceFill([
+            'name' => (string) config('prism.judge.name'),
+            'password' => $password,
+            'email_verified_at' => $user->email_verified_at ?? now(),
+        ])->save();
 
         $this->command?->info('Judge account is ready.');
     }

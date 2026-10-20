@@ -77,7 +77,14 @@ return [
     // because a password sent over HTTP is readable on the network.
     'require_login' => (bool) env('REQUIRE_LOGIN', false),
 
-    // The one judge account. JudgeSeeder reads these. Set them as Elastic
+    // Password for the /admin/invites page, where the entrant invites judges
+    // by email. Leave unset and the page returns 404. Use a value that no
+    // other PRISM password uses. Needs REQUIRE_LOGIN=true and working MAIL_*
+    // settings.
+    'invite_admin_password' => env('INVITE_ADMIN_PASSWORD'),
+
+    // Optional: one fixed judge account made by JudgeSeeder. The invite page
+    // is the main way to make judge accounts. JudgeSeeder reads these. Set them as Elastic
     // Beanstalk environment properties, never in the code. With either
     // JUDGE_EMAIL or JUDGE_PASSWORD missing, no account exists.
     'judge' => [

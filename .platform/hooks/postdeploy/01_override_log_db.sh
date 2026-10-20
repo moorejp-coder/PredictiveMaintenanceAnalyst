@@ -17,12 +17,12 @@ touch "$DATA_DIR/prism.sqlite" || true
 cd /var/app/current || exit 0
 php artisan migrate --force || echo "PRISM: migrate failed. The override log is unavailable."
 
-# Create or update the judge account from JUDGE_EMAIL and JUDGE_PASSWORD (set
-# in the Elastic Beanstalk console). With either missing, no account is made
-# and nobody can sign in once REQUIRE_LOGIN=true. A rebuilt server loses the
-# SQLite file, so this runs on every deploy. With REQUIRE_LOGIN off, the
-# account is unused.
-php artisan db:seed --class=JudgeSeeder --force || echo "PRISM: judge account was not created. Nobody can sign in if REQUIRE_LOGIN is true."
+# Optional backup: create or update one fixed judge account from JUDGE_EMAIL and
+# JUDGE_PASSWORD (set in the Elastic Beanstalk console). Judges normally come
+# from the invite page, so a missing value here is fine and no account is made.
+# Invited judges live in the same SQLite file, so a rebuilt server erases them.
+# This backup account is the one that comes back on its own.
+php artisan db:seed --class=JudgeSeeder --force || echo "PRISM: the backup judge account was not created."
 
 # The web server user must be able to write the file and its folder.
 chown -R webapp:webapp "$DATA_DIR" || true

@@ -14,30 +14,43 @@ PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It 
 - Offers four simulated situations (worn tool, overheating, overload, healthy) to show how the score reacts.
 - "Explain this reading" asks Claude for a likely cause and a drafted work order. A built-in explanation shows if the AI is slow or off (see AI steps).
 - Records an override when an operator keeps a machine running after PRISM says to stop it (see Override log).
-- Has a sign-in that is built and switched off for now (see Sign in and the judge account). Today the dashboard is public.
+- Has a sign-in and an email invite flow for contest judges, built and switched off for now (see Sign in and judge invites). Today the dashboard is public.
 - Includes a FAQ, Terms and Conditions and a Privacy Policy. Each says what PRISM does not do.
 - Explains its AI use on the page `/ai`: where AI runs, what it receives, who decides, the backtest limits, a NIST AI RMF mapping and an accessibility statement.
 - Labels every AI answer "AI-GENERATED" and lets a visitor rate it Helpful or Wrong (see Ethical AI, accessibility and sources).
 
 Safety disclaimer: PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.
 
-## Sign in and the judge account (built, switched off)
+## Sign in and judge invites (built, switched off)
 
-The sign-in is finished and tested but turned off. The contest asks for a working login, and a password sent over HTTP is readable on the network, so the sign-in waits for HTTPS (blocked until AWS verifies the account for CloudFront). With it off, the dashboard is public, `/login` goes back to `/`, and the login and logout POST routes return 404.
+The sign-in and the judge invite flow are finished and tested but turned off. The contest asks for a working login, and a password sent over HTTP is readable on the network, so they wait for HTTPS (blocked until AWS verifies the account for CloudFront). With the switch off, the dashboard is public, `/login` goes back to `/`, and the login, invite and set-password routes return 404.
+
+How a judge gets in (switch on):
+
+1. The entrant opens `/admin/invites`, signs in with the `INVITE_ADMIN_PASSWORD` value and types the judge's email address.
+2. PRISM creates the account with a random password nobody knows and emails the judge a link. The email holds a link, never a password.
+3. The link opens `/set-password/{token}`. The judge chooses a password of at least 12 characters. The link works once and expires after 7 days.
+4. The judge signs in at `/login` with that email address and password.
+
+To send a fresh link (a lost email, an expired link), type the same address again. A second invite inside one minute is held back.
 
 Turn it on after HTTPS works:
 
-1. In the Elastic Beanstalk console, set the environment properties `REQUIRE_LOGIN=true`, `JUDGE_EMAIL`, `JUDGE_PASSWORD` and optionally `JUDGE_NAME`. Use a password you use nowhere else.
-2. Deploy. The hook `.platform/hooks/postdeploy/01_override_log_db.sh` runs `JudgeSeeder` after every migrate, so a rebuilt server gets the account back. To change the password, change the property and deploy again.
-3. Hard-refresh the live site, sign in, and check the dashboard, the dark theme and the AI panel.
-4. Send judge credentials by a one-time secret link, never by plain email (contest rule).
+1. Set up an email sender (see Email below). Any SMTP provider works with no added package.
+2. In the Elastic Beanstalk console, set the environment properties `REQUIRE_LOGIN=true`, `INVITE_ADMIN_PASSWORD` and the `MAIL_*` values. Use a password for the invite page that no other PRISM password uses.
+3. Deploy, then load `/admin/invites`, invite yourself first and walk through steps 2 to 4.
+4. Invite the judges.
+
+Email: set `MAIL_MAILER=smtp`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS` and `MAIL_FROM_NAME` as environment properties. With the default `MAIL_MAILER=log`, nothing is sent and the invite email is written to the log. If the mail service refuses the message, the invite page shows an error, keeps the account and lets you try again. Amazon SES is one option. While an SES account is in the sandbox, it sends only to verified addresses (AWS SES FAQ), so each judge's address would need verifying first. Mail from a new sender is sometimes filtered, so test with an address like a judge's.
 
 How it works when on:
 
-- Laravel's built-in session login, no added package. No sign-up page. Logins are limited to 5 tries a minute, and the session is renewed at sign-in.
+- Laravel's built-in session login and password broker, no added package. The invites use their own broker named `invites` in `config/auth.php`, with a 7 day life. Laravel deletes a token after it sets a password, so a link works once.
 - `RequireLogin` (`app/Http/Middleware/RequireLogin.php`) guards `/` and the `/api/` routes. The pages `/ai`, `/faq`, `/privacy`, `/terms` and `/login` stay public. A separate password still guards `/overrides`.
-- The one account is the judge account, made by `database/seeders/JudgeSeeder.php` from `JUDGE_EMAIL` and `JUDGE_PASSWORD`. With either missing, no account exists. No credential is in the code or in this repository.
-- The account stores a name, an email address and a password hash. Every reading is simulated, so the account holds no real personal data. The override form asks judges to type made-up names.
+- Logins are limited to 5 tries a minute. The invite and set-password forms are limited to 10 a minute. The session is renewed at sign-in.
+- A judge account stores a name, an email address and a password hash. Every reading is simulated, so the account holds no real personal data. The override form asks judges to type made-up names.
+- Limit: accounts live in the same SQLite file as the override log, so a replaced or rebuilt server erases every invited judge. Invite again after a rebuild.
+- Optional: `JudgeSeeder` can still make one fixed account from `JUDGE_EMAIL` and `JUDGE_PASSWORD`, as a backup if email fails. It comes back after every deploy. The invite page is the main way.
 - The sitemap drops `/` while the sign-in is on.
 
 ## The problem
@@ -93,7 +106,7 @@ Ethical AI
 - The dashboard shows how often a High score was right in the AI4I test (291 of 645, 45.1%), so the score is not read as certain. The numbers live in `config/prism.php` under `backtest` and must match `php artisan prism:backtest`.
 - A visitor rates an AI answer Helpful or Wrong. The route is `POST /api/ai-feedback`. It accepts fixed choices only. The table `ai_feedback` stores the rating, the step, the source, the scenario, the reading number and the time. It stores no name, no free text and no IP address. The override log page shows the counts.
 - The page `/ai` maps PRISM to the NIST AI Risk Management Framework functions (Govern, Map, Measure, Manage). The mapping is mine. NIST has not reviewed PRISM.
-- Privacy Policy and FAQ list the stored records: the override log and AI answer ratings, plus the judge account when the sign-in is on.
+- Privacy Policy and FAQ list the stored records: the override log and AI answer ratings, plus judge accounts and the invite email when the sign-in is on.
 
 Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
 - Lighthouse accessibility audit, October 20, 2026, on the live site: 100 on every page the author tested, including the dashboard and `/ai`, in desktop and mobile modes and in both the light and dark themes. An earlier run on a local copy also gave 100 on both (Lighthouse 13.4.1, axe-core 4.12.1). Lighthouse checks only a subset of issues. The author also walked the dashboard with VoiceOver on macOS and with the keyboard only (Chrome) on October 20, 2026 and found no issues. At 200% and 400% browser zoom the layout reflows and the two pop-ups scroll vertically inside the window.
@@ -137,7 +150,7 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 2. `cp .env.example .env && php artisan key:generate`
 3. `touch database/database.sqlite && php artisan migrate` (creates the override log and AI feedback tables)
 4. Optional: set `OVERRIDE_LOG_PASSWORD` and `ANTHROPIC_API_KEY` in `.env`
-5. Optional, to try the sign-in: set `REQUIRE_LOGIN=true`, `JUDGE_EMAIL` and `JUDGE_PASSWORD` in `.env`, then run `php artisan db:seed --class=JudgeSeeder`
+5. Optional, to try the sign-in: set `REQUIRE_LOGIN=true` and `INVITE_ADMIN_PASSWORD` in `.env`. Keep `MAIL_MAILER=log`, then open `/admin/invites`, invite an address and copy the link from `storage/logs/laravel.log`. Or set `JUDGE_EMAIL` and `JUDGE_PASSWORD` and run `php artisan db:seed --class=JudgeSeeder`
 6. `php artisan serve`
 7. Open http://127.0.0.1:8000/
 

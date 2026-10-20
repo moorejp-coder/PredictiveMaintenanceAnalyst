@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
- * Sign in and sign out. PRISM has no sign-up page. The only account is the
- * judge account that JudgeSeeder creates from environment properties.
+ * Sign in and sign out. PRISM has no sign-up page. Judge accounts come from
+ * the invite page (InviteController). JudgeSeeder can also make one fixed
+ * account from environment properties.
  * Everything here is inactive until REQUIRE_LOGIN=true.
  */
 class AuthController extends Controller
@@ -27,6 +29,8 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         abort_unless(config('prism.require_login'), 404);
+
+        $request->merge(['email' => Str::lower(trim((string) $request->input('email')))]);
 
         $credentials = $request->validate([
             'email' => ['required', 'string', 'email', 'max:255'],

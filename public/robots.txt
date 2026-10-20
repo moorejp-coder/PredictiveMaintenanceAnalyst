@@ -1,4 +1,6 @@
 User-agent: *
 Disallow: /api/
+Disallow: /admin/
+Disallow: /set-password/
 
 Sitemap: http://prism-cua-env.eba-fsf9rffw.us-east-2.elasticbeanstalk.com/sitemap.xml
