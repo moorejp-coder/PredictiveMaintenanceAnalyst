@@ -19,11 +19,13 @@ class DashboardTest extends TestCase
             ->assertSee('Failure risk score');
     }
 
-    public function test_dashboard_shows_the_start_here_guide_with_real_button_names(): void
+    public function test_dashboard_has_a_start_here_guide_dialog_a_reopen_button_and_real_button_names(): void
     {
         $this->get('/')
             ->assertOk()
             ->assertSee('Start here: a four step tour of PRISM')
+            ->assertSee('id="guide-open"', false)
+            ->assertSee('id="guide-modal"', false)
             ->assertSee('Worn tool')
             ->assertSee('Explain this reading')
             ->assertSee('Keep running anyway')

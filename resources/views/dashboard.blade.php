@@ -143,8 +143,6 @@
         <h1>Machine Risk Analysis</h1>
     </div>
 
-    @include('partials.judge-guide')
-
     <div class="toolbar">
         <span class="label" id="scenario-label">Simulated situation</span>
         <div class="seg" role="group" aria-labelledby="scenario-label">
@@ -153,6 +151,7 @@
             @endforeach
         </div>
         <span class="spacer"></span>
+        <button type="button" class="btn" id="guide-open" aria-haspopup="dialog">Guide</button>
         <span class="badge">SIMULATED DATA</span>
         <span class="status"><i class="dot" id="dot"></i><span id="status-text">Starting</span></span>
         <button type="button" class="btn" id="pause">Pause</button>
@@ -251,6 +250,8 @@
             </div>
         </div>
     </dialog>
+
+    @include('partials.judge-guide')
 
     <div class="sr-only" role="status" id="sr-status"></div>
     <div class="sr-only" role="alert" id="sr-alert"></div>
