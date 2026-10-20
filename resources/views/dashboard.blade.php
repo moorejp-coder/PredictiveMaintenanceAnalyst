@@ -109,6 +109,14 @@
         .ov-error { color: var(--prism-risk-high); font-weight: 600; margin: 0 0 var(--prism-space-3); }
         .ov-actions { display: flex; flex-wrap: wrap; gap: var(--prism-space-2); justify-content: flex-end; }
 
+        .confidence { margin: var(--prism-space-2) 0 0; font-size: 0.8125rem; color: var(--prism-muted); text-align: left; }
+        .confidence strong { color: var(--prism-text); }
+        .chart-data { margin-top: var(--prism-space-2); }
+        .chart-data > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--prism-accent); font-size: 0.875rem; }
+        .chart-data .table-scroll { max-height: 240px; overflow: auto; border: 1px solid var(--prism-border); border-radius: var(--prism-radius-sm); }
+        .chart-data table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .chart-data th, .chart-data td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--prism-border); font-variant-numeric: tabular-nums; }
+        .chart-data th { position: sticky; top: 0; background: var(--prism-surface-raised); }
         .fold > summary { cursor: pointer; }
         .section-title { display: list-item; }
         footer { margin-top: var(--prism-space-4); color: var(--prism-muted); font-size: 0.875rem; display: grid; gap: var(--prism-space-2); }
@@ -172,6 +180,8 @@
                 <p class="note">If you keep the machine running, PRISM records your name, the time, and your reason.</p>
                 <p class="logged" id="override-logged" role="status"></p>
             </div>
+            @php($hb = config('prism.backtest.high'))
+            <p class="confidence"><strong>How often a High score is right.</strong> On the AI4I test data, {{ number_format($hb['failed']) }} of {{ number_format($hb['total']) }} High readings ({{ number_format($hb['failed'] / $hb['total'] * 100, 1) }}%) were real failures. Some High scores are false alarms. This describes the test data and is not a forecast for this machine. <a href="{{ url('/ai#limits') }}">Limits</a></p>
             <p class="disclaimer">PRISM supports technician decisions. Confirm findings through inspection.</p>
         </section>
 
@@ -189,6 +199,16 @@
         <h2 id="chart-title">Risk score over the last 30 readings</h2>
         <svg id="chart" viewBox="0 0 640 84" role="img" aria-label="Line chart of the risk score for the last 30 readings. Waiting for the first reading." aria-describedby="cycle"></svg>
         <p class="cap" id="cycle">Reading 0 of {{ $cycle }}. The demo restarts after reading {{ $cycle }}, as if the tool were changed.</p>
+        <details class="chart-data" id="chart-data">
+            <summary>View the chart data as a table</summary>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Risk scores for the last 30 readings, newest first">
+                <table>
+                    <caption class="sr-only">Risk score and band for each of the last 30 readings, newest first</caption>
+                    <thead><tr><th scope="col">Reading</th><th scope="col">Score</th><th scope="col">Band</th></tr></thead>
+                    <tbody id="chart-rows"></tbody>
+                </table>
+            </div>
+        </details>
     </section>
     </div>
 
@@ -235,7 +255,7 @@
     </main>
 
     <footer>
-        <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern. Every reading on this page is simulated. <a href="{{ url('/faq') }}">FAQ</a> &middot; <a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a></p>
+        <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern. Every reading on this page is simulated. <a href="{{ url('/ai') }}">How PRISM uses AI</a> &middot; <a href="{{ url('/faq') }}">FAQ</a> &middot; <a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a></p>
     </footer>
 </div>
 
@@ -313,7 +333,7 @@
             const row = document.createElement('div');
             row.className = 'driver';
             row.id = 'driver-' + k;
-            row.innerHTML = '<span></span><div class="bar"><i></i></div><span class="stress"><span class="n">0</span><span class="sr-only"></span></span>';
+            row.innerHTML = '<span aria-hidden="true"></span><div class="bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div><span class="stress" aria-hidden="true"><span class="n">0</span></span>';
             el.drivers.appendChild(row);
         });
     }
@@ -372,6 +392,25 @@
             'Shaded zones: green below 40, amber 40 to 69, red 70 and above.';
     }
 
+    // The chart's data as a table. Filled only while the table is open, so a
+    // screen reader user is not interrupted by a rebuild every 1.2 seconds.
+    function fillChartTable() {
+        const box = $('chart-data');
+        if (!box || !box.open) { return; }
+        const rows = $('chart-rows');
+        rows.textContent = '';
+        state.history.slice().reverse().forEach((h) => {
+            const tr = document.createElement('tr');
+            [String((h.tick % CYCLE) + 1), String(h.risk.score), h.risk.band_label].forEach((text) => {
+                const td = document.createElement('td');
+                td.textContent = text;
+                tr.appendChild(td);
+            });
+            rows.appendChild(tr);
+        });
+    }
+    $('chart-data').addEventListener('toggle', fillChartTable);
+
     function render() {
         const latest = state.history[state.history.length - 1];
         if (!latest) { return; }
@@ -396,9 +435,13 @@
             bar.className = !scored ? 'context' : (bandOf(d.stress) === 'low' ? '' : bandOf(d.stress));
             row.title = scored ? '' : 'Context only. Not part of the score.';
             row.querySelector('.stress .n').textContent = d.stress;
-            row.querySelector('.stress .sr-only').textContent = scored
-                ? ' out of 100, ' + bandOf(d.stress)
-                : ' out of 100, context only, not part of the score';
+            // The bar is a meter for screen readers. The visible label and number are hidden from them.
+            const meter = row.querySelector('.bar');
+            meter.setAttribute('aria-label', d.label);
+            meter.setAttribute('aria-valuenow', d.stress);
+            meter.setAttribute('aria-valuetext', scored
+                ? d.stress + ' out of 100, ' + bandOf(d.stress)
+                : d.stress + ' out of 100, context only, not part of the score');
         });
 
         SENSORS.forEach((s) => {
@@ -420,6 +463,7 @@
         measureChart();
         el.chart.innerHTML = chartSvg(scores);
         el.chart.setAttribute('aria-label', chartLabel(scores, risk.band_label));
+        fillChartTable();
         el.cycle.textContent = 'Reading ' + ((latest.tick % CYCLE) + 1) + ' of ' + CYCLE +
             '. The demo restarts after reading ' + CYCLE + ', as if the tool were changed.';
 

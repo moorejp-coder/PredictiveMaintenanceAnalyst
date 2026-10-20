@@ -55,7 +55,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM FAQ</h1>
-    <p class="meta">Updated October 19, 2026</p>
+    <p class="meta">Updated October 20, 2026</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Read this first</h2>
@@ -74,7 +74,7 @@
     <table>
         <tr><th scope="col">Area</th><th scope="col">Status</th><th scope="col">Short answer</th></tr>
         <tr><td><a href="#scope">1. In-scope definition</a></td><td><span class="tag ok">Defined</span></td><td>One simulated milling machine. Six checks. One score from 0 to 100.</td></tr>
-        <tr><td><a href="#limits">2. Out-of-scope control</a></td><td><span class="tag ok">Enforced by design</span></td><td>PRISM takes no actions and writes no data. Every default sentence comes from a fixed template.</td></tr>
+        <tr><td><a href="#limits">2. Out-of-scope control</a></td><td><span class="tag ok">Enforced by design</span></td><td>PRISM takes no actions on a machine. Its only writes are the override log and AI answer ratings. Every default sentence comes from a fixed template.</td></tr>
         <tr><td><a href="#escalation">3. Escalation rule</a></td><td><span class="tag partial">Partly built</span></td><td>High and Elevated scores point you to a technician. No "unsure" state exists yet.</td></tr>
         <tr><td><a href="#ownership">4. Ownership and maintenance</a></td><td><span class="tag ok">Defined</span></td><td>James Moore owns, runs and maintains PRISM.</td></tr>
         <tr><td><a href="#lifecycle">5. Lifecycle</a></td><td><span class="tag partial">Partly defined</span></td><td>Contest demo. Not ready for real equipment.</td></tr>
@@ -111,7 +111,7 @@
                 <li><strong>Score random failure.</strong> In AI4I, random failures occur with a 0.1 percent probability independent of every parameter, so no reading predicts them.</li>
                 <li><strong>Learn from data.</strong> The score is rule-based. No trained model runs today.</li>
                 <li><strong>Send alerts, email or messages.</strong> Alerts are on the roadmap only.</li>
-                <li><strong>Store data.</strong> PRISM has no accounts. It stores one thing: the override log of who kept a machine running after a stop warning.</li>
+                <li><strong>Store data.</strong> PRISM has no accounts. It stores two things: the override log of who kept a machine running after a stop warning, and Helpful or Wrong ratings of AI answers (no name, no text, no IP address).</li>
                 <li><strong>Give engineering, maintenance or safety advice.</strong> See Terms section 4.</li>
             </ul>
             <p class="src">Sources: <code>README.md</code>, <a href="{{ url('/terms') }}">Terms</a> and <a href="{{ url('/privacy') }}">Privacy Policy</a>.</p>
@@ -157,7 +157,7 @@
         <div class="answer">
             <p>No. PRISM is not an autonomous agent. The score and every default sentence come from fixed templates in the check classes under <code>app/Services/Checks</code>. Only three action lines exist (see the table in section 1).</p>
             <p>When a visitor presses Explain this reading and the band is Elevated or High, two optional AI calls restate that result: a likely-cause note and a draft work order. The AI sees only the score result. It cannot act, send or change anything, and code sets the work order priority. AI text can be wrong, so the score and the safety disclaimer rule. If the AI is slow, off or returns unusable text, the fixed text shows.</p>
-            <p>PRISM has no tool to act with. PRISM has no email and no link to a machine. Its only write is the override log, <code>POST /api/overrides</code>, which records a decision and changes nothing on a machine. The other routes are read-only: <code>/</code>, <code>/api/readings</code>, <code>/api/diagnosis</code>, <code>/api/work-order</code>, <code>/privacy</code>, <code>/terms</code>, <code>/faq</code> and <code>/sitemap.xml</code>. A password protects <code>/overrides</code>, the page that lists the log.</p>
+            <p>PRISM has no tool to act with. PRISM has no email and no link to a machine. Its only writes are the override log, <code>POST /api/overrides</code>, and AI answer ratings, <code>POST /api/ai-feedback</code>. Both record a decision or a rating and change nothing on a machine. The other routes are read-only: <code>/</code>, <code>/api/readings</code>, <code>/api/diagnosis</code>, <code>/api/work-order</code>, <code>/ai</code>, <code>/privacy</code>, <code>/terms</code>, <code>/faq</code> and <code>/sitemap.xml</code>. A password protects <code>/overrides</code>, the page that lists the log.</p>
             <p class="src">Sources: <code>routes/web.php</code>, <code>app/Http/Controllers/DashboardController.php</code>.</p>
         </div>
     </details>

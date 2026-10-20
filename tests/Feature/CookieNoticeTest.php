@@ -8,7 +8,7 @@ class CookieNoticeTest extends TestCase
 {
     public function test_every_page_includes_the_cookie_notice(): void
     {
-        foreach (['/', '/faq', '/privacy', '/terms'] as $path) {
+        foreach (['/', '/ai', '/faq', '/privacy', '/terms'] as $path) {
             $this->get($path)->assertOk()->assertSee('id="cookie-notice"', false);
         }
     }

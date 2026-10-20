@@ -29,6 +29,8 @@
     <h1>Override Log</h1>
     <p>Each row is a time an operator chose to keep a machine running after PRISM said "Stop the machine and inspect it now." The name is what the operator typed. PRISM has no sign-in, so it does not verify who typed it. The score and reading were rebuilt by the server. Times are UTC. Showing the newest 200 entries.</p>
 
+    <p><strong>AI answer ratings:</strong> {{ number_format($helpful) }} Helpful, {{ number_format($wrong) }} Wrong. Visitors rate answers from "Explain this reading". See <a href="{{ url('/ai') }}">How PRISM uses AI</a>.</p>
+
     @if ($logs->isEmpty())
         <p><strong>No overrides recorded yet.</strong></p>
     @else

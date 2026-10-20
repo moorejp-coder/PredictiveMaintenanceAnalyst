@@ -32,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
 
         // One canonical address per page: APP_URL host, no query string,
         // no trailing slash.
-        View::composer(['dashboard', 'faq', 'privacy', 'terms'], function ($view) {
+        View::composer(['dashboard', 'ai', 'faq', 'privacy', 'terms'], function ($view) {
             $view->with('canonicalUrl', CanonicalUrl::current());
         });
     }

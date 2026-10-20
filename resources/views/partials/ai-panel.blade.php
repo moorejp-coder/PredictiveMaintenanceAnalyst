@@ -5,7 +5,8 @@
   server sends back the built-in explanation, so the panel always has an answer.
 --}}
 <section class="card ai" id="ai-panel" aria-labelledby="ai-title"
-         data-diagnosis="{{ url('/api/diagnosis') }}" data-order="{{ url('/api/work-order') }}">
+         data-diagnosis="{{ url('/api/diagnosis') }}" data-order="{{ url('/api/work-order') }}"
+         data-feedback="{{ url('/api/ai-feedback') }}">
     <style>
         .ai { margin-top: 12px; border: 2px solid var(--prism-accent, #8ab4f8); background: var(--prism-surface-raised, var(--prism-surface)); }
         .ai-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; }
@@ -24,11 +25,17 @@
         .ai-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
         .ai-modal-head h2 { margin: 0; font-size: 1.25rem; }
         .ai-close { min-height: 44px; min-width: 44px; }
+        .ai-label { display: inline-block; margin: 8px 0 0; padding: 2px 10px; border: 1px solid var(--prism-accent, #8ab4f8); border-radius: 6px; color: var(--prism-accent, #8ab4f8); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; }
+        .ai-warn { margin: 8px 0 0; padding: 8px 12px; border-left: 4px solid var(--prism-risk-elevated, #fbbf24); background: var(--prism-surface, transparent); border-radius: 6px; font-size: 0.875rem; }
+        .ai-feedback { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--prism-border, #26355a); }
+        .ai-feedback p { margin: 0 0 8px; font-size: 0.9375rem; }
+        .ai-feedback .ai-fb-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .ai-feedback .btn { min-height: 44px; }
     </style>
     <div class="ai-head">
         <div>
             <h2 id="ai-title">Explain this reading</h2>
-            <p class="ai-note">Get the likely cause and a drafted work order for the current reading. If the AI is slow or unavailable, PRISM shows its built-in explanation instead.</p>
+            <p class="ai-note">Get the likely cause and a drafted work order for the current reading. If the AI is slow or unavailable, PRISM shows its built-in explanation instead. <a href="{{ url('/ai') }}">How PRISM uses AI</a></p>
         </div>
         <button type="button" class="btn btn--primary ai-cta" id="ai-run">Explain this reading</button>
     </div>
@@ -38,6 +45,8 @@
                 <h2 id="ai-modal-title">Explain this reading</h2>
                 <button type="button" class="btn ai-close" id="ai-close" aria-label="Close">Close</button>
             </div>
+            <span class="ai-label">AI-GENERATED</span>
+            <p class="ai-warn">AI can be wrong. A qualified technician decides what to do. The score above comes from fixed rules, not from the AI.</p>
             <div aria-live="polite">
                 <p class="ai-note" id="ai-status"></p>
                 <div id="ai-diagnosis" hidden>
@@ -52,6 +61,14 @@
                 </div>
                 <p class="ai-note" id="ai-meta"></p>
             </div>
+            <div class="ai-feedback" id="ai-feedback" hidden>
+                <p id="ai-feedback-q">Was this answer correct and useful?</p>
+                <div class="ai-fb-row" role="group" aria-labelledby="ai-feedback-q">
+                    <button type="button" class="btn" id="ai-fb-helpful">Helpful</button>
+                    <button type="button" class="btn" id="ai-fb-wrong">Wrong</button>
+                </div>
+                <p class="ai-note" id="ai-fb-status" role="status"></p>
+            </div>
         </div>
     </dialog>
     <script>
@@ -61,6 +78,36 @@
         const $ = (id) => document.getElementById(id);
         const btn = $('ai-run');
         const modal = $('ai-modal');
+
+        const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+        let rated = null; // { latest, diagnosis, order } for the answer on screen
+
+        function sourceOf(result) {
+            return (result.source === 'ai' || result.source === 'cache') ? result.source : 'rules';
+        }
+
+        async function sendRating(rating) {
+            if (!rated) { return; }
+            const status = $('ai-fb-status');
+            const buttons = [$('ai-fb-helpful'), $('ai-fb-wrong')];
+            buttons.forEach((b) => { b.disabled = true; });
+            const post = (step, result) => fetch(panel.dataset.feedback, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: JSON.stringify({ step: step, rating: rating, source: sourceOf(result), scenario: rated.latest.scenario, tick: rated.latest.tick })
+            });
+            try {
+                const [a, b] = await Promise.all([post('diagnosis', rated.diagnosis), post('work_order', rated.order)]);
+                if (!a.ok || !b.ok) { throw new Error('HTTP ' + a.status + '/' + b.status); }
+                status.textContent = 'Thank you. Your rating is saved. PRISM stores no name or text with it.';
+            } catch (err) {
+                status.textContent = 'Your rating was not saved. Try again later.';
+                buttons.forEach((x) => { x.disabled = false; });
+            }
+        }
+
+        $('ai-fb-helpful').addEventListener('click', () => sendRating('helpful'));
+        $('ai-fb-wrong').addEventListener('click', () => sendRating('wrong'));
 
         $('ai-close').addEventListener('click', () => modal.close());
         // Click on the dimmed backdrop closes the pop-up.
@@ -113,6 +160,8 @@
             $('ai-diagnosis').hidden = true;
             $('ai-order').hidden = true;
             $('ai-meta').textContent = '';
+            $('ai-feedback').hidden = true;
+            rated = null;
             $('ai-status').textContent = 'Reading the numbers...';
             try {
                 const d = await get(panel.dataset.diagnosis, latest);
@@ -129,6 +178,11 @@
 
                 $('ai-status').textContent = '';
                 $('ai-meta').textContent = 'Likely cause: ' + label(d) + '. Work order: ' + label(w) + '.';
+                rated = { latest: latest, diagnosis: d, order: w };
+                $('ai-fb-status').textContent = '';
+                $('ai-fb-helpful').disabled = false;
+                $('ai-fb-wrong').disabled = false;
+                $('ai-feedback').hidden = false;
             } catch (err) {
                 $('ai-status').textContent = 'This step is not available right now. The score and reason above still apply.';
             } finally {

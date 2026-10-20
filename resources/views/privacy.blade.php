@@ -34,7 +34,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM Privacy Policy</h1>
-    <p class="meta">Effective October 19, 2026</p>
+    <p class="meta">Effective October 20, 2026</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Summary</h2>
@@ -60,7 +60,7 @@
         <tr><td>Session cookie</td><td>A cookie named <code>prism-session</code>. The framework (Laravel) sets it. It holds a random session ID. It expires after 120 minutes of inactivity.</td><td>Standard framework behavior. PRISM does not use it to identify you or track you.</td></tr>
         <tr><td>Security cookie</td><td>A cookie named <code>XSRF-TOKEN</code>. The framework sets it to guard against forged requests.</td><td>Security.</td></tr>
     </table>
-    <p>PRISM stores one kind of record: the override log. It holds the name and reason you type. A password protects the page that lists the log.</p>
+    <p>PRISM stores two kinds of record. The first is the override log. It holds the name and reason you type. A password protects the page that lists the log. The second is a rating of an AI answer, if you press Helpful or Wrong. It holds the rating, the step, the source, the scenario, the reading number and the time. It holds no name, no free text and no IP address.</p>
     <p>Both cookies are strictly necessary for the site to work, so PRISM does not ask for cookie consent. A short notice tells you about them. Your choice to dismiss the notice is stored in your browser (local storage), not in a cookie, and is never sent to PRISM. <button type="button" onclick="window.prismCookieNotice &amp;&amp; window.prismCookieNotice.open()" style="background:none;border:0;padding:0;color:var(--prism-accent);text-decoration:underline;cursor:pointer;font:inherit">Show the cookie notice again</button>.</p>
 
     <h2>3. How PRISM uses information</h2>

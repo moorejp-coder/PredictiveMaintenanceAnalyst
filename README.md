@@ -15,6 +15,8 @@ PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It 
 - "Explain this reading" asks Claude for a likely cause and a drafted work order. A built-in explanation shows if the AI is slow or off (see AI steps).
 - Records an override when an operator keeps a machine running after PRISM says to stop it (see Override log).
 - Includes a FAQ, Terms and Conditions and a Privacy Policy. Each says what PRISM does not do.
+- Explains its AI use on the page `/ai`: where AI runs, what it receives, who decides, the backtest limits, a NIST AI RMF mapping and an accessibility statement.
+- Labels every AI answer "AI-GENERATED" and lets a visitor rate it Helpful or Wrong (see Ethical AI, accessibility and sources).
 
 Safety disclaimer: PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.
 
@@ -63,6 +65,32 @@ The rules do the math. AI explains the result in plain words, only when a visito
 
 Set `ANTHROPIC_API_KEY` in `.env` (local) or as an Elastic Beanstalk environment property (live). `ANTHROPIC_MODEL` and `ANTHROPIC_TIMEOUT` are optional. With no key, PRISM makes no AI call.
 
+## Ethical AI, accessibility and sources
+
+Ethical AI
+- Rules score the machine. The AI only explains, on request. It cannot change the score, the band or the action. Code sets the work order priority.
+- Every AI answer shows an "AI-GENERATED" label and a reminder that a qualified technician decides.
+- The dashboard shows how often a High score was right in the AI4I test (291 of 645, 45.1%), so the score is not read as certain. The numbers live in `config/prism.php` under `backtest` and must match `php artisan prism:backtest`.
+- A visitor rates an AI answer Helpful or Wrong. The route is `POST /api/ai-feedback`. It accepts fixed choices only. The table `ai_feedback` stores the rating, the step, the source, the scenario, the reading number and the time. It stores no name, no free text and no IP address. The override log page shows the counts.
+- The page `/ai` maps PRISM to the NIST AI Risk Management Framework functions (Govern, Map, Measure, Manage). The mapping is mine. NIST has not reviewed PRISM.
+- Privacy Policy and FAQ list both stored records: the override log and AI answer ratings.
+
+Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
+- Lighthouse 13.4.1 accessibility audit, run October 20, 2026 on a local copy: 100 on the dashboard (mobile emulation, navigation mode) and 100 on `/ai`. Lighthouse uses axe-core 4.12.1 and checks only a subset of issues. Its manual-check items and a screen reader test are not done.
+- Skip link, main landmark, a visible focus outline and native dialogs that return focus.
+- Risk bands appear as words, not color alone.
+- Each stress bar is a labeled `role="meter"` with a value and a band.
+- The risk chart keeps its text description and adds a "View the chart data as a table" control. The table fills only while open, so screen readers are not interrupted every 1.2 seconds.
+- Band changes use a status region. A new High score uses an alert.
+- Animations stop under reduced motion.
+- Known gaps: dark theme only, no manual or screen reader audit, HTTP only.
+
+Fields PRISM draws on
+- Data science: AI4I 2020 dataset (Matzka, 2020).
+- Mechanical and reliability engineering: ISO 10816-3 Group 2 vibration zones.
+- Occupational safety: the stop instruction sits beside OSHA lockout/tagout, 29 CFR 1910.147. PRISM does not lock out or tag out anything.
+- Law and privacy: Terms, Privacy Policy and the `/ai` disclosure.
+
 ## Roadmap (not built)
 
 These items are not in the app today. They are goals, not commitments.
@@ -86,7 +114,7 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 
 1. `composer install`
 2. `cp .env.example .env && php artisan key:generate`
-3. `touch database/database.sqlite && php artisan migrate` (creates the override log table)
+3. `touch database/database.sqlite && php artisan migrate` (creates the override log and AI feedback tables)
 4. Optional: set `OVERRIDE_LOG_PASSWORD` and `ANTHROPIC_API_KEY` in `.env`
 5. `php artisan serve`
 6. Open http://127.0.0.1:8000/

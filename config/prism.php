@@ -71,6 +71,15 @@ return [
     // Password for the /overrides review page. Leave unset and the page returns 404.
     'override_log_password' => env('OVERRIDE_LOG_PASSWORD'),
 
+    // Backtest of the four AI4I checks on the 10,000 AI4I records, 18 random
+    // failure records left out. Reproduce with `php artisan prism:backtest`.
+    // Keep these in step with the README. Shown on the dashboard and /ai.
+    'backtest' => [
+        'high' => ['failed' => 291, 'total' => 645],
+        'elevated' => ['failed' => 42, 'total' => 1889],
+        'low' => ['failed' => 6, 'total' => 7448],
+    ],
+
     'bands' => [
         'elevated_from' => 40,
         'high_from' => 70,

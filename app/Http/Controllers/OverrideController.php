@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiFeedback;
 use App\Models\OverrideLog;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
@@ -63,6 +64,9 @@ class OverrideController extends Controller
         return view('overrides', [
             'logs' => OverrideLog::query()->latest('id')->limit(200)->get(),
             'cycle' => SensorSimulator::CYCLE,
+            // Ratings of AI answers. If the table is missing, show zero rather than fail the page.
+            'helpful' => rescue(fn () => AiFeedback::query()->where('rating', 'helpful')->count(), 0, false),
+            'wrong' => rescue(fn () => AiFeedback::query()->where('rating', 'wrong')->count(), 0, false),
         ]);
     }
 }

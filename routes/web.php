@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AiController;
+use App\Http\Controllers\AiFeedbackController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OverrideController;
 use App\Http\Middleware\RequireOverrideLogPassword;
@@ -39,12 +40,16 @@ Route::post('/api/overrides', [OverrideController::class, 'store'])
     ->middleware('throttle:10,1');
 Route::get('/overrides', [OverrideController::class, 'index'])
     ->middleware(RequireOverrideLogPassword::class);
+// A visitor rates an AI answer "helpful" or "wrong". Fixed choices only, no free text.
+Route::post('/api/ai-feedback', [AiFeedbackController::class, 'store'])
+    ->middleware('throttle:20,1');
+Route::view('/ai', 'ai');
 Route::view('/privacy', 'privacy');
 Route::view('/terms', 'terms');
 Route::view('/faq', 'faq');
 
 Route::get('/sitemap.xml', function () {
-    $paths = ['/', '/faq', '/privacy', '/terms'];
+    $paths = ['/', '/ai', '/faq', '/privacy', '/terms'];
 
     $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
