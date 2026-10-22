@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\OverrideLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class OverrideLogTest extends TestCase
@@ -128,5 +129,33 @@ class OverrideLogTest extends TestCase
             ->assertOk()
             ->assertDontSee('<script>alert(1)</script>', false)
             ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false);
+    }
+
+    public function test_the_review_page_lists_ai_ratings_and_their_count(): void
+    {
+        config(['prism.override_log_password' => 'open-sesame']);
+        foreach (['diagnosis', 'work_order'] as $step) {
+            $this->postJson('/api/ai-feedback', [
+                'step' => $step, 'rating' => 'helpful', 'source' => 'ai', 'scenario' => 'overload', 'tick' => 59,
+            ])->assertCreated();
+        }
+
+        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:open-sesame')])
+            ->assertOk()
+            ->assertSee('2 Helpful, 0 Wrong')
+            ->assertSee('Recent AI ratings')
+            ->assertSee('work_order')
+            ->assertSee('Overload, reading 60 of 60');
+    }
+
+    public function test_the_review_page_says_so_when_the_ratings_table_is_missing(): void
+    {
+        config(['prism.override_log_password' => 'open-sesame']);
+        Schema::drop('ai_feedback');
+
+        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:open-sesame')])
+            ->assertOk()
+            ->assertSee('The ratings could not be read')
+            ->assertDontSee('0 Helpful');
     }
 }

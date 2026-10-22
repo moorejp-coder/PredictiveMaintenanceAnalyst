@@ -26,7 +26,13 @@
     <h1>Override Log</h1>
     <p>Each row is a time an operator chose to keep a machine running after PRISM said "Stop the machine and inspect it now." The name is what the operator typed. The name is not tied to any sign-in, so PRISM does not verify who typed it. The score and reading were rebuilt by the server. Times are UTC. Showing the newest 200 entries.</p>
 
-    <p><strong>AI answer ratings:</strong> {{ number_format($helpful) }} Helpful, {{ number_format($wrong) }} Wrong. Visitors rate answers from "Explain this reading". See <a href="{{ url('/ai') }}">How PRISM uses AI</a>.</p>
+    <p><strong>AI answer ratings:</strong>
+    @if ($ratings === null)
+        The ratings could not be read. The <code>ai_feedback</code> table may be missing. Check the deploy log for a line that starts with "PRISM: migrate failed".
+    @else
+        {{ number_format($helpful) }} Helpful, {{ number_format($wrong) }} Wrong. Each click on a rating saves two rows, one for the diagnosis and one for the work order. Visitors rate answers from "Explain this reading". See <a href="{{ url('/ai') }}">How PRISM uses AI</a>.
+    @endif
+    </p>
 
     @if ($logs->isEmpty())
         <p><strong>No overrides recorded yet.</strong></p>
@@ -60,6 +66,41 @@
                 </tbody>
             </table>
         </div>
+    @endif
+
+    @if ($ratings !== null)
+        <h2>Recent AI ratings</h2>
+        @if ($ratings->isEmpty())
+            <p><strong>No ratings recorded yet.</strong></p>
+        @else
+            <div class="table-wrap">
+                <table>
+                    <caption class="sr-only">AI answer ratings, newest first</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">When (UTC)</th>
+                            <th scope="col">Step</th>
+                            <th scope="col">Rating</th>
+                            <th scope="col">Answer source</th>
+                            <th scope="col">Reading</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach ($ratings as $rating)
+                        <tr>
+                            <td class="num">{{ $rating->id }}</td>
+                            <td class="num"><time datetime="{{ $rating->created_at->toIso8601String() }}">{{ $rating->created_at->utc()->format('Y-m-d H:i:s') }}</time></td>
+                            <td>{{ $rating->step }}</td>
+                            <td>{{ $rating->rating }}</td>
+                            <td>{{ $rating->source }}</td>
+                            <td>{{ \App\Services\SensorSimulator::SCENARIOS[$rating->scenario]['label'] ?? $rating->scenario }}, reading {{ ($rating->tick % $cycle) + 1 }} of {{ $cycle }}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     @endif
 </main>
 </body>

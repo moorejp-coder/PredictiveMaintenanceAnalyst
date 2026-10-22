@@ -58,15 +58,28 @@ class OverrideController extends Controller
         ], 201);
     }
 
-    /** The review page: newest 200 entries. */
+    /** The review page: newest 200 entries and the newest 50 AI ratings. */
     public function index(): View
     {
+        // If the ratings table cannot be read, say so on the page. A silent
+        // zero would look the same as "nobody has rated an answer yet".
+        $ratings = null;
+        $helpful = 0;
+        $wrong = 0;
+        try {
+            $ratings = AiFeedback::query()->latest('id')->limit(50)->get();
+            $helpful = AiFeedback::query()->where('rating', 'helpful')->count();
+            $wrong = AiFeedback::query()->where('rating', 'wrong')->count();
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return view('overrides', [
             'logs' => OverrideLog::query()->latest('id')->limit(200)->get(),
             'cycle' => SensorSimulator::CYCLE,
-            // Ratings of AI answers. If the table is missing, show zero rather than fail the page.
-            'helpful' => rescue(fn () => AiFeedback::query()->where('rating', 'helpful')->count(), 0, false),
-            'wrong' => rescue(fn () => AiFeedback::query()->where('rating', 'wrong')->count(), 0, false),
+            'ratings' => $ratings,
+            'helpful' => $helpful,
+            'wrong' => $wrong,
         ]);
     }
 }
