@@ -85,6 +85,26 @@ How it works when on:
 - Optional: `JudgeSeeder` can still make one fixed account from `JUDGE_EMAIL` and `JUDGE_PASSWORD`, as a backup if email fails. It comes back after every deploy. The invite page is the main way.
 - The sitemap drops `/` while the sign-in is on.
 
+## Test the live app
+
+Live site: https://prismcua.duckdns.org/ . Every reading is simulated. Sign in with the account from your invite email (see Sign in and judge invites). If you have no account yet, ask the entrant.
+
+Checks that need no account. Run on Oct 22, 2026 against the live site:
+- `/api/readings`, `/api/diagnosis`, `/overrides` and `/admin/invites` return 401 when you are signed out.
+- A path that does not exist, such as `/nope-xyz`, returns 404.
+- The sign-in page sends `Strict-Transport-Security`, `X-Content-Type-Options: nosniff` and a Content-Security-Policy header.
+
+Checks after you sign in. The entrant ran steps 1 to 6 on the live site on Oct 22, 2026 and all worked. The entrant also ran one invite from start to finish (email, set password, sign in) and signed in again after a deploy to confirm accounts survive a normal deploy. The expected results also come from the code and the automated tests in `tests/`.
+
+1. Open the dashboard. A new reading arrives about every 1.2 seconds.
+2. Choose Overload under Simulated situation. Wait for the score to reach the High band. The panel shows "High Predicted Failure Risk" and the instruction to stop the machine (`tests/Feature/OverrideLogTest.php` uses Overload at reading 59 as a High reading).
+3. Press "Explain this reading". The answer carries the label AI-GENERATED. If the AI is slow, off or wrong in format, the label reads "RULE-BASED, NO AI USED" and a built-in explanation appears (see AI steps).
+4. Rate the answer Helpful or Wrong. A thank-you appears beside the buttons.
+5. Press "Keep running anyway". Type a made-up name and a reason of at least 10 characters. The server accepts the entry only for a High reading. For a Healthy reading it returns 422 (`tests/Feature/OverrideLogTest.php`).
+6. Open `/overrides`. It asks for its own password, which only the entrant holds.
+
+Edge cases the tests cover: an unknown scenario name, an override for a reading that is not High, a missing AI key, an AI timeout, an unknown AI tool, a wrong invite token, a short or mismatched password, an invalid invite email, a wrong sign-in password (one generic message), and the styled 419 and 429 pages. Test files: `OverrideLogTest`, `AiStepsTest`, `InvestigatorTest`, `InviteTest`, `LoginTest`, `ErrorPagesTest`.
+
 ## The problem
 
 PRISM is for the maintenance technician at a small machine shop who runs CNC milling machines and has no data scientist. In this README, small means fewer than 100 employees. That is my assumption, chosen because 44 of the 71 firms in the NIST survey below were that size. Raw sensor numbers do not say which failure is developing. PRISM turns the numbers into one score, a reason a technician reads in a few seconds, and an instruction.
