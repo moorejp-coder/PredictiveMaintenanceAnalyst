@@ -117,10 +117,10 @@ return [
     // message prints the new hash. When you update a hash, set that page's date
     // to the day you changed the text.
     'policy_dates' => [
-        'faq' => ['date' => 'October 21, 2026', 'hash' => 'cfc688156929e5b5865cb7a49446b82116866ad795b3f46a1a3cf76a151717ca'],
+        'faq' => ['date' => 'October 22, 2026', 'hash' => 'b79cc9b2568b7b1de51f088887beab1b3e731315089daa8adf44c5a65175795b'],
         'privacy' => ['date' => 'October 21, 2026', 'hash' => '8d24a9913d4420b47772b5fc80b024959dc4fba2502d60eb2f0dff21003efe06'],
-        'terms' => ['date' => 'October 21, 2026', 'hash' => '7775b60201d819989e74d537265540b9fabc92bbbf96f2b2d914fb8864cfe9bb'],
-        'ai' => ['date' => 'October 21, 2026', 'hash' => '338bd5097a8bee96b6cc0e77fe0c089769c07741a071278728f2b7247551c52a'],
+        'terms' => ['date' => 'October 22, 2026', 'hash' => '370c855821a81078ea98f4657f04523213b0119375b9cc81f333270af41e569d'],
+        'ai' => ['date' => 'October 22, 2026', 'hash' => 'a0f54b72adb4a4f3d764b2462c499234d002891311d43f54a193581953929b73'],
     ],
 
     'bands' => [

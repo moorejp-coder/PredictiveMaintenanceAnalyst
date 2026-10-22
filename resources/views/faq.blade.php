@@ -109,7 +109,7 @@
                 <li><strong>Read real machines.</strong> Every reading is simulated.</li>
                 <li><strong>Forecast a failure date.</strong> The AI4I dataset is a snapshot of operating conditions, not a time series.</li>
                 <li><strong>Score random failure.</strong> In AI4I, random failures occur with a 0.1 percent probability independent of every parameter, so no reading predicts them.</li>
-                <li><strong>Learn from data.</strong> The score is rule-based. No trained model runs today.</li>
+                <li><strong>Let a model decide.</strong> The score and action are rule-based. A trained model shows a learned estimate of failure chance beside them, and it never changes the score.</li>
                 <li><strong>Send alerts, email or messages.</strong> @if (config('prism.require_login'))The only email PRISM sends is the invite that lets a contest judge choose a password. @endif Alerts are on the roadmap only.</li>
                 <li><strong>Store data.</strong> @if (config('prism.require_login'))PRISM has accounts for invited contest judges (a name, an email address and a password stored as a hash). It also stores @else PRISM has no accounts. It stores two things:@endif the override log of who kept a machine running after a stop warning, and Helpful or Wrong ratings of AI answers (no name, no text, no IP address).</li>
                 <li><strong>Give engineering, maintenance or safety advice.</strong> See Terms section 4.</li>
@@ -296,7 +296,7 @@
     <details>
         <summary>What is on the roadmap?</summary>
         <div class="answer">
-            <p>The Privacy Policy names live sensor feeds and alerts as roadmap items. The scorer class is built to be swapped for a trained model without changing the page. Roadmap items are not commitments. Live feeds and alerts would collect new data, so the Privacy Policy would change first.</p>
+            <p>The Privacy Policy names live sensor feeds and alerts as roadmap items. A learned estimate already runs beside the rules. Letting it drive the score is not planned until real machine data exists. Roadmap items are not commitments. Live feeds and alerts would collect new data, so the Privacy Policy would change first.</p>
             <p class="src">Sources: <a href="{{ url('/privacy') }}">Privacy Policy</a> section 10, <code>RiskScorer.php</code> comments.</p>
         </div>
     </details>

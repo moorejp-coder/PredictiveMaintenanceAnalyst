@@ -7,7 +7,7 @@ Local site: http://127.0.0.1:8000/ (run `php artisan serve` in the project folde
 
 Stack: Laravel (PHP 8.4), SQLite, AWS Elastic Beanstalk with nginx and a Let's Encrypt certificate, the Anthropic Claude API for explanations, GitHub Actions for tests.
 
-PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It scores risk from 0 to 100 with fixed rules, explains the score in plain English, and shows the stress on each failure check. Every reading on the dashboard is simulated. PRISM is rule-based. It does not use a trained machine-learning model.
+PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It scores risk from 0 to 100 with fixed rules, explains the score in plain English, and shows the stress on each failure check. Every reading on the dashboard is simulated. The score and the action come from fixed rules. A trained gradient boosting model adds a second opinion, a learned estimate of failure chance, and never changes the score.
 
 ## What PRISM does today
 
@@ -32,7 +32,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026. Th
 | Criterion | Weight | How PRISM addresses it |
 |---|---|---|
 | Problem/Opportunity Identification & Relevance | 20% | Names the user: a maintenance technician at a small machine shop with no data scientist (see The problem). The score is backtested on all 10,000 AI4I 2020 records (`php artisan prism:backtest`), and the limits of that test are stated. Cites an ABB survey and a 2019 CNC SME cost model paper, with their scope limits (see Evidence behind the problem). Compares the six checks with four condition monitoring sources (see What the literature monitors). |
-| Functionality & Technical Execution | 25% | Live on AWS Elastic Beanstalk over HTTPS. Sign-in is on, with an email invite flow for judges. AI calls have timeouts, token caps and a built-in fallback. Server-side checks and rate limits guard the override log and the AI routes. Security headers include a per-request Content-Security-Policy nonce (see Security headers). Error pages for 404, 419, 429, 500 and 503 use one shared layout, show a Return to Dashboard link and never print the exception message. Automated tests run on every push (GitHub Actions, PHP 8.4 and 8.5). |
+| Functionality & Technical Execution | 25% | Live on AWS Elastic Beanstalk over HTTPS. Sign-in is on, with an email invite flow for judges. AI calls have timeouts, token caps and a built-in fallback. Server-side checks and rate limits guard the override log and the AI routes. Security headers include a per-request Content-Security-Policy nonce (see Security headers). Automated tests run on every push (GitHub Actions, PHP 8.4 and 8.5). |
 | AI Integration & Innovation | 20% | Rules score the machine. On request, Claude investigates the reading with five read-only tools (a check, a trend, a time-to-limit estimate, a what-if on a copy of the reading, and the backtest figures), then a second call drafts the work order. Code rejects any answer with a number or tool the AI was not given, and code sets the work order priority. The AI never changes the score. See AI steps. |
 | Code Quality, Documentation & GitHub Transparency | 15% | One class per failure check in `app/Services/Checks`, with every limit and its source in `config/prism.php`. Secrets live in environment properties, not in the repo. Login attempts are rate limited. Commit history starts Sep 28, 2026. See Run locally for setup steps. |
 | User Experience, Design & Polish | 10% | Plain-English "Why this score" and risk bands shown as words. Lighthouse accessibility score of 100 on the pages tested on Oct 20 and 21, 2026. Light and dark themes, keyboard and VoiceOver pass, reduced motion respected. See Ethical AI, accessibility and sources. |
@@ -122,7 +122,7 @@ Limits: the sources are from 2009 to 2018. For Rastegari and Archenti and for Zh
 
 ## How the score works
 
-- The score is rule-based. Each failure check is its own class in `app/Services/Checks`. Every limit and its source lives in `config/prism.php`. `app/Services/RiskScorer.php` only collects the results.
+- The score is rule-based. A learned estimate sits beside it (see "Learned estimate" below). Each failure check is its own class in `app/Services/Checks`. Every limit and its source lives in `config/prism.php`. `app/Services/RiskScorer.php` only collects the results.
 - Per the code comments, the AI4I 2020 limits for heat, power and overstrain reproduce those labels in the dataset. Random failures cannot be predicted from any reading, so PRISM does not score them.
 - Readings come from `app/Services/SensorSimulator.php`. The same scenario and reading number always give the same reading.
 - AI4I has no vibration or machine run hours column. Those two readings are simulated, and their checks are not backtested. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) match the Group 2 rigid-foundation zone boundaries listed for ISO 20816-3, which replaced ISO 10816-3. That standard covers industrial machines above 15 kW and does not list machine tools, so these are demo values for a milling machine. The 8,000 hour overhaul interval is a placeholder.
@@ -197,11 +197,36 @@ Fields PRISM draws on
 - Occupational safety: the stop instruction sits beside OSHA lockout/tagout, 29 CFR 1910.147. PRISM does not lock out or tag out anything.
 - Law and privacy: Terms, Privacy Policy and the `/ai` disclosure.
 
+## Learned estimate
+
+Next to the rule score, the dashboard shows "Learned estimate: X% chance of failure". A gradient boosting model produces it. The rules still decide the score, the band and the action.
+
+- Inputs (14): air and process temperature, speed, torque, tool wear, machine type, temperature gap, power, wear times torque, and the stress of the four AI4I checks.
+- Training: `ml/train_model.py`, scikit-learn, on the AI4I records (9,982 after dropping 18 random-failure-only rows). The trained trees are exported to `resources/ml/failure_model.json` and run in PHP (`app/Services/Ml`). A test checks PHP against Python on 300 saved rows to within 0.000001.
+- Method: 30% of records were locked as a test set before any model choice (seed 42). The model size was picked by 5-fold cross-validation on the other 70%. The test set was scored once.
+- Calibration: next to the percentage the page shows how often readings in the same range failed, from predictions made on rows the model did not train on.
+
+Locked test set (2,995 records, 102 failures). Flag rate set to about the share the rules flag as High.
+
+| Model | PR-AUC | Recall | Precision |
+|---|---|---|---|
+| PRISM rules, High band | 0.860 | 0.902 | 0.495 |
+| Gradient boosting (shipped) | 0.919 | 0.951 | 0.449 |
+| Decision tree, depth 4 | 0.914 | 0.971 | 0.318 |
+| Decision tree, depth 6 | 0.914 | 0.951 | 0.383 |
+| Logistic regression, engineered inputs | 0.506 | 0.725 | 0.346 |
+| Logistic regression, raw inputs | 0.458 | 0.637 | 0.301 |
+
+- PR-AUC gap, boosting minus rules: +0.059. A bootstrap 95% interval is +0.020 to +0.103. In 15 repeated cross-validation folds, boosting was ahead in all 15 (mean PR-AUC 0.906 vs 0.837).
+- Precision is lower than the rules at the chosen flag rate. Recall is higher. The estimate is not a clear win on every measure.
+- Caveats: AI4I is synthetic. Its failure labels come from the same rules the dataset documents, and PRISM's rule limits come from those documents, so the model mostly relearns those rules plus smoother edges. Each model type got one configuration, not a full search. Cross-validation folds share rows, so the 15 folds are not independent. Nothing here shows the model works on a real machine.
+- Full numbers: `resources/ml/model_card.json`. Retrain with `php artisan prism:export-features data/ai4i2020.csv --out=ml/features.csv` and `python3 ml/train_model.py`.
+
 ## Roadmap (not built)
 
 These items are not in the app today. They are goals, not commitments.
 
-- A trained machine-learning classifier with confidence scores. The scorer class is built so a model could replace it without changing the page. A model would need to beat the rule-based score on the same backtest first.
+- Letting the learned estimate drive the score or the action. Today the rules decide. The estimate needs real machine data first, because AI4I is synthetic.
 - Entry of real readings by a technician. Every reading today is simulated.
 - A live sensor feed.
 - Automated alerts. PRISM today shows its instruction on screen and sends nothing.
@@ -250,7 +275,7 @@ What growing past one machine would need (none of this is built):
 
 ## Dataset
 
-PRISM takes its limits from, and backtests against, the AI4I 2020 Predictive Maintenance Dataset from the UCI Machine Learning Repository. It holds 10,000 records and 14 features. PRISM trains no model on it.
+PRISM takes its limits from, and backtests against, the AI4I 2020 Predictive Maintenance Dataset from the UCI Machine Learning Repository. It holds 10,000 records and 14 features. PRISM trains one model on it (see "Learned estimate").
 
 - Synthetic data: AI4I was generated to mirror real milling data. It is not pulled from a factory floor.
 - Rare failures: failures make up roughly 3 percent of records. A rule or model that predicts "no failure" every time scores about 97 percent accuracy and has no value. The backtest above reports how often failures fall in each band, not accuracy.

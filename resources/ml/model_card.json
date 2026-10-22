@@ -1,0 +1,139 @@
+{
+ "trained": "2026-10-22",
+ "library": "scikit-learn 1.9.1",
+ "algorithm": "Gradient boosted decision trees (HistGradientBoostingClassifier)",
+ "trees": 100,
+ "tree_depth": 3,
+ "dataset": {
+  "file": "AI4I 2020",
+  "records_used": 9982,
+  "failures": 339,
+  "left_out": "18 records whose only failure is random failure"
+ },
+ "inputs": [
+  "air",
+  "proc",
+  "rpm",
+  "torque",
+  "wear",
+  "typeM",
+  "typeH",
+  "dT",
+  "power_w",
+  "wear_x_torque",
+  "s_tool_wear",
+  "s_heat",
+  "s_power",
+  "s_overstrain"
+ ],
+ "locked_test": {
+  "records": 2995,
+  "failures": 102,
+  "seed": 42,
+  "flag_share": 0.0646,
+  "results": {
+   "PRISM rules, High band": {
+    "pr_auc": 0.8597,
+    "roc_auc": 0.9873,
+    "precision": 0.4946,
+    "recall": 0.902,
+    "flagged": 0.0621
+   },
+   "PRISM rules, Elevated or High": {
+    "pr_auc": 0.8597,
+    "roc_auc": 0.9873,
+    "precision": 0.132,
+    "recall": 0.9902,
+    "flagged": 0.2554
+   },
+   "Gradient boosting (shipped type)": {
+    "pr_auc": 0.9193,
+    "roc_auc": 0.9896,
+    "precision": 0.4491,
+    "recall": 0.951,
+    "flagged": 0.0721,
+    "brier": 0.0047
+   },
+   "Logistic regression, raw inputs": {
+    "pr_auc": 0.4579,
+    "roc_auc": 0.9219,
+    "precision": 0.3009,
+    "recall": 0.6373,
+    "flagged": 0.0721
+   },
+   "Logistic regression, engineered inputs": {
+    "pr_auc": 0.5057,
+    "roc_auc": 0.9513,
+    "precision": 0.3458,
+    "recall": 0.7255,
+    "flagged": 0.0715
+   },
+   "Decision tree, depth 4": {
+    "pr_auc": 0.9141,
+    "roc_auc": 0.9739,
+    "precision": 0.3183,
+    "recall": 0.9706,
+    "flagged": 0.1038
+   },
+   "Decision tree, depth 6": {
+    "pr_auc": 0.9136,
+    "roc_auc": 0.9739,
+    "precision": 0.3834,
+    "recall": 0.951,
+    "flagged": 0.0845
+   }
+  },
+  "pr_auc_gap_boosting_minus_rules_95pct_interval": [
+   0.02,
+   0.103
+  ]
+ },
+ "cross_validation": {
+  "folds": 15,
+  "pr_auc_boosting": 0.906,
+  "pr_auc_rules": 0.837,
+  "pr_auc_gap_mean": 0.069,
+  "folds_boosting_ahead": 15,
+  "recall_boosting": 0.908,
+  "recall_rules": 0.858,
+  "precision_boosting": 0.47,
+  "precision_rules": 0.453
+ },
+ "calibration": [
+  {
+   "from": 0.0,
+   "to": 0.01,
+   "records": 8887,
+   "failed": 10,
+   "rate": 0.0011252391133115788
+  },
+  {
+   "from": 0.01,
+   "to": 0.05,
+   "records": 470,
+   "failed": 23,
+   "rate": 0.04893617021276596
+  },
+  {
+   "from": 0.05,
+   "to": 0.2,
+   "records": 308,
+   "failed": 19,
+   "rate": 0.06168831168831169
+  },
+  {
+   "from": 0.2,
+   "to": 0.5,
+   "records": 25,
+   "failed": 0,
+   "rate": 0.0
+  },
+  {
+   "from": 0.5,
+   "to": 1.0,
+   "records": 292,
+   "failed": 287,
+   "rate": 0.9828767123287672
+  }
+ ]
+}

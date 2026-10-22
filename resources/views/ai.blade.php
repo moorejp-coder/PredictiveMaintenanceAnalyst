@@ -60,6 +60,7 @@
     <table>
         <tr><th scope="col">Part of PRISM</th><th scope="col">Uses AI?</th><th scope="col">Detail</th></tr>
         <tr><td>Risk score and band</td><td>No</td><td>Six rule-based checks. The score is the highest of the six. Limits live in <code>config/prism.php</code>.</td></tr>
+        <tr><td>Learned estimate</td><td>Yes, trained model</td><td>A gradient boosting model trained offline on AI4I (<code>ml/train_model.py</code>) and run in PHP from <code>resources/ml/failure_model.json</code>. It shows a chance of failure beside the score and never changes the score, band or action. Test results and caveats are in <code>resources/ml/model_card.json</code>.</td></tr>
         <tr><td>"Why this score" text</td><td>No</td><td>Fixed sentence templates written by the checks.</td></tr>
         <tr><td>Likely cause</td><td>Yes, on request</td><td>Call 1 in <code>app/Services/Ai/Investigator.php</code>. Claude calls up to five read-only tools in <code>app/Services/Ai/ToolBox.php</code>, in at most four rounds. If the investigator fails a check, the older single call in <code>Diagnoser.php</code> runs, then the built-in text.</td></tr>
         <tr><td>Drafted work order</td><td>Yes, on request</td><td>Call 2 in <code>app/Services/Ai/WorkOrderStep.php</code>. Code sets the priority from the band. The model does not.</td></tr>

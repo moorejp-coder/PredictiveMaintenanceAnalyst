@@ -47,6 +47,8 @@
             display: inline-block; padding: 4px 14px; border-radius: var(--prism-radius-sm); font-weight: 600;
             border: 2px solid var(--band); color: var(--band);
         }
+        .estimate { margin: var(--prism-space-2) 0 0; font-size: 0.875rem; color: var(--prism-muted); }
+        .estimate strong { color: inherit; font-family: var(--prism-font-data); }
         .alert-title { margin: var(--prism-space-2) 0 0; padding: var(--prism-space-2) var(--prism-space-3); text-align: left; font-weight: 600;
             color: var(--prism-risk-high); border-left: 4px solid var(--prism-risk-high); background: var(--prism-surface-raised); border-radius: var(--prism-radius-sm); }
         /* Hidden but still in the layout, so the card keeps one height when the band changes. */
@@ -180,6 +182,7 @@
             <span class="chip" id="band">No Assessment Yet</span>
             <p class="alert-title" id="alert-title" hidden>High Predicted Failure Risk</p>
             <p class="action" id="action">Waiting for the first simulated reading.</p>
+            <p class="estimate" id="estimate" hidden></p>
             <div class="override" id="override" hidden>
                 <button type="button" class="btn" id="override-open" aria-haspopup="dialog">Keep running anyway</button>
                 <p class="note">If you keep the machine running, PRISM records your name, the time, and your reason.</p>
@@ -436,6 +439,19 @@
         ov.box.hidden = risk.band !== 'high';
         el.action.textContent = risk.action;
         el.why.textContent = risk.explanation;
+        const est = latest.estimate;
+        const estEl = $('estimate');
+        if (est) {
+            estEl.replaceChildren();
+            estEl.append('Learned estimate: ');
+            const b = document.createElement('strong');
+            b.textContent = est.percent;
+            estEl.append(b, ' chance of failure.');
+            if (est.range && est.range_records) {
+                estEl.append(' In the AI4I data, ' + est.range_failed.toLocaleString('en-US') + ' of ' + est.range_records.toLocaleString('en-US') + ' readings estimated at ' + est.range + ' failed.');
+            }
+            estEl.hidden = false;
+        }
 
         risk.drivers.forEach((d) => {
             const row = $('driver-' + d.key);

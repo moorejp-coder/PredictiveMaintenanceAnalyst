@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Ml\LearnedEstimate;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
 use Illuminate\Http\JsonResponse;
@@ -33,6 +34,7 @@ class DashboardController extends Controller
             'tick' => (int) $data['tick'],
             'reading' => $reading,
             'risk' => (new RiskScorer('L'))->score($reading),
+            'estimate' => (new LearnedEstimate)->estimate($reading, 'L'),
         ])
             ->header('X-Robots-Tag', 'noindex')
             // The same scenario and tick always give the same reading, so the
