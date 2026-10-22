@@ -7,6 +7,8 @@ Local site: http://127.0.0.1:8000/ (run `php artisan serve` in the project folde
 
 Stack: Laravel (PHP 8.4), SQLite, AWS Elastic Beanstalk with nginx and a Let's Encrypt certificate, the Anthropic Claude API for explanations, GitHub Actions for tests.
 
+Hosting: the server runs on the AWS Free Tier. The entrant confirmed this in the AWS account on Oct 22, 2026. The Claude API is a separate service and is not part of the free tier.
+
 PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It scores risk from 0 to 100 with fixed rules, explains the score in plain English, and shows the stress on each failure check. Every reading on the dashboard is simulated. The score and the action come from fixed rules. A trained gradient boosting model adds a second opinion, a learned estimate of failure chance, and never changes the score.
 
 ## What PRISM does today
