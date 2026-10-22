@@ -105,7 +105,7 @@ Checks after you sign in. The entrant ran steps 1 to 6 on the live site on Oct 2
 
 Edge cases the tests cover: an unknown scenario name, an override for a reading that is not High, a score sent by the browser (the server ignores it), a missing AI key, an AI timeout, an unknown AI tool, a wrong invite token, an invite link used twice, an invite link older than 7 days, a short or mismatched password, an invalid invite email, a wrong sign-in password (one generic message), the rate limit on sign-in, diagnosis, work order, override, rating, set-password and invite routes (429 after the allowed number), the styled 419 and 429 pages, and the health check. Test files: `OverrideLogTest`, `AiStepsTest`, `InvestigatorTest`, `InviteTest`, `LoginTest`, `ErrorPagesTest`, `RateLimitTest`, `HealthTest`.
 
-`/health` is public. It returns `{"status":"ok"}` when the app reaches its database and the `users`, `override_logs` and `ai_feedback` tables exist. Otherwise it returns 503 with `{"status":"unavailable"}` and writes the reason to the log. It names no table in the reply. Elastic Beanstalk does not use it yet.
+`/health` is public. It returns `{"status":"ok"}` when the app reaches its database and the `users`, `override_logs` and `ai_feedback` tables exist. Otherwise it returns 503 with `{"status":"unavailable"}` and writes the reason to the log. It names no table in the reply. It returned ok on the live site on Oct 22, 2026. Elastic Beanstalk does not use it yet.
 
 ## The problem
 
