@@ -97,7 +97,7 @@
         .override { margin-top: var(--prism-space-3); text-align: left; }
         .override[hidden] { display: block; visibility: hidden; }
         .override .note { margin: var(--prism-space-1) 0 0; color: var(--prism-muted); font-size: 0.8125rem; }
-        .override .logged { margin: var(--prism-space-2) 0 0; font-size: 0.875rem; overflow-wrap: anywhere; min-height: 2.6em; }
+        .override .logged { margin: var(--prism-space-2) 0 0; font-size: 0.875rem; overflow-wrap: anywhere; }
         .ov-modal { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 2px solid var(--prism-risk-high); border-radius: 12px; background: var(--prism-surface-raised, var(--prism-surface, #fff)); color: inherit; overflow: auto; }
         .ov-modal::backdrop { background: rgba(0, 0, 0, 0.6); }
         .ov-inner { padding: 20px 24px 24px; }
@@ -184,9 +184,6 @@
                 <p class="note">If you keep the machine running, PRISM records your name, the time, and your reason.</p>
                 <p class="logged" id="override-logged" role="status"></p>
             </div>
-            @php($hb = config('prism.backtest.high'))
-            <p class="confidence"><strong>How often a High score is right.</strong> On the AI4I test data, {{ number_format($hb['failed']) }} of {{ number_format($hb['total']) }} High readings ({{ number_format($hb['failed'] / $hb['total'] * 100, 1) }}%) were real failures. Some High scores are false alarms. This describes the test data and is not a forecast for this machine. <a href="{{ url('/ai#limits') }}">Limits</a></p>
-            <p class="disclaimer">PRISM supports technician decisions. Confirm findings through inspection.</p>
         </section>
 
         <section class="card why" aria-labelledby="why-title">
@@ -194,6 +191,9 @@
             <p id="why">Analyzing readings...</p>
             <div class="drivers" id="drivers" role="group" aria-label="Stress on each failure mode"></div>
             <p class="hint">The score is the highest of the six colored bars. The gray rotational speed bar is context only and is not scored. It shows how close speed is to the {{ number_format(config('prism.heat.speed_limit_rpm')) }} rpm heat limit.</p>
+            @php($hb = config('prism.backtest.high'))
+            <p class="confidence"><strong>How often a High score is right.</strong> On the AI4I test data, {{ number_format($hb['failed']) }} of {{ number_format($hb['total']) }} High readings ({{ number_format($hb['failed'] / $hb['total'] * 100, 1) }}%) were real failures. Some High scores are false alarms. This describes the test data and is not a forecast for this machine. <a href="{{ url('/ai#limits') }}">Limits</a></p>
+            <p class="disclaimer">PRISM supports technician decisions. Confirm findings through inspection.</p>
         </section>
     </div>
 
