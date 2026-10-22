@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Page expired')
+@section('code', '419')
+@section('heading', 'Page Expired')
+@section('lead', 'Your session ended before the form was sent. Return to the dashboard and try again. Nothing was saved.')

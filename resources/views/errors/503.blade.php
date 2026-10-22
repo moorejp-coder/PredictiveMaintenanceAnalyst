@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Back soon')
+@section('code', '503')
+@section('heading', 'Back Soon')
+@section('lead', 'PRISM is being updated. Try again in a minute.')

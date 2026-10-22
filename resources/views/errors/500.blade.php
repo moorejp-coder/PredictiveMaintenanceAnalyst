@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', 'Server error')
+@section('code', '500')
+@section('heading', 'Something Went Wrong')
+@section('lead', 'PRISM hit an error on its side. Nothing you did caused it, and no reading or score was changed. Return to the dashboard and try again in a minute.')
