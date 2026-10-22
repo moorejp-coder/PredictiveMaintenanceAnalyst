@@ -118,6 +118,7 @@ Limits: the sources are from 2009 to 2018. For Rastegari and Archenti and for Zh
 - AI4I has no vibration or machine run hours column. Those two readings are simulated, and their checks are not backtested. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) match the Group 2 rigid-foundation zone boundaries listed for ISO 20816-3, which replaced ISO 10816-3. That standard covers industrial machines above 15 kW and does not list machine tools, so these are demo values for a milling machine. The 8,000 hour overhaul interval is a placeholder.
 - Run hours alone never score above 50 (Elevated). Tool wear alone never scores above 60.
 - Backtest of the four AI4I checks (tool wear, heat, power, overstrain) on the 10,000 AI4I records. A record counts as failed when its Machine failure label is 1. 18 records are left out (see below). Low: 6 of 7,448 failed (0.1%). Elevated: 42 of 1,889 failed (2.2%). High: 291 of 645 failed (45.1%).
+- Catch rate, from the same counts: the High band holds 291 of the 339 labeled failures (291 / 339 = 85.8%) while holding 645 of the 9,982 scored records (645 / 9,982 = 6.5%). The Low band holds 6 of the 339 failures (1.8%). The limits below apply to these figures.
 - Reproduce the figures with `php artisan prism:backtest`. The dataset file is `data/ai4i2020.csv`. The command also prints failures by AI4I failure mode.
 
 Read the backtest with three limits in mind:
