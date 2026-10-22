@@ -29,6 +29,13 @@ Source: `.ebextensions/01-laravel.config` and `.platform/hooks/postdeploy/01_ove
 4. Upload the latest deploy zip. The hooks create the database, run the migrations, create the fallback judge account and request the certificate.
 5. Read the deploy logs for lines starting with `PRISM:` or `PRISM HTTPS:`. They name any step that failed.
 
+## If the site does not load
+
+1. In the EC2 console, open Elastic IPs. Check that the address named PRISM-CUA-env is still attached to the instance.
+2. In DuckDNS, check that the prismcua address matches it. Update it if it differs.
+3. Open `http://prism-cua-env.eba-fsf9rffw.us-east-2.elasticbeanstalk.com/login` in a normal browser tab. If it loads, the app is up and nginx lost its HTTPS settings. Upload the latest deploy zip, which writes them again.
+4. If it does not load, open the Elastic Beanstalk environment page and read the health status and the newest events.
+
 ## Verify
 
 1. `https://prismcua.duckdns.org/` loads over HTTPS with the dark theme, logo and fonts.
@@ -46,4 +53,5 @@ Source: `.ebextensions/01-laravel.config` and `.platform/hooks/postdeploy/01_ove
 
 - The override log history and AI ratings from before the replacement cannot be recovered.
 - This runbook does not back up the database. Backing it up to S3 or moving to RDS were the other options considered.
-- Not confirmed: which AWS events replace the instance, and whether an Elastic IP is attached.
+- Not confirmed: which AWS events replace the instance, and whether the attached Elastic IP stays attached after the environment is rebuilt.
+- Observed on Oct 22, 2026: the EC2 console lists an Elastic IP named PRISM-CUA-env attached to the instance, and the DuckDNS record for prismcua holds the same address. The author did not record who created it.
