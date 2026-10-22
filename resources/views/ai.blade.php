@@ -7,7 +7,7 @@
     <meta name="description" content="Where PRISM uses AI, what it sends, who decides, what the tests show, the sources PRISM draws on, and how the dashboard supports people who use assistive technology.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     @include('partials.brand-head')
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         html { scroll-behavior: smooth; }
         body { line-height: 1.6; }
         .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }

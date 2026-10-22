@@ -32,7 +32,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026. Th
 | Criterion | Weight | How PRISM addresses it |
 |---|---|---|
 | Problem/Opportunity Identification & Relevance | 20% | Names the user: a maintenance technician at a small machine shop with no data scientist (see The problem). The score is backtested on all 10,000 AI4I 2020 records (`php artisan prism:backtest`), and the limits of that test are stated. Cites an ABB survey and a 2019 CNC SME cost model paper, with their scope limits (see Evidence behind the problem). Compares the six checks with four condition monitoring sources (see What the literature monitors). |
-| Functionality & Technical Execution | 25% | Live on AWS Elastic Beanstalk over HTTPS. Sign-in is on, with an email invite flow for judges. AI calls have timeouts, token caps and a built-in fallback. Server-side checks and rate limits guard the override log and the AI routes. Automated tests run on every push (GitHub Actions, PHP 8.4 and 8.5). |
+| Functionality & Technical Execution | 25% | Live on AWS Elastic Beanstalk over HTTPS. Sign-in is on, with an email invite flow for judges. AI calls have timeouts, token caps and a built-in fallback. Server-side checks and rate limits guard the override log and the AI routes. Security headers include a per-request Content-Security-Policy nonce (see Security headers). Automated tests run on every push (GitHub Actions, PHP 8.4 and 8.5). |
 | AI Integration & Innovation | 20% | Rules score the machine. On request, Claude investigates the reading with five read-only tools (a check, a trend, a time-to-limit estimate, a what-if on a copy of the reading, and the backtest figures), then a second call drafts the work order. Code rejects any answer with a number or tool the AI was not given, and code sets the work order priority. The AI never changes the score. See AI steps. |
 | Code Quality, Documentation & GitHub Transparency | 15% | One class per failure check in `app/Services/Checks`, with every limit and its source in `config/prism.php`. Secrets live in environment properties, not in the repo. Login attempts are rate limited. Commit history starts Sep 28, 2026. See Run locally for setup steps. |
 | User Experience, Design & Polish | 10% | Plain-English "Why this score" and risk bands shown as words. Lighthouse accessibility score of 100 on the pages tested on Oct 20 and 21, 2026. Light and dark themes, keyboard and VoiceOver pass, reduced motion respected. See Ethical AI, accessibility and sources. |
@@ -42,6 +42,16 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026. Th
 ## HTTPS
 
 The live site uses a free Let's Encrypt certificate on a free DuckDNS name. nginx on the Elastic Beanstalk instance ends the encrypted connection. The setup is configured to send http requests for this name to https and to renew the certificate on its own. The files are `.ebextensions/02-https.config`, `.platform/nginx/conf.d/elasticbeanstalk/acme.conf` and `.platform/hooks/postdeploy/02_https.sh`. The name and the contact email are environment properties (`APP_DOMAIN`, `CERTBOT_EMAIL`, `APP_URL`), not code.
+
+## Security headers
+
+`app/Http/Middleware/SecurityHeaders.php` adds browser security headers to every page Laravel serves. `tests/Feature/SecurityHeadersTest.php` checks them.
+
+- Content-Security-Policy: scripts and styles run only with a random nonce the server makes for each request. Every inline `<script>` and `<style>` in `resources/views` carries it. The policy allows no `unsafe-inline` or `unsafe-eval` for scripts, loads everything from PRISM's own origin, blocks plugins and blocks framing (`frame-ancestors 'none'`). The site loads no outside scripts, styles or fonts, so none are listed.
+- Strict-Transport-Security (one year) and `upgrade-insecure-requests`, sent only when the request is HTTPS or `APP_URL` starts with `https://`.
+- X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy and Cross-Origin-Opener-Policy. A controller that sets its own value keeps it (the set-password page sends `no-referrer`).
+- The session cookie is marked Secure when `APP_URL` starts with `https://`. `SESSION_SECURE_COOKIE` overrides this.
+- Limits: inline `style="..."` attributes are still allowed (`style-src-attr`), because several pages use them. Files nginx serves directly (CSS, fonts, images) do not pass through Laravel and carry no PRISM headers. No independent scan has been run.
 
 ## Sign in and judge invites
 

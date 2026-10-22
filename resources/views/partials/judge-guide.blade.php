@@ -4,7 +4,7 @@
   session, and the "Guide" button in the toolbar (#guide-open) opens it again.
   Button names below match the real buttons on the dashboard.
 --}}
-<style>
+<style nonce="{{ $cspNonce ?? '' }}">
     .guide-modal { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 2px solid var(--prism-accent); border-radius: 12px; background: var(--prism-surface-raised); color: var(--prism-text); overflow: auto; }
     .guide-modal::backdrop { background: rgba(0, 0, 0, 0.7); }
     .guide-inner { padding: 20px 24px 24px; }
@@ -50,7 +50,7 @@
         </div>
     </div>
 </dialog>
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
     (function () {
         var dlg = document.getElementById('guide-modal');
         var openBtn = document.getElementById('guide-open');

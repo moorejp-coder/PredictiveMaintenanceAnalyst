@@ -7,7 +7,7 @@
     <meta name="description" content="The terms for using PRISM, a demo predictive maintenance dashboard that runs on simulated readings.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     @include('partials.brand-head')
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { line-height: 1.6; }
         .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
         h1 { margin: 0 0 4px; font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }

@@ -7,7 +7,7 @@
     <title>Invite judges | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="Entrant page for inviting contest judges to PRISM by email. Each judge gets a link to choose a password.">
     @include('partials.brand-head')
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { line-height: 1.6; }
         .wrap { max-width: 760px; margin: 0 auto; padding: var(--prism-space-8) max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
         h1 { margin: 0 0 var(--prism-space-2); font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }

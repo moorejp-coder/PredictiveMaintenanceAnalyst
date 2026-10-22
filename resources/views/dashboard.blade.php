@@ -8,7 +8,7 @@
     <link rel="canonical" href="{{ $canonicalUrl }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('partials.brand-head')
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         :root { --band: var(--prism-risk-low); }
         .wrap { max-width: 1120px; margin: 0 auto; padding: var(--prism-space-4) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 
@@ -266,7 +266,7 @@
     </footer>
 </div>
 
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 (function () {
     'use strict';
 

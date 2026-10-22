@@ -8,7 +8,7 @@
     <meta name="description" content="Sign in to the PRISM milling machine failure-risk dashboard. Contest judges receive their sign-in details by a one-time secret link.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     @include('partials.brand-head')
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { line-height: 1.6; }
         .wrap { max-width: 480px; margin: 0 auto; padding: var(--prism-space-8) max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
         h1 { margin: 0 0 var(--prism-space-2); font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }

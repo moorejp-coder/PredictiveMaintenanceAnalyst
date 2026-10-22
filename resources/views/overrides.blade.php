@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Override Log | {{ config('app.name', 'PRISM') }}</title>
     @include('partials.brand-head')
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { line-height: 1.6; }
         .wrap { max-width: 1120px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
         h1 { margin: 0 0 4px; font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.75rem); }

@@ -7,7 +7,7 @@
     <meta name="description" content="Plain answers on what PRISM does, what PRISM does not do, who owns PRISM, and what PRISM does not promise.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     @include('partials.brand-head')
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         html { scroll-behavior: smooth; }
         body { line-height: 1.6; }
         .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
@@ -345,7 +345,7 @@
     <p style="margin-top:32px"><a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a> &middot; <a href="{{ url('/') }}">Dashboard</a></p>
 </main>
 
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
     (function () {
         var all = function () { return document.querySelectorAll('details'); };
         document.getElementById('expand-all').addEventListener('click', function () {

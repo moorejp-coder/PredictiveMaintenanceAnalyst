@@ -7,7 +7,7 @@
 <section class="card ai" id="ai-panel" aria-labelledby="ai-title"
          data-diagnosis="{{ url('/api/diagnosis') }}" data-order="{{ url('/api/work-order') }}"
          data-feedback="{{ url('/api/ai-feedback') }}">
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         .ai { margin-top: 12px; border: 2px solid var(--prism-accent, #8ab4f8); background: var(--prism-surface-raised, var(--prism-surface)); }
         .ai-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; }
         .ai-head h2 { margin: 0; font-size: 1.25rem; }
@@ -79,7 +79,7 @@
             </div>
         </div>
     </dialog>
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
     (function () {
         'use strict';
         const panel = document.getElementById('ai-panel');

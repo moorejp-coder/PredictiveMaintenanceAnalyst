@@ -6,7 +6,7 @@
 <link rel="preload" href="{{ asset('fonts/ibm-plex-sans-latin-400-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ asset('fonts/ibm-plex-sans-latin-600-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ asset('css/prism.css') }}?v={{ @filemtime(public_path('css/prism.css')) }}">
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
     // Apply a saved theme before the page paints. Without a saved choice, the CSS follows the system setting.
     (function () {
         var root = document.documentElement;

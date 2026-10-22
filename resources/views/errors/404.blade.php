@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex">
     <title>Page not found | {{ config('app.name', 'PRISM') }}</title>
     @include('partials.brand-head')
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { min-height: 100vh; display: flex; align-items: center; justify-content: center; line-height: 1.6; }
         .panel { width: 100%; max-width: 520px; margin: 24px 16px; padding: var(--prism-space-8) var(--prism-space-6); text-align: center; }
         .panel .prism-logo { margin-bottom: var(--prism-space-6); }

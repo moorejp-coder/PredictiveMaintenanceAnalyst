@@ -8,7 +8,7 @@
     <title>Set your password | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="Choose a password for your PRISM contest judge account, then sign in to the milling machine failure-risk dashboard.">
     @include('partials.brand-head')
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { line-height: 1.6; }
         .wrap { max-width: 480px; margin: 0 auto; padding: var(--prism-space-8) max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
         h1 { margin: 0 0 var(--prism-space-2); font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }

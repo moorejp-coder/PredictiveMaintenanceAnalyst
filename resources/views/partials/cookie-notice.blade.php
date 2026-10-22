@@ -1,5 +1,5 @@
 <div id="cookie-notice" role="region" aria-label="Cookie notice" hidden>
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         #cookie-notice { position: fixed; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); z-index: 1000; max-width: 560px;
                          margin: 0 auto; background: var(--prism-surface, #111A2E); color: var(--prism-text, #E8EEFB); border: 1px solid var(--prism-border, #26355A);
                          border-radius: 10px; padding: 14px 16px; font: 0.875rem/1.5 var(--prism-font-ui, system-ui, sans-serif);
@@ -16,7 +16,7 @@
     <p>PRISM sets two cookies, a session cookie and a security cookie. Both are required for the site to work. PRISM sets no analytics, advertising or tracking cookies. <a href="{{ url('/privacy') }}">Read the privacy policy</a>.</p>
     <button type="button" id="cookie-notice-ok">Got it</button>
 </div>
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 (function () {
     var KEY = 'prism_cookie_notice_v1';
     var box = document.getElementById('cookie-notice');
