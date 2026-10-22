@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
  *   appear in the input or in a tool result. Otherwise the answer is rejected
  *   and the caller shows the older Diagnose answer or the built-in text.
  *
- * @phpstan-type InvestigationResult array{source: string, data: array{cause: string, checks: list<string>, evidence: list<string>}|null, tokens: array{input: int, output: int}|null, reason: string|null, trace: list<array{tool: string, summary: string, ok: bool}>}
+ * @phpstan-type InvestigationResult array{source: string, data: array{cause: string, checks: list<string>, evidence: list<string>, tested_fix?: array{channel: string, value: float|int, score_from: int, score_to: int, text: string}|null}|null, tokens: array{input: int, output: int}|null, reason: string|null, trace: list<array{tool: string, summary: string, ok: bool}>}
  *
  * run() returns the same shape as AiStep::run() plus trace: a list of
  * {tool, summary, ok} for the page to show as "What the AI looked at".
@@ -361,7 +361,7 @@ final class Investigator
     }
 
     /**
-     * @param  array{cause: string, checks: list<string>, evidence: list<string>}|null  $data
+     * @param  array{cause: string, checks: list<string>, evidence: list<string>, tested_fix?: array{channel: string, value: float|int, score_from: int, score_to: int, text: string}|null}|null  $data
      * @param  list<array{tool: string, summary: string, ok: bool}>  $trace
      * @param  array{input: int, output: int}|null  $tokens
      * @return InvestigationResult

@@ -358,6 +358,23 @@ final class ToolBox
     }
 
     /**
+     * The five columns the learned model reads, as floats.
+     *
+     * @param  array<string, float|int>  $reading
+     * @return array{air_temp_k: float, process_temp_k: float, rotational_speed_rpm: float, torque_nm: float, tool_wear_min: float}
+     */
+    private static function shaped(array $reading): array
+    {
+        return [
+            'air_temp_k' => (float) $reading['air_temp_k'],
+            'process_temp_k' => (float) $reading['process_temp_k'],
+            'rotational_speed_rpm' => (float) $reading['rotational_speed_rpm'],
+            'torque_nm' => (float) $reading['torque_nm'],
+            'tool_wear_min' => (float) $reading['tool_wear_min'],
+        ];
+    }
+
+    /**
      * The trained model's chance of failure, in percent, for the real reading
      * and for a changed copy. Null when the model file cannot be read, so the
      * what_if still works without it.
@@ -371,8 +388,8 @@ final class ToolBox
             $learned = new LearnedEstimate;
 
             return [
-                'now' => round(100 * $learned->estimate($this->reading, $this->quality)['probability'], 1),
-                'if_changed' => round(100 * $learned->estimate($copy, $this->quality)['probability'], 1),
+                'now' => round(100 * $learned->estimate(self::shaped($this->reading), $this->quality)['probability'], 1),
+                'if_changed' => round(100 * $learned->estimate(self::shaped($copy), $this->quality)['probability'], 1),
             ];
         } catch (\Throwable) {
             return null;
@@ -383,7 +400,7 @@ final class ToolBox
     private function getLearnedEstimate(): array
     {
         try {
-            $e = (new LearnedEstimate)->estimate($this->reading, $this->quality);
+            $e = (new LearnedEstimate)->estimate(self::shaped($this->reading), $this->quality);
         } catch (\Throwable) {
             throw new \InvalidArgumentException('The learned estimate is not available.');
         }
