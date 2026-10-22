@@ -335,6 +335,68 @@ class InvestigatorTest extends TestCase
         }
     }
 
+    public function test_the_projection_is_added_when_the_cause_says_the_model_disagrees(): void
+    {
+        $projection = ['first_reading_at_20_percent' => 5, 'first_reading_at_50_percent' => 5];
+
+        $this->assertSame(
+            'The trained model disagrees, at 4%. The learned model projects 20% in about 5 readings.',
+            Investigator::addProjectionNote('The trained model disagrees, at 4%.', $projection),
+        );
+        // Only when the cause says disagree.
+        $plain = 'Overstrain is rising.';
+        $this->assertSame($plain, Investigator::addProjectionNote($plain, $projection));
+        // Not twice when the cause already gives the readings.
+        $said = 'The model disagrees now but projects 20% in 5 readings.';
+        $this->assertSame($said, Investigator::addProjectionNote($said, $projection));
+        // Nothing to add when no crossing is projected, or there is no projection.
+        $none = 'The trained model disagrees, at 4%.';
+        $this->assertSame($none, Investigator::addProjectionNote($none, ['first_reading_at_20_percent' => null, 'first_reading_at_50_percent' => null]));
+        $this->assertSame($none, Investigator::addProjectionNote($none, null));
+        // The 50 percent crossing is used when only it is projected.
+        $this->assertSame($none.' The learned model projects 50% in about 3 readings.', Investigator::addProjectionNote($none, ['first_reading_at_20_percent' => null, 'first_reading_at_50_percent' => 3]));
+    }
+
+    public function test_a_disagrees_cause_gets_the_projection_and_the_straight_line_caveat(): void
+    {
+        $tick = null;
+        $reach = null;
+        for ($t = 10; $t <= 58; $t++) {
+            $p = (new ToolBox('worn_tool', $t))->run('get_learned_estimate', [])['result']['projection']['first_reading_at_20_percent'] ?? null;
+            $band = (new RiskScorer('L'))->score((new SensorSimulator)->reading('worn_tool', $t))['band'];
+            if ($p !== null && $band !== 'low') {
+                [$tick, $reach] = [$t, $p];
+                break;
+            }
+        }
+        $this->assertNotNull($tick, 'No worn_tool reading projects a 20 percent chance.');
+
+        $answer = $this->answer([
+            'cause' => 'Tool wear is rising. The trained model disagrees with the band.',
+            'checks' => ['Pull the tool and look at the cutting edge.'],
+            'evidence' => ['get_learned_estimate', 'what_if'],
+        ]);
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->toolUse('toolu_1', 'get_learned_estimate', []), 200)
+            ->push($this->whatIf('toolu_2', 30.0), 200)
+            ->push($answer, 200)]);
+
+        $cause = $this->getJson('/api/diagnosis?scenario=worn_tool&tick='.$tick)->assertJsonPath('source', 'ai')->json('data.cause');
+
+        $this->assertStringContainsString("The learned model projects 20% in about {$reach} readings.", $cause);
+        $this->assertStringEndsWith('This is a straight-line estimate on simulated data.', $cause);
+    }
+
+    public function test_the_prompt_forbids_a_bare_disagreement_and_asks_what_a_time_counts_down_to(): void
+    {
+        Http::fake(['api.anthropic.com/*' => Http::response($this->good(), 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertOk();
+
+        Http::assertSent(fn ($r) => str_contains($r['system'], 'Never say the model disagrees with the band without also giving that projection')
+            && str_contains($r['system'], 'name what it counts down to'));
+    }
+
     public function test_the_tested_fix_says_so_when_the_rules_and_the_model_disagree(): void
     {
         $base = ['channel' => 'torque_nm', 'tried_value' => 40, 'current_score' => 76, 'score_if_changed' => 60, 'band_if_changed' => 'elevated'];

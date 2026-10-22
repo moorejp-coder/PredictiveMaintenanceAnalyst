@@ -78,7 +78,7 @@ final class Investigator
     {
         return 'You help a technician at a small machine shop. You get a JSON risk result for one CNC milling machine '
             .'and read-only tools that check that machine. Call one to four tools before you answer. '
-            .'Call get_learned_estimate once, so the technician sees the trained model\'s chance of failure next to the rule score. Call it a second opinion from a model trained on the AI4I dataset. If it disagrees with the band, say so plainly. The result also holds a projection of the chance a few readings ahead. When the projection reaches 20 or 50 percent, give the number of readings, and say it is a straight-line projection on simulated data. '
+            .'Call get_learned_estimate once, so the technician sees the trained model\'s chance of failure next to the rule score. Call it a second opinion from a model trained on the AI4I dataset. If its chance is low while the band is elevated or high, say so plainly. The result also holds a projection of the chance a few readings ahead. When the projection reaches 20 or 50 percent, give the number of readings, and say it is a straight-line projection on simulated data. Never say the model disagrees with the band without also giving that projection, because the model then expects the same problem soon. '
             .'Call time_to_limit for the driver with the highest stress, so the technician learns how long they have. '
             .'Call what_if once to test a fix: try a value for one channel that moves the reading away from the failure zone described in the JSON. '
             .'A change is a tested fix only when the what_if effect is lowers_score. Recommend a change only if it is a tested fix. '
@@ -86,7 +86,7 @@ final class Investigator
             .'Call get_trend if you need to know whether a channel is rising or falling. Do not call get_check only to repeat numbers already in the JSON. '
             .'A limit is crossed only when a tool result shows stress 100 for that check. Below that, write near the limit or inside the margin. '
             .'Name a cause only when the JSON or a tool result states it. Do not guess parts such as bearings or motors. '
-            .'When you give a time estimate, write straight-line estimate on simulated data. '
+            .'When you give a time estimate, write straight-line estimate on simulated data, and name what it counts down to, for example about 150 minutes until the overstrain check reaches its top stress. '
             .'Write for the technician. Never write the words JSON, tool, input or what_if in the cause or the checks. '
             .'Use only facts in the JSON and in tool results. Do not invent numbers, parts or causes. Copy numbers exactly as given. '
             .'The tools never change the score. '
@@ -114,6 +114,7 @@ final class Investigator
         $nudged = false;
         $bestFix = null;
         $timeResults = [];
+        $projection = null;
 
         for ($round = 1; $round <= self::MAX_ROUNDS; $round++) {
             $remaining = (int) floor($deadline - microtime(true));
@@ -154,6 +155,7 @@ final class Investigator
                             $timeResults[] = $out['result'];
                         }
                         if ($name === 'get_learned_estimate' && is_array($kept['projection'] ?? null)) {
+                            $projection = $kept['projection'];
                             // A projected crossing is a time estimate too, so it gets the same caveat.
                             foreach (['first_reading_at_20_percent', 'first_reading_at_50_percent'] as $field) {
                                 $k = $kept['projection'][$field] ?? null;
@@ -206,6 +208,7 @@ final class Investigator
                 return $this->finish(null, $parsed === null ? 'bad_reply' : 'ungrounded', $trace, null);
             }
 
+            $parsed['cause'] = self::addProjectionNote($parsed['cause'], $projection);
             $parsed['cause'] = self::addCaveat($parsed['cause'], $timeResults);
             $parsed['tested_fix'] = $bestFix === null ? null : self::testedFix($bestFix);
 
@@ -275,6 +278,33 @@ final class Investigator
                     return $cause.' This is a straight-line estimate on simulated data.';
                 }
             }
+        }
+
+        return $cause;
+    }
+
+    /**
+     * Code adds the projection when the cause says the model disagrees with the
+     * band but the model projects the same problem soon. Without it the cause
+     * reads as if the model sees no problem.
+     *
+     * @param  array<mixed>|null  $projection  The projection from the learned estimate tool.
+     */
+    public static function addProjectionNote(string $cause, ?array $projection): string
+    {
+        if ($projection === null || preg_match('/\bdisagree/i', $cause) !== 1) {
+            return $cause;
+        }
+        foreach (['first_reading_at_20_percent' => 20, 'first_reading_at_50_percent' => 50] as $field => $percent) {
+            $readings = $projection[$field] ?? null;
+            if (! is_int($readings)) {
+                continue;
+            }
+            if (self::quotesWithUnit($cause, (float) $readings, 'readings?')) {
+                return $cause;
+            }
+
+            return rtrim($cause).sprintf(' The learned model projects %d%% in about %d readings.', $percent, $readings);
         }
 
         return $cause;
