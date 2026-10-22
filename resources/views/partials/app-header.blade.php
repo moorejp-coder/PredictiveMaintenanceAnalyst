@@ -16,13 +16,15 @@
                 <span>Product quality variant L</span>
             </div>
         @endif
-        <button type="button" class="btn theme-toggle" id="theme-toggle">Switch to light theme</button>
-        @auth
-            <form method="POST" action="{{ url('/logout') }}">
-                @csrf
-                <button type="submit" class="btn">Sign out</button>
-            </form>
-        @endauth
+        <div class="prism-header__actions">
+            <button type="button" class="btn theme-toggle" id="theme-toggle">Light theme</button>
+            @auth
+                <form method="POST" action="{{ url('/logout') }}">
+                    @csrf
+                    <button type="submit" class="btn">Sign out</button>
+                </form>
+            @endauth
+        </div>
     </div>
     <script>
         (function () {
@@ -35,7 +37,7 @@
                 return t ? t === 'light' : !!(mq && mq.matches);
             }
             function paint() {
-                btn.textContent = isLight() ? 'Switch to dark theme' : 'Switch to light theme';
+                btn.textContent = isLight() ? 'Dark theme' : 'Light theme';
                 var meta = document.querySelector('meta[name="theme-color"]');
                 if (meta) { meta.setAttribute('content', isLight() ? '#F6F8FC' : '#0b1220'); }
                 window.dispatchEvent(new Event('prism-theme'));

@@ -123,7 +123,9 @@ a:hover { color: var(--prism-accent-hover); }
 
 /* App header */
 .prism-header { background: var(--prism-bg); border-bottom: 1px solid var(--prism-border); }
-.theme-toggle { margin-left: auto; min-height: 44px; }
+.theme-toggle { min-height: 44px; }
+.prism-header__actions { display: flex; align-items: center; gap: var(--prism-space-2); margin-left: auto; }
+.prism-header__actions form { margin: 0; }
 .prism-header__inner {
     max-width: 1120px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: var(--prism-space-2) var(--prism-space-6);
     padding: var(--prism-space-2) max(16px, env(safe-area-inset-right)) var(--prism-space-2) max(16px, env(safe-area-inset-left));
