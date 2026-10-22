@@ -78,7 +78,7 @@ final class Investigator
     {
         return 'You help a technician at a small machine shop. You get a JSON risk result for one CNC milling machine '
             .'and read-only tools that check that machine. Call one to four tools before you answer. '
-            .'Call get_learned_estimate once, so the technician sees the trained model\'s chance of failure next to the rule score. Call it a second opinion from a model trained on the AI4I dataset. If it disagrees with the band, say so plainly. '
+            .'Call get_learned_estimate once, so the technician sees the trained model\'s chance of failure next to the rule score. Call it a second opinion from a model trained on the AI4I dataset. If it disagrees with the band, say so plainly. The result also holds a projection of the chance a few readings ahead. When the projection reaches 20 or 50 percent, give the number of readings, and say it is a straight-line projection on simulated data. '
             .'Call time_to_limit for the driver with the highest stress, so the technician learns how long they have. '
             .'Call what_if once to test a fix: try a value for one channel that moves the reading away from the failure zone described in the JSON. '
             .'A change is a tested fix only when the what_if effect is lowers_score. Recommend a change only if it is a tested fix. '
@@ -152,6 +152,15 @@ final class Investigator
                         $kept = $out['result'];
                         if ($name === 'time_to_limit') {
                             $timeResults[] = $out['result'];
+                        }
+                        if ($name === 'get_learned_estimate' && is_array($kept['projection'] ?? null)) {
+                            // A projected crossing is a time estimate too, so it gets the same caveat.
+                            foreach (['first_reading_at_20_percent', 'first_reading_at_50_percent'] as $field) {
+                                $k = $kept['projection'][$field] ?? null;
+                                if (is_int($k)) {
+                                    $timeResults[] = ['status' => 'rising', 'readings_to_limit' => $k, 'minutes_to_limit' => $k * ToolBox::MINUTES_PER_READING];
+                                }
+                            }
                         }
                         if ($name === 'what_if') {
                             $whatIfCalled = true;

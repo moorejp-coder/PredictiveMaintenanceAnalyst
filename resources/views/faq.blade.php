@@ -87,7 +87,7 @@
         <div class="answer">
             <ul>
                 <li><strong>Read real machines.</strong> Every reading is simulated.</li>
-                <li><strong>Forecast a failure date.</strong> The AI4I dataset is a snapshot of operating conditions, not a time series.</li>
+                <li><strong>Forecast a failure date.</strong> The AI4I dataset is a snapshot of operating conditions, not a time series. The AI can quote a projection of the learned chance a few readings ahead. It is a straight-line projection on simulated data, not a failure date.</li>
                 <li><strong>Score random failure.</strong> In AI4I, random failures occur with a 0.1 percent probability independent of every parameter, so no reading predicts them.</li>
                 <li><strong>Let a model decide.</strong> The score and action are rule-based. A trained model shows a learned estimate of failure chance beside them, and it never changes the score.</li>
                 <li><strong>Send alerts, email or messages.</strong> @if (config('prism.require_login'))The only email PRISM sends is the invite that lets a contest judge choose a password. @endif Alerts are on the roadmap only.</li>
