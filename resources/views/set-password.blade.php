@@ -71,7 +71,6 @@
 
         <div class="help">
             <p>This link works once. After you set a password, sign in at the login page.</p>
-            <p>This site loads over HTTP today, so use a password you use nowhere else.</p>
         </div>
     </div>
 </main>
