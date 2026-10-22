@@ -4,6 +4,7 @@ use App\Http\Controllers\AiController;
 use App\Http\Controllers\AiFeedbackController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\JudgePasswordController;
 use App\Http\Controllers\OverrideController;
@@ -65,6 +66,8 @@ Route::middleware(RequireLogin::class)->group(function () {
 });
 Route::get('/overrides', [OverrideController::class, 'index'])
     ->middleware(RequireOverrideLogPassword::class);
+// Public. Reports only ok or unavailable, so a monitor can poll it.
+Route::get('/health', HealthController::class);
 Route::view('/ai', 'ai');
 Route::view('/privacy', 'privacy');
 Route::view('/terms', 'terms');
