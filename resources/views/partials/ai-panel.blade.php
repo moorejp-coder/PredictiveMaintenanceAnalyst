@@ -39,6 +39,9 @@
         .ai-feedback p { margin: 0 0 8px; font-size: 0.9375rem; }
         .ai-feedback .ai-fb-row { display: flex; flex-wrap: wrap; gap: 8px; }
         .ai-feedback .btn { min-height: 44px; }
+        /* The thank-you text sits to the right of the buttons, so rating an answer never adds a line and never causes scrolling. */
+        .ai-feedback .ai-fb-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+        .ai-feedback .ai-fb-line .ai-note { margin: 0; }
     </style>
     <div class="ai-head">
         <div>
@@ -86,11 +89,13 @@
             </div>
             <div class="ai-feedback" id="ai-feedback" hidden>
                 <p id="ai-feedback-q">Was this answer correct and useful?</p>
-                <div class="ai-fb-row" role="group" aria-labelledby="ai-feedback-q">
-                    <button type="button" class="btn" id="ai-fb-helpful">Helpful</button>
-                    <button type="button" class="btn" id="ai-fb-wrong">Wrong</button>
+                <div class="ai-fb-line">
+                    <div class="ai-fb-row" role="group" aria-labelledby="ai-feedback-q">
+                        <button type="button" class="btn" id="ai-fb-helpful">Helpful</button>
+                        <button type="button" class="btn" id="ai-fb-wrong">Wrong</button>
+                    </div>
+                    <p class="ai-note" id="ai-fb-status" role="status"></p>
                 </div>
-                <p class="ai-note" id="ai-fb-status" role="status"></p>
             </div>
         </div>
     </dialog>
