@@ -401,8 +401,12 @@ class InvestigatorTest extends TestCase
     {
         $base = ['channel' => 'torque_nm', 'tried_value' => 40, 'current_score' => 76, 'score_if_changed' => 60, 'band_if_changed' => 'elevated'];
 
-        $worse = Investigator::testedFix($base + ['learned_chance_percent_now' => 4.0, 'learned_chance_percent_if_changed' => 4.6]);
-        $this->assertStringContainsString('moves from 4% to 4.6%, so the rules and the model disagree on this change. Inspect before relying on it.', $worse['text']);
+        $tiny = Investigator::testedFix($base + ['learned_chance_percent_now' => 0.8, 'learned_chance_percent_if_changed' => 1.1]);
+        $this->assertStringContainsString('moves from 0.8% to 1.1%, a change too small to count.', $tiny['text']);
+        $this->assertStringNotContainsString('disagree', $tiny['text']);
+
+        $worse = Investigator::testedFix($base + ['learned_chance_percent_now' => 4.0, 'learned_chance_percent_if_changed' => 5.2]);
+        $this->assertStringContainsString('moves from 4% to 5.2%, so the rules and the model disagree on this change. Inspect before relying on it.', $worse['text']);
 
         $better = Investigator::testedFix($base + ['learned_chance_percent_now' => 4.6, 'learned_chance_percent_if_changed' => 2.1]);
         $this->assertStringContainsString('moves from 4.6% to 2.1%.', $better['text']);

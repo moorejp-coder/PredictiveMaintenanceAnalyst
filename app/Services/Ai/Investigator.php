@@ -29,6 +29,9 @@ final class Investigator
 {
     public const MAX_ROUNDS = 4;
 
+    /** A rise in the learned chance smaller than this many percentage points is not a disagreement with the rules. */
+    public const MIN_DISAGREE_POINTS = 1.0;
+
     /** Why the last answer was refused, for the log only. */
     private ?string $lastDetail = null;
 
@@ -82,7 +85,7 @@ final class Investigator
     {
         return 'You help a technician at a small machine shop. You get a JSON risk result for one CNC milling machine '
             .'and read-only tools that check that machine. Call one to four tools before you answer. '
-            .'Call get_learned_estimate once, so the technician sees the trained model\'s chance of failure next to the rule score. Call it a second opinion from a model trained on the AI4I dataset. If its chance is low while the band is elevated or high, say so plainly. The result also holds a projection of the chance a few readings ahead. When the projection reaches 20 or 50 percent, give the number of readings, and say it is a straight-line projection on simulated data. Never say the model disagrees with the band without also giving that projection, because the model then expects the same problem soon. '
+            .'Call get_learned_estimate once, so the technician sees the trained model\'s chance of failure next to the rule score. Call it a second opinion from a model trained on the AI4I dataset. If its chance is low while the band is elevated or high, say so plainly. The result also holds a projection of the chance a few readings ahead. When the projection reaches 20 or 50 percent, give the number of readings (if both reach it at the same reading, say so once, for example \'20% and 50% both in about 4 readings\'), and say it is a straight-line projection on simulated data. Never say the model disagrees with the band without also giving that projection, because the model then expects the same problem soon. '
             .'Call time_to_limit for the driver with the highest stress, so the technician learns how long they have. '
             .'Call what_if once to test a fix: try a value for one channel that moves the reading away from the failure zone described in the JSON. '
             .'A change is a tested fix only when the what_if effect is lowers_score. Recommend a change only if it is a tested fix. '
@@ -354,6 +357,7 @@ final class Investigator
             $then = self::percent((float) $r['learned_chance_percent_if_changed']);
             $learned = match (true) {
                 $now === $then => sprintf(' The learned estimate of failure stays at %s%%.', $now),
+                (float) $r['learned_chance_percent_if_changed'] - (float) $r['learned_chance_percent_now'] > 0 && (float) $r['learned_chance_percent_if_changed'] - (float) $r['learned_chance_percent_now'] < self::MIN_DISAGREE_POINTS => sprintf(' The learned estimate of failure moves from %s%% to %s%%, a change too small to count.', $now, $then),
                 (float) $r['learned_chance_percent_if_changed'] > (float) $r['learned_chance_percent_now'] => sprintf(' The learned estimate of failure moves from %s%% to %s%%, so the rules and the model disagree on this change. Inspect before relying on it.', $now, $then),
                 default => sprintf(' The learned estimate of failure moves from %s%% to %s%%.', $now, $then),
             };
