@@ -192,6 +192,8 @@ final class Investigator
                     }
                 }
                 if ($results === []) {
+                    $this->lastDetail = 'tool_use reply held no tool call';
+
                     return $this->finish(null, 'bad_reply', $trace, null);
                 }
                 $messages[] = ['role' => 'user', 'content' => $results];
@@ -211,6 +213,9 @@ final class Investigator
 
             $text = AiClient::firstText(['content' => $reply['content']]);
             $parsed = $text === null ? null : $this->parse($text, array_keys($used), $numbers);
+            if ($text === null) {
+                $this->lastDetail = 'final reply held no text';
+            }
             if (! is_array($parsed)) {
                 return $this->finish(null, $parsed === null ? 'bad_reply' : 'ungrounded', $trace, null);
             }
@@ -221,6 +226,8 @@ final class Investigator
 
             return $this->finish($parsed, null, $trace, $tokens);
         }
+
+        $this->lastDetail = 'no final answer within '.self::MAX_ROUNDS.' rounds';
 
         return $this->finish(null, 'bad_reply', $trace, null);
     }
@@ -234,12 +241,21 @@ final class Investigator
     {
         $json = AiStep::decodeJson($text);
         if ($json === null) {
+            $this->lastDetail = 'reply held no readable JSON object';
+
             return null;
         }
         $cause = AiStep::cleanString($json['cause'] ?? null, 400);
         $checks = AiStep::cleanList($json['checks'] ?? null, 1, 2, 160);
         $evidence = AiStep::cleanList($json['evidence'] ?? null, 1, 5, 40);
         if ($cause === null || $checks === null || $evidence === null) {
+            $rawCause = $json['cause'] ?? null;
+            $this->lastDetail = sprintf(
+                'unusable field(s): %s%s',
+                implode(', ', array_keys(array_filter(['cause' => $cause === null, 'checks' => $checks === null, 'evidence' => $evidence === null]))),
+                is_string($rawCause) ? ' (cause length '.mb_strlen($rawCause).', limit 400)' : '',
+            );
+
             return null;
         }
 
