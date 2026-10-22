@@ -1,9 +1,9 @@
+# PRISM: Predictive Real-time Infrastructure Sensor Monitoring
+
 Live site: https://prismcua.duckdns.org/ (HTTPS)
 Local site: http://127.0.0.1:8000/ (run `php artisan serve` in the project folder first)
 
-HTTPS: the live site uses a free Let's Encrypt certificate on a free DuckDNS name. nginx on the Elastic Beanstalk instance ends the encrypted connection. The setup is configured to send http requests for this name to https and to renew the certificate on its own. The files are `.ebextensions/02-https.config`, `.platform/nginx/conf.d/elasticbeanstalk/acme.conf` and `.platform/hooks/postdeploy/02_https.sh`. The name and the contact email are environment properties (`APP_DOMAIN`, `CERTBOT_EMAIL`, `APP_URL`), not code.
-
-# PRISM: Predictive Real-time Infrastructure Sensor Monitoring
+Stack: Laravel (PHP 8.4), SQLite, AWS Elastic Beanstalk with nginx and a Let's Encrypt certificate, the Anthropic Claude API for explanations, GitHub Actions for tests.
 
 PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It scores risk from 0 to 100 with fixed rules, explains the score in plain English, and shows the stress on each failure check. Every reading on the dashboard is simulated. PRISM is rule-based. It does not use a trained machine-learning model.
 
@@ -22,6 +22,24 @@ PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It 
 - Labels every AI answer "AI-GENERATED" and lets a visitor rate it Helpful or Wrong (see Ethical AI, accessibility and sources).
 
 Safety disclaimer: PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.
+
+## How PRISM meets the judging criteria
+
+Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026. The right column points to where each claim lives in this repo.
+
+| Criterion | Weight | How PRISM addresses it |
+|---|---|---|
+| Problem/Opportunity Identification & Relevance | 20% | Names the user: a maintenance technician at a small machine shop with no data scientist (see The problem). The score is backtested on all 10,000 AI4I 2020 records (`php artisan prism:backtest`), and the limits of that test are stated. |
+| Functionality & Technical Execution | 25% | Live on AWS Elastic Beanstalk over HTTPS. Sign-in is on, with an email invite flow for judges. AI calls have timeouts, token caps and a built-in fallback. Server-side checks and rate limits guard the override log and the AI routes. Automated tests run on every push (GitHub Actions, PHP 8.4 and 8.5). |
+| AI Integration & Innovation | 20% | Rules score the machine and the AI only explains, on request, in two small Claude calls (Diagnose, then Work order). PHP builds a short structured input for each call, and code sets the work order priority. See AI steps. |
+| Code Quality, Documentation & GitHub Transparency | 15% | One class per failure check in `app/Services/Checks`, with every limit and its source in `config/prism.php`. Secrets live in environment properties, not in the repo. Login attempts are rate limited. Commit history starts Sep 28, 2026. See Run locally for setup steps. |
+| User Experience, Design & Polish | 10% | Plain-English "Why this score" and risk bands shown as words. Lighthouse accessibility score of 100 on the pages tested on Oct 20 and 21, 2026. Light and dark themes, keyboard and VoiceOver pass, reduced motion respected. See Ethical AI, accessibility and sources. |
+| Business/Real-World Impact & Presentation | 10% | Goals are fewer unneeded repairs and less unplanned downtime (see What PRISM aims to deliver). The README states that the dataset cannot prove dollar savings, and the Roadmap lists what is not built. |
+| Bonus (up to 5) | | Ethical AI: AI-GENERATED labels, a rating on every AI answer, a NIST AI RMF mapping on `/ai`. Accessibility: WCAG 2.2 AA goal with the known gaps listed. Cross-disciplinary: data science, mechanical engineering, occupational safety, law and privacy. |
+
+## HTTPS
+
+The live site uses a free Let's Encrypt certificate on a free DuckDNS name. nginx on the Elastic Beanstalk instance ends the encrypted connection. The setup is configured to send http requests for this name to https and to renew the certificate on its own. The files are `.ebextensions/02-https.config`, `.platform/nginx/conf.d/elasticbeanstalk/acme.conf` and `.platform/hooks/postdeploy/02_https.sh`. The name and the contact email are environment properties (`APP_DOMAIN`, `CERTBOT_EMAIL`, `APP_URL`), not code.
 
 ## Sign in and judge invites
 
