@@ -1,5 +1,7 @@
 # PRISM: Predictive Real-time Infrastructure Sensor Monitoring
 
+[![Tests](https://github.com/moorejp-coder/PredictiveMaintenanceAnalyst/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/moorejp-coder/PredictiveMaintenanceAnalyst/actions/workflows/tests.yml)
+
 Live site: https://prismcua.duckdns.org/ (HTTPS)
 Local site: http://127.0.0.1:8000/ (run `php artisan serve` in the project folder first)
 
