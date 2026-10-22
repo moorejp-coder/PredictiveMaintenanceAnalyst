@@ -28,6 +28,8 @@ MUST_HAVE = [
     "public/build/manifest.json", "resources/views/partials/brand-head.blade.php",
     ".ebextensions/01-laravel.config", ".platform/hooks/postdeploy/01_override_log_db.sh",
     ".platform/nginx/conf.d/elasticbeanstalk/laravel.conf",
+    ".ebextensions/02-https.config", ".platform/hooks/postdeploy/02_https.sh",
+    ".platform/nginx/conf.d/elasticbeanstalk/acme.conf",
     "composer.json", "composer.lock", "artisan", "bootstrap/app.php",
 ]
 FORBIDDEN_PREFIXES = (".env", ".git-credentials", "vendor/", "node_modules/", ".git/")
