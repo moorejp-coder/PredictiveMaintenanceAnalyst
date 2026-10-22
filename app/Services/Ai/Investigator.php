@@ -37,7 +37,7 @@ final class Investigator
 
     public const BUDGET_SECONDS = 12;
 
-    private const MAX_TOKENS = 400;
+    private const MAX_TOKENS = 1000;
 
     private const AI_TTL_SECONDS = 3600;
 
@@ -217,6 +217,9 @@ final class Investigator
                 $this->lastDetail = 'final reply held no text';
             }
             if (! is_array($parsed)) {
+                // A reply cut off at the token limit shows up here as no text or half a JSON object.
+                $this->lastDetail = trim(($this->lastDetail ?? '').' (stop_reason '.($reply['stop_reason'] ?? 'unknown').')');
+
                 return $this->finish(null, $parsed === null ? 'bad_reply' : 'ungrounded', $trace, null);
             }
 
