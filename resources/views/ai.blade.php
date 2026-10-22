@@ -89,7 +89,7 @@
         <li>AI4I has no vibration or run-hours column. Those two checks are simulated and are not backtested.</li>
         <li>The AI can be wrong. It sees the score and the fact sentences, not the machine.</li>
         <li>The projection extends the last 10 readings in a straight line and scores each projected reading with the trained model. A check against the simulator found the projected crossing within 3 readings of the real one in 18 of 25 start readings (<code>php artisan prism:forecast-check</code>). The simulator climbs in straight lines, so this does not show how the projection performs on a real machine.</li>
-        <li>On October 22, 2026, the investigator ran once on 38 simulated Elevated or High readings. 35 answers passed the code checks (92.1%). 3 fell back to the built-in text (2 with a number the AI was not given, 1 with an unusable reply). Passing the checks does not show the advice is correct, and no technician graded the answers. The full report is <code>docs/EVAL.md</code>.</li>
+        <li>On October 22, 2026, the investigator ran once on 38 simulated Elevated or High readings. All 38 answers passed the code checks (100%) and none fell back to the built-in text. Earlier runs the same day had 8 and then 6 fallbacks, and two fixes followed (a number check that misread numbers such as 1,400, and more room for the AI's answer). One run is not a rate, and results vary. Passing the checks does not show the advice is correct, and no technician graded the answers. The full report is <code>docs/EVAL.md</code>.</li>
     </ul>
     <p class="src">Source: <code>README.md</code> section "How the score works".</p>
 
