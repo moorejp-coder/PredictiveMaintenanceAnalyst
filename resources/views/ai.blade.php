@@ -159,7 +159,6 @@
     <ul>
         <li>The Lighthouse scores are the author's own runs, not an independent audit. The light theme's contrast ratios were calculated (see docs/BRAND.md).</li>
         <li>No independent audit and no test with people who use assistive technology. Only VoiceOver on macOS was tried. Lighthouse checks only a subset of issues.</li>
-        <li>The live site loads over HTTP.</li>
     </ul>
     <p>To report a barrier, write to <a href="mailto:moorejp@cua.edu">moorejp@cua.edu</a>.</p>
     <p class="src">Source: <a href="https://www.w3.org/TR/WCAG22/">Web Content Accessibility Guidelines (WCAG) 2.2</a>.</p>

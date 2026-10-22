@@ -44,7 +44,7 @@
             <li>PRISM uses no analytics, advertising, tracking pixels or third-party scripts.</li>
             <li>If you press Explain this reading, PRISM's server sends the simulated score result (numbers and labels, no personal data) to Anthropic's API and shows the reply.</li>
             <li>PRISM does not sell or share your data.</li>
-            <li>The site currently loads over HTTP, which is not encrypted.</li>
+            <li>The site loads over HTTPS, which encrypts traffic between your browser and PRISM.</li>
         </ul>
     </div>
 
@@ -79,7 +79,7 @@
     <p>PRISM sets no custom retention period for server logs. Logs stay on the hosting server until the platform rotates them or the server is replaced or shut down. Session cookies expire after 120 minutes of inactivity. You can delete cookies in your browser settings at any time. Override log entries have no deletion schedule. They stay until James Moore removes them or the server is replaced or shut down.</p>
 
     <h2>6. Security</h2>
-    <p>The live site currently loads over HTTP, not HTTPS. Anyone on your network path could read traffic between your browser and PRISM. Do not enter sensitive information into any page. The only fields ask for a name and a reason. Enter nothing else personal.</p>
+    <p>The live site loads over HTTPS with a free Let's Encrypt certificate, so traffic between your browser and PRISM is encrypted. Do not enter sensitive information into any page. The only fields ask for a name and a reason. Enter nothing else personal.</p>
 
     <h2>7. Your choices and rights</h2>
     <ul>

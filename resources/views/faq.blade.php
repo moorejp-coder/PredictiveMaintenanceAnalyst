@@ -249,7 +249,7 @@
             <ul>
                 <li><strong>Scoring limits.</strong> The values in <code>config/prism.php</code>. The AI4I limits are fixed. The vibration limits (1.4 and 4.5 mm/s RMS) follow ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</li>
                 <li><strong>Terms and Privacy Policy.</strong> Both carry an effective date of October 19, 2026. Any new data collection means a new Privacy Policy first.</li>
-                <li><strong>HTTPS.</strong> Not set up. The live site loads over HTTP.</li>
+                <li><strong>HTTPS.</strong> The live site uses a free Let's Encrypt certificate. A renewal check runs twice a day on the server. A rebuilt server requests a new certificate, and the DuckDNS name must point to the new address first.</li>
             </ul>
         </div>
     </details>
@@ -330,7 +330,7 @@
     <details>
         <summary>Is the connection secure?</summary>
         <div class="answer">
-            <p>Not yet. The live site loads over HTTP, which is not encrypted. Do not enter sensitive information. PRISM has no field to ask for any.</p>
+            <p>Yes. The live site loads over HTTPS with a free Let's Encrypt certificate, so traffic between your browser and PRISM is encrypted. Do not enter sensitive information anyway. PRISM has no field to ask for any.</p>
             <p class="src">Source: <a href="{{ url('/privacy') }}">Privacy Policy</a> section 6.</p>
         </div>
     </details>
