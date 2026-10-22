@@ -84,6 +84,7 @@ final class Investigator
             .'Call get_trend if you need to know whether a channel is rising or falling. Do not call get_check only to repeat numbers already in the JSON. '
             .'A limit is crossed only when a tool result shows stress 100 for that check. Below that, write near the limit or inside the margin. '
             .'Name a cause only when the JSON or a tool result states it. Do not guess parts such as bearings or motors. '
+            .'When you give a time estimate, write straight-line estimate on simulated data. '
             .'Write for the technician. Never write the words JSON, tool, input or what_if in the cause or the checks. '
             .'Use only facts in the JSON and in tool results. Do not invent numbers, parts or causes. Copy numbers exactly as given. '
             .'The tools never change the score. '
@@ -106,6 +107,8 @@ final class Investigator
         $deadline = microtime(true) + self::BUDGET_SECONDS;
         $whatIfCalled = false;
         $nudged = false;
+        $bestFix = null;
+        $timeResults = [];
 
         for ($round = 1; $round <= self::MAX_ROUNDS; $round++) {
             $remaining = (int) floor($deadline - microtime(true));
@@ -142,8 +145,15 @@ final class Investigator
                         $out = $box->run($name, $args);
                         $used[$name] = true;
                         $kept = $out['result'];
+                        if ($name === 'time_to_limit') {
+                            $timeResults[] = $out['result'];
+                        }
                         if ($name === 'what_if') {
                             $whatIfCalled = true;
+                            if (($kept['effect'] ?? null) === 'lowers_score'
+                                && ($bestFix === null || $kept['score_if_changed'] < $bestFix['score_if_changed'])) {
+                                $bestFix = $kept;
+                            }
                             // A value that did not lower the score is not a tested fix,
                             // so the answer may not recommend it as a target.
                             if (($kept['effect'] ?? null) !== 'lowers_score') {
@@ -181,6 +191,9 @@ final class Investigator
             if (! is_array($parsed)) {
                 return $this->finish(null, $parsed === null ? 'bad_reply' : 'ungrounded', $trace, null);
             }
+
+            $parsed['cause'] = self::addCaveat($parsed['cause'], $timeResults);
+            $parsed['tested_fix'] = $bestFix === null ? null : self::testedFix($bestFix);
 
             return $this->finish($parsed, null, $trace, $tokens);
         }
@@ -221,6 +234,60 @@ final class Investigator
         }
 
         return ['cause' => $cause, 'checks' => $checks, 'evidence' => $evidence];
+    }
+
+    /**
+     * Code adds the caveat when the cause quotes a time estimate without it.
+     *
+     * @param  list<array<string, mixed>>  $timeResults  Results of the time_to_limit calls.
+     */
+    public static function addCaveat(string $cause, array $timeResults): string
+    {
+        if (stripos($cause, 'straight') !== false) {
+            return $cause;
+        }
+        $quoted = self::numbers($cause);
+        foreach ($timeResults as $r) {
+            if (($r['status'] ?? null) !== 'rising') {
+                continue;
+            }
+            foreach ([$r['readings_to_limit'] ?? null, $r['minutes_to_limit'] ?? null] as $n) {
+                if ($n !== null && in_array((float) $n, $quoted, true)) {
+                    return $cause.' This is a straight-line estimate on simulated data.';
+                }
+            }
+        }
+
+        return $cause;
+    }
+
+    /**
+     * The tested fix as a sentence code writes from a what_if result. The model
+     * chose the value, and the rules scored it on a copy of the reading.
+     *
+     * @param  array<string, mixed>  $r
+     * @return array{channel: string, value: float|int, score_from: int, score_to: int, text: string}
+     */
+    public static function testedFix(array $r): array
+    {
+        [$label, $unit] = ToolBox::CHANNEL_LABELS[$r['channel']];
+        $value = rtrim(rtrim(number_format((float) $r['tried_value'], 2, '.', ','), '0'), '.');
+
+        return [
+            'channel' => $r['channel'],
+            'value' => $r['tried_value'],
+            'score_from' => $r['current_score'],
+            'score_to' => $r['score_if_changed'],
+            'text' => sprintf(
+                'PRISM scored a copy of the reading with %s set to %s %s. The score falls from %d to %d (%s). This is a test only. It changes nothing on the machine.',
+                strtolower($label),
+                $value,
+                $unit,
+                $r['current_score'],
+                $r['score_if_changed'],
+                $r['band_if_changed'],
+            ),
+        ];
     }
 
     /** @return list<float> */
