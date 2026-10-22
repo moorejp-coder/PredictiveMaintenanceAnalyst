@@ -19,15 +19,23 @@
         .ai p { margin: 6px 0 0; }
         .ai .ai-note { color: var(--prism-muted, var(--muted, #a3b3d1)); font-size: 0.8125rem; }
         .ai [hidden] { display: none; }
-        .ai-modal { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 2px solid var(--prism-accent, #8ab4f8); border-radius: 12px; background: var(--prism-surface-raised, var(--prism-surface, #fff)); color: inherit; overflow: auto; }
+        .ai-modal { width: min(1080px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 2px solid var(--prism-accent, #8ab4f8); border-radius: 12px; background: var(--prism-surface-raised, var(--prism-surface, #fff)); color: inherit; overflow: auto; }
+        /* Wide pop-up: the cause and the work order sit side by side on a wide screen, so a long answer needs little or no scrolling. */
+        .ai-body { display: grid; gap: 0 32px; }
+        .ai-body > .ai-note { grid-column: 1 / -1; }
+        @media (min-width: 900px) {
+            .ai-body { grid-template-columns: 1fr 1fr; align-items: start; }
+            .ai-body > .ai-col-right:has(> :not([hidden])) { border-left: 1px solid var(--prism-border, #26355a); padding-left: 32px; }
+        }
         .ai-modal::backdrop { background: rgba(0, 0, 0, 0.6); }
-        .ai-modal-inner { padding: 20px 24px 24px; }
+        .ai-modal-inner { padding: 16px 24px 18px; }
         .ai-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
         .ai-modal-head h2 { margin: 0; font-size: 1.25rem; }
+        .ai-modal-head .ai-note { margin: 2px 0 0; }
         .ai-close { min-height: 44px; min-width: 44px; }
         .ai-label { display: inline-block; margin: 8px 0 0; padding: 2px 10px; border: 1px solid var(--prism-accent, #8ab4f8); border-radius: 6px; color: var(--prism-accent, #8ab4f8); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; }
         .ai-warn { margin: 8px 0 0; padding: 8px 12px; border-left: 4px solid var(--prism-risk-elevated, #fbbf24); background: var(--prism-surface, transparent); border-radius: 6px; font-size: 0.875rem; }
-        .ai-feedback { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--prism-border, #26355a); }
+        .ai-feedback { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--prism-border, #26355a); }
         .ai-feedback p { margin: 0 0 8px; font-size: 0.9375rem; }
         .ai-feedback .ai-fb-row { display: flex; flex-wrap: wrap; gap: 8px; }
         .ai-feedback .btn { min-height: 44px; }
@@ -42,17 +50,29 @@
     <dialog class="ai-modal" id="ai-modal" aria-labelledby="ai-modal-title">
         <div class="ai-modal-inner">
             <div class="ai-modal-head">
-                <h2 id="ai-modal-title">Explain this reading</h2>
+                <div>
+                    <h2 id="ai-modal-title">Explain this reading</h2>
+                    <p class="ai-note">The simulated feed is paused while this pop-up is open.</p>
+                </div>
                 <button type="button" class="btn ai-close" id="ai-close" aria-label="Close">Close</button>
             </div>
             <span class="ai-label" id="ai-label" hidden></span>
             <p class="ai-warn" id="ai-warn" hidden></p>
-            <div aria-live="polite">
+            <div class="ai-body" aria-live="polite">
                 <p class="ai-note" id="ai-status"></p>
-                <div id="ai-diagnosis" hidden>
-                    <h3>Likely cause</h3>
-                    <p id="ai-cause"></p>
-                    <ul id="ai-checks"></ul>
+                <div class="ai-col ai-col-left">
+                    <div id="ai-diagnosis" hidden>
+                        <h3>Likely cause</h3>
+                        <p id="ai-cause"></p>
+                        <ul id="ai-checks"></ul>
+                    </div>
+                </div>
+                <div class="ai-col ai-col-right">
+                    <div id="ai-order" hidden>
+                        <h3 id="ai-order-title"></h3>
+                        <p id="ai-priority"></p>
+                        <ol id="ai-steps"></ol>
+                    </div>
                     <div id="ai-tested" hidden>
                         <h3>Tested on a copy</h3>
                         <p id="ai-tested-text"></p>
@@ -61,11 +81,6 @@
                         <h3>What the AI looked at</h3>
                         <ul id="ai-trace-list"></ul>
                     </div>
-                </div>
-                <div id="ai-order" hidden>
-                    <h3 id="ai-order-title"></h3>
-                    <p id="ai-priority"></p>
-                    <ol id="ai-steps"></ol>
                 </div>
                 <p class="ai-note" id="ai-meta"></p>
             </div>
@@ -139,7 +154,10 @@
         $('ai-close').addEventListener('click', () => modal.close());
         // Click on the dimmed backdrop closes the pop-up.
         modal.addEventListener('click', (e) => { if (e.target === modal) { modal.close(); } });
-        modal.addEventListener('close', () => btn.focus());
+        modal.addEventListener('close', () => {
+            if (window.prismFeed) { window.prismFeed.release(); }
+            btn.focus();
+        });
 
         async function get(base, latest) {
             const url = base + '?scenario=' + encodeURIComponent(latest.scenario) + '&tick=' + latest.tick;
@@ -180,6 +198,8 @@
         }
 
         btn.addEventListener('click', async () => {
+            // Freeze the feed first, so the reading explained is the reading on screen.
+            if (window.prismFeed) { window.prismFeed.hold(); }
             const latest = window.prismLatest;
             if (!modal.open) { modal.showModal(); }
             if (!latest) { $('ai-status').textContent = 'Wait for the first reading, then try again.'; return; }
@@ -187,6 +207,8 @@
             btn.setAttribute('aria-busy', 'true');
             $('ai-diagnosis').hidden = true;
             $('ai-order').hidden = true;
+            $('ai-tested').hidden = true;
+            $('ai-trace').hidden = true;
             $('ai-meta').textContent = '';
             $('ai-feedback').hidden = true;
             $('ai-label').hidden = true;

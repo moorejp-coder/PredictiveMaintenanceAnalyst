@@ -313,7 +313,7 @@
     const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
     let ovTarget = null;
 
-    const state = { scenario: scenarioButtons[0].dataset.scenario, tick: 0, history: [], paused: false };
+    const state = { scenario: scenarioButtons[0].dataset.scenario, tick: 0, history: [], paused: false, held: false };
     let generation = 0;
     let inflight = false;
     let lastBand = null;
@@ -494,13 +494,15 @@
     }
 
     function setStatus(kind) {
-        el.dot.className = 'dot' + (kind === 'live' ? '' : ' ' + kind);
-        el.statusText.textContent = kind === 'live' ? 'Simulated feed running' : (kind === 'paused' ? 'Paused' : 'Connection lost, retrying');
+        el.dot.className = 'dot' + (kind === 'live' ? '' : ' ' + (kind === 'held' ? 'paused' : kind));
+        el.statusText.textContent = kind === 'live' ? 'Simulated feed running'
+            : (kind === 'paused' ? 'Paused'
+            : (kind === 'held' ? 'Paused while the explanation is open' : 'Connection lost, retrying'));
         el.errorNotice.hidden = kind !== 'error';
     }
 
     async function step() {
-        if (state.paused || inflight || document.hidden) { return; }
+        if (state.paused || state.held || inflight || document.hidden) { return; }
         inflight = true;
         const mine = generation;
         try {
@@ -612,6 +614,25 @@
         setStatus(state.paused ? 'paused' : 'live');
         if (!state.paused) { step(); }
     });
+
+    // The Explain this reading pop-up freezes the feed, so the answer matches the
+    // reading on screen. hold() drops any reading still on its way, so none lands
+    // after the pop-up opens. release() resumes unless the visitor paused the feed.
+    window.prismFeed = {
+        hold() {
+            if (state.held) { return; }
+            state.held = true;
+            generation += 1;
+            inflight = false;
+            setStatus('held');
+        },
+        release() {
+            if (!state.held) { return; }
+            state.held = false;
+            setStatus(state.paused ? 'paused' : 'live');
+            if (!state.paused) { step(); }
+        }
+    };
 
     // Redraw the chart when the theme changes.
     window.addEventListener('prism-theme', () => { if (state.history.length) { render(); } });

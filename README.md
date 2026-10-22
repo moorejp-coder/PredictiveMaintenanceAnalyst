@@ -16,7 +16,7 @@ PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It 
 - Shows a seventh gray bar, rotational speed, as context. Speed has no limit of its own. It feeds the heat and power rules. The bar shows how close speed is to the 1,380 rpm heat limit and is not part of the score.
 - Runs seven simulated sensor readings (process and air temperature, vibration, machine run hours, rotational speed, torque, tool wear) and a chart of the last 30 risk scores.
 - Offers four simulated situations (worn tool, overheating, overload, healthy) to show how the score reacts.
-- "Explain this reading" lets Claude check the reading with five read-only tools, then give a likely cause and a drafted work order. The page lists each tool call. A built-in explanation shows if the AI is slow or off (see AI steps).
+- "Explain this reading" lets Claude check the reading with five read-only tools, then give a likely cause and a drafted work order. The page lists each tool call. A built-in explanation shows if the AI is slow or off (see AI steps). The simulated feed pauses while the pop-up is open and resumes on Close, so the answer matches the reading on screen. A visitor who paused the feed stays paused. The pop-up is wide, with the cause on the left and the work order on the right, so a long answer fits a laptop screen without scrolling. On a phone it stacks in one column and scrolls.
 - Records an override when an operator keeps a machine running after PRISM says to stop it (see Override log).
 - Has a sign-in and an email invite flow for contest judges. The sign-in is on at the live site, so the dashboard needs a login (see Sign in and judge invites).
 - Includes a FAQ, Terms and Conditions and a Privacy Policy. Each says what PRISM does not do.
