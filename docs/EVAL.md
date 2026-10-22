@@ -7,14 +7,14 @@ Reproduce with `php artisan prism:eval-investigator`. Results vary from run to r
 | Measure | Result |
 |---|---|
 | Readings investigated | 38 |
-| Answers accepted by the code checks | 35 of 38 (92.1%) |
-| Fell back to the built-in text | 3 of 38 (bad_reply 1, ungrounded 2) |
+| Answers accepted by the code checks | 38 of 38 (100.0%) |
+| Fell back to the built-in text | 0 of 38 (none) |
 | Runs that called what_if | 38 of 38 (100.0%) |
 | Runs that called get_learned_estimate | 38 of 38 (100.0%) |
-| Accepted answers with a tested fix | 28 of 35 (80.0%) |
-| Tool calls per run | 3 |
-| Tokens per accepted answer (input, output) | 5292, 877 |
-| Time per run, median and 95th percentile | 5.8 s, 9.6 s |
+| Accepted answers with a tested fix | 30 of 38 (78.9%) |
+| Tool calls per run | 3.1 |
+| Tokens per accepted answer (input, output) | 5911, 1377 |
+| Time per run, median and 95th percentile | 7.9 s, 10.3 s |
 
 Limits:
 - The readings are simulated. The run shows how the investigator behaves, not how it performs on a real machine.
