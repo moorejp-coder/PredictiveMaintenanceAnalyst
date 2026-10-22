@@ -71,7 +71,7 @@ How it works when on:
 - `RequireLogin` (`app/Http/Middleware/RequireLogin.php`) guards `/` and the `/api/` routes. The pages `/ai`, `/faq`, `/privacy`, `/terms` and `/login` stay public. A separate password still guards `/overrides`.
 - Logins are limited to 5 tries a minute. The invite and set-password forms are limited to 10 a minute. The session is renewed at sign-in.
 - A judge account stores a name, an email address and a password hash. Every reading is simulated, so the account holds no real personal data. The override form asks judges to type made-up names.
-- Limit: accounts live in the same SQLite file as the override log, so a replaced or rebuilt server erases every invited judge. Invite again after a rebuild.
+- Limit: accounts live in the same SQLite file as the override log, so a replaced or rebuilt server erases every invited judge. Invite again after a rebuild. Steps are in [docs/RECOVERY.md](docs/RECOVERY.md).
 - Optional: `JudgeSeeder` can still make one fixed account from `JUDGE_EMAIL` and `JUDGE_PASSWORD`, as a backup if email fails. It comes back after every deploy. The invite page is the main way.
 - The sitemap drops `/` while the sign-in is on.
 
