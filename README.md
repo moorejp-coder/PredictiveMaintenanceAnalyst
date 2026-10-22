@@ -94,7 +94,7 @@ Checks that need no account. Run on Oct 22, 2026 against the live site:
 - A path that does not exist, such as `/nope-xyz`, returns 404.
 - The sign-in page sends `Strict-Transport-Security`, `X-Content-Type-Options: nosniff` and a Content-Security-Policy header.
 
-Checks after you sign in. The entrant ran steps 1 to 6 on the live site on Oct 22, 2026 and all worked. The entrant also ran one invite from start to finish (email, set password, sign in) and signed in again after a deploy to confirm accounts survive a normal deploy. The expected results also come from the code and the automated tests in `tests/`.
+Checks after you sign in. The entrant ran steps 1 to 6 on the live site on Oct 22, 2026 and all worked. The entrant also ran one invite from start to finish (email, set password, sign in) and signed in again after a deploy to confirm accounts survive a normal deploy. The entrant also signed in with the backup judge account (`JUDGE_EMAIL` and `JUDGE_PASSWORD`) on Oct 22, 2026. The expected results also come from the code and the automated tests in `tests/`.
 
 1. Open the dashboard. A new reading arrives about every 1.2 seconds.
 2. Choose Overload under Simulated situation. Wait for the score to reach the High band. The panel shows "High Predicted Failure Risk" and the instruction to stop the machine (`tests/Feature/OverrideLogTest.php` uses Overload at reading 59 as a High reading).
