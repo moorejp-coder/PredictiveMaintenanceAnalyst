@@ -31,12 +31,12 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026. Th
 
 | Criterion | Weight | How PRISM addresses it |
 |---|---|---|
-| Problem/Opportunity Identification & Relevance | 20% | Names the user: a maintenance technician at a small machine shop with no data scientist (see The problem). The score is backtested on all 10,000 AI4I 2020 records (`php artisan prism:backtest`), and the limits of that test are stated. |
+| Problem/Opportunity Identification & Relevance | 20% | Names the user: a maintenance technician at a small machine shop with no data scientist (see The problem). The score is backtested on all 10,000 AI4I 2020 records (`php artisan prism:backtest`), and the limits of that test are stated. Cites an ABB survey and a 2019 CNC SME cost model paper, with their scope limits (see Evidence behind the problem). |
 | Functionality & Technical Execution | 25% | Live on AWS Elastic Beanstalk over HTTPS. Sign-in is on, with an email invite flow for judges. AI calls have timeouts, token caps and a built-in fallback. Server-side checks and rate limits guard the override log and the AI routes. Automated tests run on every push (GitHub Actions, PHP 8.4 and 8.5). |
 | AI Integration & Innovation | 20% | Rules score the machine and the AI only explains, on request, in two small Claude calls (Diagnose, then Work order). PHP builds a short structured input for each call, and code sets the work order priority. See AI steps. |
 | Code Quality, Documentation & GitHub Transparency | 15% | One class per failure check in `app/Services/Checks`, with every limit and its source in `config/prism.php`. Secrets live in environment properties, not in the repo. Login attempts are rate limited. Commit history starts Sep 28, 2026. See Run locally for setup steps. |
 | User Experience, Design & Polish | 10% | Plain-English "Why this score" and risk bands shown as words. Lighthouse accessibility score of 100 on the pages tested on Oct 20 and 21, 2026. Light and dark themes, keyboard and VoiceOver pass, reduced motion respected. See Ethical AI, accessibility and sources. |
-| Business/Real-World Impact & Presentation | 10% | Goals are fewer unneeded repairs and less unplanned downtime (see What PRISM aims to deliver). The README states that the dataset cannot prove dollar savings, and the Roadmap lists what is not built. |
+| Business/Real-World Impact & Presentation | 10% | Goals are fewer unneeded repairs and less unplanned downtime (see What PRISM aims to deliver). The README states that the dataset cannot prove dollar savings, and the Roadmap lists what is not built. Business value and scale marks each assumption and lists what growing past one machine needs. |
 | Bonus (up to 5) | | Ethical AI: AI-GENERATED labels, a rating on every AI answer, a NIST AI RMF mapping on `/ai`. Accessibility: WCAG 2.2 AA goal with the known gaps listed. Cross-disciplinary: data science, mechanical engineering, occupational safety, law and privacy. |
 
 ## HTTPS
@@ -78,6 +78,15 @@ How it works when on:
 ## The problem
 
 PRISM is for the maintenance technician at a small machine shop who runs CNC milling machines and has no data scientist. Raw sensor numbers do not say which failure is developing, so the shop repairs healthy machines or loses production to unplanned breakdowns. PRISM turns the numbers into one score, a reason a technician reads in a few seconds, and an instruction.
+
+## Evidence behind the problem
+
+Two sources support the problem. Neither tests PRISM.
+
+- ABB, Value of Reliability survey, press release of October 11, 2023. ABB surveyed 3,215 plant maintenance decision-makers worldwide. Unplanned downtime cost close to $125,000 per hour for the typical business. ABB used the median, and the figures are self-reported. More than two-thirds of the industrial businesses surveyed had unplanned outages at least once a month. The industries listed include energy, chemicals, metals and food and beverage. The release does not name machine shops or break results out by shop size. Source: https://new.abb.com/news/detail/107660/abb-survey-reveals-unplanned-downtime-costs-125000-per-hour. Dan Zeiger quotes the figure in an ISM article dated August 27, 2024.
+- Adu-Amankwa, Attia, Janardhanan and Patel (2019), "A predictive maintenance cost model for CNC SMEs in the era of industry 4.0," The International Journal of Advanced Manufacturing Technology 104, 3567 to 3587. The authors found no earlier study with a predictive maintenance cost model for small and medium CNC shops. Their model predicts savings of 22,804 to 48,585 British pounds for setups of 1 to 50 machines. These are model predictions, not measured results. The page I read does not state the time period. Source: https://doi.org/10.1007/s00170-019-04094-2.
+
+What the evidence does not show: PRISM's own savings. No shop has used PRISM, and AI4I is synthetic data. The value stays a goal (see What PRISM aims to deliver).
 
 ## How the score works
 
@@ -183,6 +192,21 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 - Longer equipment life, through timely intervention.
 
 These are goals. The dataset cannot prove dollar savings.
+
+## Business value and scale
+
+Assumptions are labeled. Nothing here is a measured result.
+
+- Who uses PRISM: the maintenance technician described in The problem.
+- Who would pay (assumption, not researched): the owner or maintenance manager of a small CNC shop.
+- Pricing: not researched. This README gives no revenue figure.
+- What exists today: one simulated milling machine (M-01), one server and one SQLite file. All readings come from `app/Services/SensorSimulator.php`, and one set of limits lives in `config/prism.php`.
+
+What growing past one machine would need (none of this is built):
+- Real readings from a technician or a sensor feed in place of the simulator (see Roadmap).
+- One score and one set of limits per machine. The vibration limits are demo values, since ISO 20816-3 does not list machine tools.
+- A shared database in place of the single SQLite file. Rebuilding the server erases that file today (see Sign in and judge invites).
+- A test of the rules on real machine data. The backtest checks the rules against AI4I labels only.
 
 ## Dataset
 
