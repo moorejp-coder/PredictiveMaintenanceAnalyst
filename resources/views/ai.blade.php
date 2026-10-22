@@ -39,7 +39,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>How PRISM uses AI</h1>
-    <p class="meta">Updated October 20, 2026</p>
+    <p class="meta">Updated October 21, 2026</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Read this first</h2>
@@ -68,7 +68,8 @@
 
     <h2 id="data">2. What the AI receives</h2>
     <ul>
-        <li><strong>Sent:</strong> the score, the band, the drivers scored at 40 or above, the fact sentences the checks already wrote, and derived metrics. Call 2 also receives the diagnosis from call 1.</li>
+        <li><strong>Sent in call 1:</strong> the score, the band, the action line, the drivers scored at 40 or above with their stress values, the fact sentences the checks already wrote, and four derived metrics (power, temperature gap, strain percent and vibration).</li>
+        <li><strong>Sent in call 2:</strong> the machine ID (M-01), the band, the priority, the action line, the names of the drivers scored at 40 or above, and the cause and checks from call 1. Call 2 does not receive the score, the fact sentences or the metrics.</li>
         <li><strong>Never sent:</strong> text typed by a visitor, names, IP addresses, the scoring rules, or the reading history. The server rebuilds the reading from the scenario and reading number.</li>
         <li><strong>Provider and model:</strong> Anthropic's API. The model name is set by the <code>ANTHROPIC_MODEL</code> property. The default in <code>config/services.php</code> is <code>{{ config('services.anthropic.model') }}</code>.</li>
         <li><strong>Limits:</strong> each call has an 8 second timeout and is not retried. The page shows the token counts the API reports.</li>
@@ -112,7 +113,7 @@
     <ul>
         <li>PRISM scores machines. It scores no person and builds no profile of any person.</li>
         <li>The readings are simulated, so PRISM holds no real operational data.</li>
-        <li>The only personal data is the name an operator types in the override log. PRISM does not verify it.</li>
+        <li>@if (config('prism.require_login'))The personal data is the name an operator types in the override log (PRISM does not verify it), the name, email address and password hash of each invited judge, and the IP address in server logs.@else The only personal data is the name an operator types in the override log (PRISM does not verify it) and the IP address in server logs.@endif</li>
         <li>PRISM uses no analytics, advertising or tracking scripts.</li>
         <li>Rate limits protect the AI routes from automated use.</li>
     </ul>

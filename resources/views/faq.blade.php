@@ -55,7 +55,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM FAQ</h1>
-    <p class="meta">Updated October 20, 2026</p>
+    <p class="meta">Updated October 21, 2026</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Read this first</h2>
@@ -124,13 +124,13 @@
             <p>The four checks built on AI4I limits (tool wear, heat, power and overstrain) were tested on the 10,000 AI4I records. The 18 random-failure records were left out.</p>
             <table>
                 <tr><th scope="col">Band</th><th scope="col">Records</th><th scope="col">Failed</th><th scope="col">Failure rate</th></tr>
-                <tr><td>Low</td><td>7,448</td><td>0</td><td>0 / 7,448 = 0.0%</td></tr>
-                <tr><td>Elevated</td><td>1,889</td><td>40</td><td>40 / 1,889 = 2.1%</td></tr>
-                <tr><td>High</td><td>645</td><td>290</td><td>290 / 645 = 45.0%</td></tr>
+                <tr><td>Low</td><td>7,448</td><td>6</td><td>6 / 7,448 = 0.1%</td></tr>
+                <tr><td>Elevated</td><td>1,889</td><td>42</td><td>42 / 1,889 = 2.2%</td></tr>
+                <tr><td>High</td><td>645</td><td>291</td><td>291 / 645 = 45.1%</td></tr>
             </table>
             <p>Check: 7,448 + 1,889 + 645 = 9,982, which equals 10,000 minus 18.</p>
             <p>The same dataset supplied the limits. These figures show fit to AI4I. They do not show performance on real machines. The vibration and run hours checks are not tested on any failures.</p>
-            <p class="src">Source: <code>README.md</code>.</p>
+            <p class="src">Sources: <code>README.md</code>, <code>config/prism.php</code> (<code>backtest</code>). Reproduce with <code>php artisan prism:backtest</code>.</p>
         </div>
     </details>
 
@@ -157,7 +157,7 @@
         <div class="answer">
             <p>No. PRISM is not an autonomous agent. The score and every default sentence come from fixed templates in the check classes under <code>app/Services/Checks</code>. Only three action lines exist (see the table in section 1).</p>
             <p>When a visitor presses Explain this reading and the band is Elevated or High, two optional AI calls restate that result: a likely-cause note and a draft work order. The AI sees only the score result. It cannot act, send or change anything, and code sets the work order priority. AI text can be wrong, so the score and the safety disclaimer rule. If the AI is slow, off or returns unusable text, the fixed text shows.</p>
-            <p>PRISM has no tool to act with. @if (config('prism.require_login'))PRISM has no link to a machine, and its only email is the invite that lets a contest judge choose a password.@else PRISM has no email and no link to a machine.@endif Its only writes are the override log, <code>POST /api/overrides</code>, and AI answer ratings, <code>POST /api/ai-feedback</code>. Both record a decision or a rating and change nothing on a machine. @if (config('prism.require_login'))The judge invite and set-password pages also write judge accounts, and change nothing on a machine.@endif The other routes are read-only: <code>/</code>, <code>/api/readings</code>, <code>/api/diagnosis</code>, <code>/api/work-order</code>, @if (config('prism.require_login'))<code>/login</code>, @else @endif<code>/ai</code>, <code>/privacy</code>, <code>/terms</code>, <code>/faq</code> and <code>/sitemap.xml</code>. @if (config('prism.require_login'))A sign-in protects <code>/</code> and every <code>/api/</code> route. A separate password protects @else A password protects @endif <code>/overrides</code>, the page that lists the log.</p>
+            <p>PRISM has no tool to act with. @if (config('prism.require_login'))PRISM has no link to a machine, and its only email is the invite that lets a contest judge choose a password.@else PRISM has no email and no link to a machine.@endif Its only writes are the override log, <code>POST /api/overrides</code>, and AI answer ratings, <code>POST /api/ai-feedback</code>. Both record a decision or a rating and change nothing on a machine. @if (config('prism.require_login'))The judge invite and set-password pages also write judge accounts, and change nothing on a machine.@endif The other routes are read-only: <code>/</code>, <code>/api/readings</code>, <code>/api/diagnosis</code>, <code>/api/work-order</code>, @if (config('prism.require_login'))<code>/login</code>, <code>/set-password/{token}</code>, @else @endif<code>/ai</code>, <code>/privacy</code>, <code>/terms</code>, <code>/faq</code> and <code>/sitemap.xml</code>. @if (config('prism.require_login'))A sign-in protects <code>/</code> and every <code>/api/</code> route. A separate password protects @else A password protects @endif <code>/overrides</code>, the page that lists the log.</p>
             <p class="src">Sources: <code>routes/web.php</code>, <code>app/Http/Controllers/DashboardController.php</code>.</p>
         </div>
     </details>
@@ -248,7 +248,7 @@
         <div class="answer">
             <ul>
                 <li><strong>Scoring limits.</strong> The values in <code>config/prism.php</code>. The AI4I limits are fixed. The vibration limits (1.4 and 4.5 mm/s RMS) follow ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</li>
-                <li><strong>Terms and Privacy Policy.</strong> Both carry an effective date of October 19, 2026. Any new data collection means a new Privacy Policy first.</li>
+                <li><strong>Terms and Privacy Policy.</strong> Both carry an effective date of October 21, 2026. Update both dates when either text changes. Any new data collection means a new Privacy Policy first.</li>
                 <li><strong>HTTPS.</strong> The live site uses a free Let's Encrypt certificate. A renewal check runs twice a day on the server. A rebuilt server requests a new certificate, and the DuckDNS name must point to the new address first.</li>
             </ul>
         </div>
@@ -281,7 +281,6 @@
                 <li>The vibration and run hours readings are invented for the demo, and their checks are untested.</li>
                 <li>The 8,000 hour overhaul interval is a placeholder.</li>
                 <li>The limits were checked on the same dataset they came from.</li>
-                <li>The site has no HTTPS.</li>
             </ul>
             <p class="src">Sources: <code>README.md</code>, <a href="{{ url('/terms') }}">Terms</a> section 3.</p>
         </div>
@@ -338,7 +337,7 @@
     <details>
         <summary>How much traffic is acceptable?</summary>
         <div class="answer">
-            <p>Do not send automated or repeated requests to the readings endpoint or the Explain this reading feature. The Terms list this under acceptable use, and PRISM reserves the right to block access for anyone who breaks the rules. The two AI routes are limited to 30 requests a minute.</p>
+            <p>The dashboard asks the readings endpoint for a new reading about every 1.2 seconds while the page is open. That is normal use. Do not run scripts, bots or extra tabs that send many more requests than the dashboard does, and do not hammer the Explain this reading feature. The Terms list this under acceptable use, and PRISM reserves the right to block access for anyone who breaks the rules. The two AI routes are limited to 30 requests a minute. The readings route has no limit of its own.</p>
             <p class="src">Sources: <a href="{{ url('/terms') }}">Terms</a> section 5, <code>routes/web.php</code>.</p>
         </div>
     </details>

@@ -28,7 +28,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM Terms and Conditions</h1>
-    <p class="meta">Effective October 19, 2026</p>
+    <p class="meta">Effective October 21, 2026</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Summary</h2>
@@ -69,10 +69,16 @@
     <ul>
         <li>Use PRISM for any unlawful purpose.</li>
         <li>Probe, scan or test the site for weaknesses, or try to get around any security measure.</li>
-        <li>Overload the site, including with automated or repeated requests to the readings endpoint or to the Explain this reading feature.</li>
+        <li>Overload the site. The open dashboard asks for a new reading about every 1.2 seconds, and that is normal use. Do not send more requests than the dashboard does, for example with scripts, bots or many open tabs, and do not send automated or repeated requests to the Explain this reading feature.</li>
         <li>Copy, scrape or resell the site as a service, or present it as your own work.</li>
         <li>Upload or transmit malicious code.</li>
+@if (config('prism.require_login'))
+        <li>Share your sign-in password, or use another person's account.</li>
+@endif
     </ul>
+@if (config('prism.require_login'))
+    <p><strong>Judge accounts.</strong> Only contest judges whom the entrant invites by email have an account. You choose your own password with a one-time link. Keep it private and use a password you use nowhere else. Tell James Moore at the address in section 13 if you think someone else used your account. PRISM may disable an account at any time. The accounts live in a file on the server, so a rebuilt or shut-down server erases them.</p>
+@endif
     <p>PRISM may block access to anyone who breaks these rules.</p>
 
     <h2>6. Intellectual property</h2>
