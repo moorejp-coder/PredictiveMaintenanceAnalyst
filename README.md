@@ -1,5 +1,7 @@
-Live site: http://prism-cua-env.eba-fsf9rffw.us-east-2.elasticbeanstalk.com/ (loads over HTTP today. HTTPS is in progress.)
+Live site: https://prismcua.duckdns.org/ (HTTPS)
 Local site: http://127.0.0.1:8000/ (run `php artisan serve` in the project folder first)
+
+HTTPS: the live site uses a free Let's Encrypt certificate on a free DuckDNS name. nginx on the Elastic Beanstalk instance ends the encrypted connection. The setup is configured to send http requests for this name to https and to renew the certificate on its own. The files are `.ebextensions/02-https.config`, `.platform/nginx/conf.d/elasticbeanstalk/acme.conf` and `.platform/hooks/postdeploy/02_https.sh`. The name and the contact email are environment properties (`APP_DOMAIN`, `CERTBOT_EMAIL`, `APP_URL`), not code.
 
 # PRISM: Predictive Real-time Infrastructure Sensor Monitoring
 
@@ -117,7 +119,7 @@ Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
 - Band changes use a status region. A new High score uses an alert.
 - Light and dark themes. PRISM follows the system setting, and a header switch overrides it (choice saved in the browser, `localStorage` key `prism-theme`). Colors are CSS tokens in `public/css/prism.css`. The chart reads its colors from the same tokens. Light theme contrast ratios are in `docs/BRAND.md`.
 - Animations stop under reduced motion.
-- Known gaps: no independent audit, no test with people who use assistive technology, only VoiceOver tried, HTTP only (the sign-in is switched off until HTTPS is live, because its password would travel over HTTP).
+- Known gaps: no independent audit, no test with people who use assistive technology, only VoiceOver tried, the sign-in is built but switched off until the author turns it on.
 
 Fields PRISM draws on
 - Data science: AI4I 2020 dataset (Matzka, 2020).
@@ -134,7 +136,6 @@ These items are not in the app today. They are goals, not commitments.
 - A live sensor feed.
 - Automated alerts. PRISM today shows its instruction on screen and sends nothing.
 - A predicted failure date. AI4I is a snapshot of operating conditions, not a time series, so PRISM flags risk under current conditions and does not forecast a date.
-- HTTPS for the live site.
 
 ## Feedback from my last project and what changed
 
