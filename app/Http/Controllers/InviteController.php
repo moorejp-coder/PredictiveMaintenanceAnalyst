@@ -46,7 +46,7 @@ class InviteController extends Controller
             report($e);
 
             return back()->withInput($request->only('email', 'name'))->withErrors([
-                'email' => 'The email could not be sent. Check the MAIL settings, then try again.',
+                'email' => 'The email could not be sent. Check the MAIL settings, then try again. Reason: '.$this->mailFailureReason($e),
             ]);
         }
 
@@ -63,5 +63,27 @@ class InviteController extends Controller
         }
 
         return back()->with('status', 'Invite sent to '.$user->email.'.');
+    }
+
+    /**
+     * One line that names why the mail service refused, for the entrant only.
+     * This page sits behind the invite admin password. The SMTP user name and
+     * password are masked in case the mail library repeats them.
+     */
+    private function mailFailureReason(\Throwable $e): string
+    {
+        $text = (string) $e->getMessage();
+
+        foreach (['username', 'password'] as $key) {
+            $secret = (string) config('mail.mailers.smtp.'.$key);
+
+            if ($secret !== '') {
+                $text = str_replace($secret, '[hidden]', $text);
+            }
+        }
+
+        $text = trim(preg_replace('/\s+/', ' ', $text) ?? '');
+
+        return class_basename($e).': '.Str::limit($text, 300);
     }
 }
