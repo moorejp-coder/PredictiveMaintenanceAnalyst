@@ -48,7 +48,7 @@
         <li><strong>The score is rule-based.</strong> It uses limits drawn from the AI4I 2020 Predictive Maintenance Dataset, which is synthetic data. A learned estimate trained on the same data appears beside it and does not change the score.</li>
         <li><strong>Some checks are untested.</strong> AI4I has no vibration or machine run hours column. Those two readings are invented for this demo, and their checks are not tested on real failures.</li>
         <li><strong>AI text is optional.</strong> When you press Explain this reading and the score is Elevated or High, PRISM asks an AI model to check the result with read-only tools and write a likely cause and a draft work order. The AI does not change the score. AI text can be wrong, so the score and the safety notice rule.</li>
-        <li><strong>PRISM flags risk under current conditions.</strong> It does not forecast a failure date.</li>
+        <li><strong>PRISM flags risk under current conditions.</strong> It does not forecast a failure date. A projection the AI quotes looks a few readings ahead on simulated data and is not a failure date.</li>
     </ul>
 
     <h2>4. Not professional or safety advice</h2>

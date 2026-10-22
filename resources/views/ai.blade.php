@@ -40,7 +40,7 @@
     <table>
         <tr><th scope="col">Part of PRISM</th><th scope="col">Uses AI?</th><th scope="col">Detail</th></tr>
         <tr><td>Risk score and band</td><td>No</td><td>Six rule-based checks. The score is the highest of the six. Limits live in <code>config/prism.php</code>.</td></tr>
-        <tr><td>Learned estimate</td><td>Yes, trained model</td><td>A gradient boosting model trained offline on AI4I (<code>ml/train_model.py</code>) and run in PHP from <code>resources/ml/failure_model.json</code>. It shows a chance of failure beside the score and never changes the score, band or action. Test results and caveats are in <code>resources/ml/model_card.json</code>.</td></tr>
+        <tr><td>Learned estimate</td><td>Yes, trained model</td><td>A gradient boosting model trained offline on AI4I (<code>ml/train_model.py</code>) and run in PHP from <code>resources/ml/failure_model.json</code>. It shows a chance of failure beside the score and never changes the score, band or action. The investigator can also read a straight-line projection of this chance a few readings ahead, on simulated data. Test results and caveats are in <code>resources/ml/model_card.json</code>.</td></tr>
         <tr><td>"Why this score" text</td><td>No</td><td>Fixed sentence templates written by the checks.</td></tr>
         <tr><td>Likely cause</td><td>Yes, on request</td><td>Call 1 in <code>app/Services/Ai/Investigator.php</code>. Claude calls up to six read-only tools in <code>app/Services/Ai/ToolBox.php</code>, in at most four rounds. If the investigator fails a check, the older single call in <code>Diagnoser.php</code> runs, then the built-in text.</td></tr>
         <tr><td>Drafted work order</td><td>Yes, on request</td><td>Call 2 in <code>app/Services/Ai/WorkOrderStep.php</code>. Code sets the priority from the band. The model does not.</td></tr>
@@ -88,6 +88,7 @@
         <li>Random failure cannot be predicted from any reading. PRISM does not score it.</li>
         <li>AI4I has no vibration or run-hours column. Those two checks are simulated and are not backtested.</li>
         <li>The AI can be wrong. It sees the score and the fact sentences, not the machine.</li>
+        <li>The projection extends the last 10 readings in a straight line and scores each projected reading with the trained model. A check against the simulator found the projected crossing within 3 readings of the real one in 18 of 25 start readings (<code>php artisan prism:forecast-check</code>). The simulator climbs in straight lines, so this does not show how the projection performs on a real machine.</li>
         <li>On October 22, 2026, the investigator ran once on 38 simulated Elevated or High readings. 35 answers passed the code checks (92.1%). 3 fell back to the built-in text (2 with a number the AI was not given, 1 with an unusable reply). Passing the checks does not show the advice is correct, and no technician graded the answers. The full report is <code>docs/EVAL.md</code>.</li>
     </ul>
     <p class="src">Source: <code>README.md</code> section "How the score works".</p>

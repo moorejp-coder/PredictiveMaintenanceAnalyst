@@ -3,6 +3,7 @@
 namespace App\Services\Ai;
 
 use App\Services\Limits;
+use App\Services\Ml\Forecaster;
 use App\Services\Ml\LearnedEstimate;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
@@ -103,7 +104,7 @@ final class ToolBox
             ],
             [
                 'name' => 'get_learned_estimate',
-                'description' => 'Read the trained model\'s chance of failure for the current reading, and how often readings in the same range failed in the AI4I records. It is a second opinion next to the rule score. It never changes the score.',
+                'description' => 'Read the trained model\'s chance of failure for the current reading, and how often readings in the same range failed in the AI4I records. It also holds a projection: the chance a few readings ahead if the recent trend continues, and the first reading ahead where the chance reaches 20 and 50 percent. It is a second opinion next to the rule score. It never changes the score.',
                 'input_schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false],
             ],
             [
@@ -396,6 +397,39 @@ final class ToolBox
         }
     }
 
+    /**
+     * The learned chance a few readings ahead if the recent trend continues,
+     * from the current cycle only. Null near the end of a cycle or when the
+     * cycle has fewer than 3 readings.
+     *
+     * @return array{method: string, readings_ahead: int, minutes_ahead: int, chance_percent_then: float, first_reading_at_20_percent: int|null, first_reading_at_50_percent: int|null, looked_ahead_readings: int}|null
+     */
+    private function projection(): ?array
+    {
+        $maxAhead = min(30, SensorSimulator::CYCLE - 1 - ($this->tick % SensorSimulator::CYCLE));
+        $rows = $this->history(10);
+        if ($maxAhead < 1 || count($rows) < 3) {
+            return null;
+        }
+
+        try {
+            $chances = (new Forecaster)->chances($rows, $maxAhead, $this->quality);
+        } catch (\Throwable) {
+            return null;
+        }
+        $ahead = min(10, $maxAhead);
+
+        return [
+            'method' => sprintf('Straight-line projection of the last %d readings, scored by the trained model. Simulated data.', count($rows)),
+            'readings_ahead' => $ahead,
+            'minutes_ahead' => $ahead * self::MINUTES_PER_READING,
+            'chance_percent_then' => $chances[$ahead - 1],
+            'first_reading_at_20_percent' => Forecaster::firstAtOrAbove($chances, 20),
+            'first_reading_at_50_percent' => Forecaster::firstAtOrAbove($chances, 50),
+            'looked_ahead_readings' => $maxAhead,
+        ];
+    }
+
     /** @return array{result: array<string, mixed>, summary: string} */
     private function getLearnedEstimate(): array
     {
@@ -415,6 +449,15 @@ final class ToolBox
             $result['records_in_range'] = $e['range_records'];
             $result['failed_in_range'] = $e['range_failed'];
             $summary = sprintf('Read the learned estimate: %s chance of failure. In the AI4I data, %d of %d readings with an estimate from %s failed.', $e['percent'], $e['range_failed'], $e['range_records'], $e['range']);
+        }
+
+        $projection = $this->projection();
+        if ($projection !== null) {
+            $result['projection'] = $projection;
+            $reach = $projection['first_reading_at_20_percent'];
+            $summary .= $reach === null
+                ? sprintf(' Projected %d readings ahead on the recent trend: %s%%, below 20%%.', $projection['readings_ahead'], $projection['chance_percent_then'])
+                : sprintf(' Projected on the recent trend (straight line): the chance reaches 20%% in about %d readings.', $reach);
         }
 
         return ['result' => $result, 'summary' => $summary];

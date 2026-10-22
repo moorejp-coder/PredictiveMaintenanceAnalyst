@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Services\Ai\AiClient;
 use App\Services\Ai\Investigator;
 use App\Services\Ai\ToolBox;
+use App\Services\RiskScorer;
+use App\Services\SensorSimulator;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -149,6 +151,35 @@ class InvestigatorTest extends TestCase
         $second = Http::recorded()[1][0];
         $this->assertStringContainsString('"name":"get_learned_estimate","input":{}', $second->body());
         $this->assertStringNotContainsString('"input":[]', $second->body());
+    }
+
+    public function test_a_projected_crossing_quoted_in_the_cause_gets_the_straight_line_caveat(): void
+    {
+        $tick = null;
+        $reach = null;
+        for ($t = 10; $t <= 58; $t++) {
+            $p = (new ToolBox('worn_tool', $t))->run('get_learned_estimate', [])['result']['projection']['first_reading_at_20_percent'] ?? null;
+            $band = (new RiskScorer('L'))->score((new SensorSimulator)->reading('worn_tool', $t))['band'];
+            if ($p !== null && $band !== 'low') {
+                [$tick, $reach] = [$t, $p];
+                break;
+            }
+        }
+        $this->assertNotNull($tick, 'No worn_tool reading projects a 20 percent chance.');
+
+        $answer = $this->answer([
+            'cause' => "The learned chance reaches 20 percent in {$reach} readings.",
+            'checks' => ['Pull the tool and look at the cutting edge.'],
+            'evidence' => ['get_learned_estimate', 'what_if'],
+        ]);
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->toolUse('toolu_1', 'get_learned_estimate', []), 200)
+            ->push($this->whatIf('toolu_2', 30.0), 200)
+            ->push($answer, 200)]);
+
+        $res = $this->getJson('/api/diagnosis?scenario=worn_tool&tick='.$tick)->assertJsonPath('source', 'ai');
+
+        $this->assertStringEndsWith('straight-line estimate on simulated data.', $res->json('data.cause'));
     }
 
     public function test_an_invented_learned_chance_is_rejected(): void
