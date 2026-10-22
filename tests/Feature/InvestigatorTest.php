@@ -183,7 +183,7 @@ class InvestigatorTest extends TestCase
 
         $res = $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('source', 'ai');
 
-        $this->assertMatchesRegularExpression('/The learned estimate of failure moves from [\d.]+% to [\d.]+%\./', $res->json('data.tested_fix.text'));
+        $this->assertMatchesRegularExpression('/The learned estimate of failure (moves from [\d.]+% to [\d.]+%|stays at [\d.]+%)/', $res->json('data.tested_fix.text'));
         $this->assertStringContainsString('This is a test only', $res->json('data.tested_fix.text'));
     }
 
@@ -289,6 +289,37 @@ class InvestigatorTest extends TestCase
         // A driver that is not rising has no estimate to quote.
         $flat = [['status' => 'not_rising']];
         $this->assertSame('It stays at 150.', Investigator::addCaveat('It stays at 150.', $flat));
+    }
+
+    public function test_a_percentage_that_matches_the_reading_count_does_not_add_the_caveat(): void
+    {
+        // The screenshot case: "4%" next to a time estimate of 4 readings.
+        $rising = [['status' => 'rising', 'readings_to_limit' => 4, 'minutes_to_limit' => 120]];
+        $cause = 'The learned model gives only a 4% chance, which disagrees with the high band.';
+
+        $this->assertSame($cause, Investigator::addCaveat($cause, $rising));
+        // A number with a time unit still adds it, in readings, minutes or hours.
+        foreach (['It reaches the limit in about 4 readings.', 'It reaches the limit in 120 minutes.', 'It reaches the limit in 2 hours.'] as $quoted) {
+            $this->assertStringEndsWith('straight-line estimate on simulated data.', Investigator::addCaveat($quoted, $rising));
+        }
+    }
+
+    public function test_the_tested_fix_says_so_when_the_rules_and_the_model_disagree(): void
+    {
+        $base = ['channel' => 'torque_nm', 'tried_value' => 40, 'current_score' => 76, 'score_if_changed' => 60, 'band_if_changed' => 'elevated'];
+
+        $worse = Investigator::testedFix($base + ['learned_chance_percent_now' => 4.0, 'learned_chance_percent_if_changed' => 4.6]);
+        $this->assertStringContainsString('moves from 4% to 4.6%, so the rules and the model disagree on this change. Inspect before relying on it.', $worse['text']);
+
+        $better = Investigator::testedFix($base + ['learned_chance_percent_now' => 4.6, 'learned_chance_percent_if_changed' => 2.1]);
+        $this->assertStringContainsString('moves from 4.6% to 2.1%.', $better['text']);
+        $this->assertStringNotContainsString('disagree', $better['text']);
+
+        $same = Investigator::testedFix($base + ['learned_chance_percent_now' => 4.0, 'learned_chance_percent_if_changed' => 4.0]);
+        $this->assertStringContainsString('stays at 4%.', $same['text']);
+
+        $none = Investigator::testedFix($base);
+        $this->assertStringNotContainsString('learned estimate', $none['text']);
     }
 
     public function test_the_second_click_is_served_from_the_cache(): void

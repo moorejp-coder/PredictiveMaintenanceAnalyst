@@ -251,19 +251,42 @@ final class Investigator
         if (stripos($cause, 'straight') !== false) {
             return $cause;
         }
-        $quoted = self::numbers($cause);
         foreach ($timeResults as $r) {
             if (($r['status'] ?? null) !== 'rising') {
                 continue;
             }
-            foreach ([$r['readings_to_limit'] ?? null, $r['minutes_to_limit'] ?? null] as $n) {
-                if ($n !== null && in_array((float) $n, $quoted, true)) {
+            $minutes = $r['minutes_to_limit'] ?? null;
+            $candidates = [
+                [$r['readings_to_limit'] ?? null, 'readings?'],
+                [$minutes, 'minutes?|mins?'],
+                [is_numeric($minutes) ? (float) $minutes / 60 : null, 'hours?|hrs?'],
+            ];
+            foreach ($candidates as [$n, $unit]) {
+                if ($n !== null && self::quotesWithUnit($cause, (float) $n, $unit)) {
                     return $cause.' This is a straight-line estimate on simulated data.';
                 }
             }
         }
 
         return $cause;
+    }
+
+    /**
+     * True when the text writes the number followed by a time unit, such as
+     * "4 readings" or "150 minutes". A bare "4%" is not a time estimate.
+     */
+    private static function quotesWithUnit(string $text, float $n, string $unitPattern): bool
+    {
+        if (preg_match_all('/(\d+(?:\.\d+)?)\s*(?:'.$unitPattern.')\b/i', $text, $m) < 1) {
+            return false;
+        }
+        foreach ($m[1] as $found) {
+            if (abs((float) $found - $n) <= max(0.05, 0.005 * abs($n))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -278,9 +301,16 @@ final class Investigator
         [$label, $unit] = ToolBox::CHANNEL_LABELS[$r['channel']];
         $value = rtrim(rtrim(number_format((float) $r['tried_value'], 2, '.', ','), '0'), '.');
 
-        $learned = isset($r['learned_chance_percent_now'], $r['learned_chance_percent_if_changed'])
-            ? sprintf(' The learned estimate of failure moves from %s%% to %s%%.', self::percent((float) $r['learned_chance_percent_now']), self::percent((float) $r['learned_chance_percent_if_changed']))
-            : '';
+        $learned = '';
+        if (isset($r['learned_chance_percent_now'], $r['learned_chance_percent_if_changed'])) {
+            $now = self::percent((float) $r['learned_chance_percent_now']);
+            $then = self::percent((float) $r['learned_chance_percent_if_changed']);
+            $learned = match (true) {
+                $now === $then => sprintf(' The learned estimate of failure stays at %s%%.', $now),
+                (float) $r['learned_chance_percent_if_changed'] > (float) $r['learned_chance_percent_now'] => sprintf(' The learned estimate of failure moves from %s%% to %s%%, so the rules and the model disagree on this change. Inspect before relying on it.', $now, $then),
+                default => sprintf(' The learned estimate of failure moves from %s%% to %s%%.', $now, $then),
+            };
+        }
 
         return [
             'channel' => $r['channel'],
