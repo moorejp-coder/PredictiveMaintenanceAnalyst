@@ -93,6 +93,14 @@ class InvestigatorTest extends TestCase
         });
     }
 
+    public function test_a_number_written_with_a_thousands_separator_counts_as_one_number(): void
+    {
+        $numbers = new \ReflectionMethod(Investigator::class, 'numbers');
+
+        $this->assertSame([1400.0, 1380.5, 20.0], $numbers->invoke(null, 'Speed 1,400 rpm, 1,380.5 limit, 20% chance'));
+        $this->assertSame([1.0, 40.0], $numbers->invoke(null, 'Between 1, 40 and none'));
+    }
+
     public function test_the_prompt_asks_for_a_time_estimate_a_what_if_and_no_guessed_causes(): void
     {
         Http::fake(['api.anthropic.com/*' => Http::response($this->good(), 200)]);

@@ -405,9 +405,10 @@ final class Investigator
     /** @return list<float> */
     private static function numbers(string $text): array
     {
-        preg_match_all('/\d+(?:\.\d+)?/', $text, $m);
+        // "1,400" is one number, not 1 and 400.
+        preg_match_all('/\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?/', $text, $m);
 
-        return array_map('floatval', $m[0]);
+        return array_map(fn (string $n) => (float) str_replace(',', '', $n), $m[0]);
     }
 
     /** @param  list<float>  $source */
