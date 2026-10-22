@@ -305,7 +305,7 @@
     <details>
         <summary>What happens to data when PRISM shuts down?</summary>
         <div class="answer">
-            <p>@if (config('prism.require_login'))PRISM has no sign-up. It has one judge account, created from environment properties and not from the code. The judge account and the override log live in a file on the host, so a replaced or shut-down server erases the log unless it was exported first. The next deploy creates the judge account again.@else PRISM has no user accounts. The override log lives in a file on the host, so a replaced or shut-down server erases it unless it was exported first.@endif Server logs stay on the host until the platform rotates them or the server is replaced or shut down.</p>
+            <p>@if (config('prism.require_login'))PRISM has no sign-up. Contest judges get an account by email invite, and the entrant sends the invites. The judge accounts and the override log live in a file on the host, so a replaced or shut-down server erases both unless the log was exported first. After a rebuild, the entrant invites the judges again.@else PRISM has no user accounts. The override log lives in a file on the host, so a replaced or shut-down server erases it unless it was exported first.@endif Server logs stay on the host until the platform rotates them or the server is replaced or shut down.</p>
             <p class="src">Source: <a href="{{ url('/privacy') }}">Privacy Policy</a> sections 2 and 5.</p>
         </div>
     </details>

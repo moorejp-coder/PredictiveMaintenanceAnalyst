@@ -16,18 +16,18 @@ PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It 
 - Offers four simulated situations (worn tool, overheating, overload, healthy) to show how the score reacts.
 - "Explain this reading" asks Claude for a likely cause and a drafted work order. A built-in explanation shows if the AI is slow or off (see AI steps).
 - Records an override when an operator keeps a machine running after PRISM says to stop it (see Override log).
-- Has a sign-in and an email invite flow for contest judges, built and switched off for now (see Sign in and judge invites). Today the dashboard is public.
+- Has a sign-in and an email invite flow for contest judges. The sign-in is on at the live site, so the dashboard needs a login (see Sign in and judge invites).
 - Includes a FAQ, Terms and Conditions and a Privacy Policy. Each says what PRISM does not do.
 - Explains its AI use on the page `/ai`: where AI runs, what it receives, who decides, the backtest limits, a NIST AI RMF mapping and an accessibility statement.
 - Labels every AI answer "AI-GENERATED" and lets a visitor rate it Helpful or Wrong (see Ethical AI, accessibility and sources).
 
 Safety disclaimer: PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.
 
-## Sign in and judge invites (built, switched off)
+## Sign in and judge invites
 
-The sign-in and the judge invite flow are finished and tested but turned off. The contest asks for a working login, and a password sent over HTTP is readable on the network, so they wait for HTTPS (blocked until AWS verifies the account for CloudFront). With the switch off, the dashboard is public, `/login` goes back to `/`, and the login, invite and set-password routes return 404.
+The sign-in and the judge invite flow are on at the live site (`REQUIRE_LOGIN=true`), which runs on HTTPS. The contest asks for a working login. With the switch off, which is the default for a local copy, the dashboard is public, `/login` goes back to `/`, and the login, invite and set-password routes return 404.
 
-How a judge gets in (switch on):
+How a judge gets in:
 
 1. The entrant opens `/admin/invites`, signs in with the `INVITE_ADMIN_PASSWORD` value and types the judge's email address.
 2. PRISM creates the account with a random password nobody knows and emails the judge a link. The email holds a link, never a password.
@@ -36,7 +36,7 @@ How a judge gets in (switch on):
 
 To send a fresh link (a lost email, an expired link), type the same address again. A second invite inside one minute is held back.
 
-Turn it on after HTTPS works:
+To turn it on (this is how the live site was set up). Use HTTPS only, since a password sent over HTTP is readable on the network:
 
 1. Set up an email sender (see Email below). Any SMTP provider works with no added package.
 2. In the Elastic Beanstalk console, set the environment properties `REQUIRE_LOGIN=true`, `INVITE_ADMIN_PASSWORD` and the `MAIL_*` values. Use a password for the invite page that no other PRISM password uses.
@@ -112,6 +112,7 @@ Ethical AI
 
 Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
 - Lighthouse accessibility audit, October 20, 2026, on the live site: 100 on every page the author tested, including the dashboard and `/ai`, in desktop and mobile modes and in both the light and dark themes. An earlier run on a local copy also gave 100 on both (Lighthouse 13.4.1, axe-core 4.12.1). Lighthouse checks only a subset of issues. The author also walked the dashboard with VoiceOver on macOS and with the keyboard only (Chrome) on October 20, 2026 and found no issues. At 200% and 400% browser zoom the layout reflows and the two pop-ups scroll vertically inside the window.
+- Sign-in pages, October 21, 2026, on the live site: Lighthouse accessibility score of 100 on `/login`, `/set-password` and `/admin/invites`. An axe-core 4.10.2 scan of `/login` found 0 violations in the light and dark themes. The author did not run a keyboard-only or screen reader pass on these three pages.
 - Skip link, main landmark, a visible focus outline and native dialogs that return focus.
 - Risk bands appear as words, not color alone.
 - Each stress bar is a labeled `role="meter"` with a value and a band.
@@ -119,7 +120,7 @@ Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
 - Band changes use a status region. A new High score uses an alert.
 - Light and dark themes. PRISM follows the system setting, and a header switch overrides it (choice saved in the browser, `localStorage` key `prism-theme`). Colors are CSS tokens in `public/css/prism.css`. The chart reads its colors from the same tokens. Light theme contrast ratios are in `docs/BRAND.md`.
 - Animations stop under reduced motion.
-- Known gaps: no independent audit, no test with people who use assistive technology, only VoiceOver tried, the sign-in is built but switched off until the author turns it on.
+- Known gaps: no independent audit, no test with people who use assistive technology, only VoiceOver tried.
 
 Fields PRISM draws on
 - Data science: AI4I 2020 dataset (Matzka, 2020).
