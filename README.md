@@ -31,7 +31,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026. Th
 
 | Criterion | Weight | How PRISM addresses it |
 |---|---|---|
-| Problem/Opportunity Identification & Relevance | 20% | Names the user: a maintenance technician at a small machine shop with no data scientist (see The problem). The score is backtested on all 10,000 AI4I 2020 records (`php artisan prism:backtest`), and the limits of that test are stated. Cites an ABB survey and a 2019 CNC SME cost model paper, with their scope limits (see Evidence behind the problem). |
+| Problem/Opportunity Identification & Relevance | 20% | Names the user: a maintenance technician at a small machine shop with no data scientist (see The problem). The score is backtested on all 10,000 AI4I 2020 records (`php artisan prism:backtest`), and the limits of that test are stated. Cites an ABB survey and a 2019 CNC SME cost model paper, with their scope limits (see Evidence behind the problem). Compares the six checks with four condition monitoring sources (see What the literature monitors). |
 | Functionality & Technical Execution | 25% | Live on AWS Elastic Beanstalk over HTTPS. Sign-in is on, with an email invite flow for judges. AI calls have timeouts, token caps and a built-in fallback. Server-side checks and rate limits guard the override log and the AI routes. Automated tests run on every push (GitHub Actions, PHP 8.4 and 8.5). |
 | AI Integration & Innovation | 20% | Rules score the machine and the AI only explains, on request, in two small Claude calls (Diagnose, then Work order). PHP builds a short structured input for each call, and code sets the work order priority. See AI steps. |
 | Code Quality, Documentation & GitHub Transparency | 15% | One class per failure check in `app/Services/Checks`, with every limit and its source in `config/prism.php`. Secrets live in environment properties, not in the repo. Login attempts are rate limited. Commit history starts Sep 28, 2026. See Run locally for setup steps. |
@@ -87,6 +87,28 @@ Two sources support the problem. Neither tests PRISM.
 - Adu-Amankwa, Attia, Janardhanan and Patel (2019), "A predictive maintenance cost model for CNC SMEs in the era of industry 4.0," The International Journal of Advanced Manufacturing Technology 104, 3567 to 3587. The authors found no earlier study with a predictive maintenance cost model for small and medium CNC shops. Their model predicts savings of 22,804 to 48,585 British pounds for setups of 1 to 50 machines. These are model predictions, not measured results. The page I read does not state the time period. Source: https://doi.org/10.1007/s00170-019-04094-2.
 
 What the evidence does not show: PRISM's own savings. No shop has used PRISM, and AI4I is synthetic data. The value stays a goal (see What PRISM aims to deliver).
+
+## What the literature monitors
+
+Four published sources describe what condition monitoring covers on machine tools. They describe monitoring in general. None reports what technicians say they check, and none studies small shops. I read each at its original page.
+
+- Neugebauer and Fischer (2009), "Condition-Based Preventive Maintenance of Machine Tools," Journal of Machine Engineering 9(3), Fraunhofer Institute. For the main spindle it lists bearing temperature, vibration, motor current and active power, and it lists operating hours as a general input. It does not list tool wear. It says time-based plans are often not followed consistently and argues for condition-based maintenance.
+- Rastegari and Archenti (2017), "Condition Based Maintenance of Machine Tools: Vibration Monitoring of Spindle Units," IEEE Reliability and Maintainability Symposium. It says spindle bearing wear is common and vibration analysis diagnoses it. The page I read mentions warning limits but gives no numeric limits and names no standard.
+- Korn (2010), "Taking Spindle Health Seriously," Production Machining magazine. A shop sets alarm limits on spindle temperature, and warning and alarm limits on vibration by machine type. The article does not mention power or load.
+- Zhou and Xue (2018), "Review of tool condition monitoring methods in milling processes," The International Journal of Advanced Manufacturing Technology 96, 2509 to 2523. The abstract says accurate tool condition monitoring is essential for fully automated milling but hard to implement. The page I read names no signals.
+
+| PRISM check | Support in these sources | Where PRISM's rule comes from |
+|---|---|---|
+| Vibration | Strong. Neugebauer and Fischer, Rastegari and Archenti, and Korn all monitor vibration. | No source gives numeric limits. PRISM uses ISO 20816-3 zone boundaries as demo values. |
+| Heat | Partial. Neugebauer and Fischer (bearing temperature) and Korn (spindle temperature limits). They monitor the spindle bearing. | The AI4I labels. |
+| Power draw | Partial. Neugebauer and Fischer list motor current and active power. Korn does not mention power or load. | The AI4I labels. |
+| Tool wear | Weak. Zhou and Xue show tool condition monitoring is an established topic in milling research. They support the topic, not a limit. Neugebauer and Fischer do not list tool wear. | The AI4I data. |
+| Overstrain | Weak. Neugebauer and Fischer list torque for axle drives. They do not describe overstrain as PRISM defines it. | The AI4I labels. |
+| Run hours | Partial. Neugebauer and Fischer list operating hours as an input and warn that time-based plans are often not followed. | PRISM caps run hours alone at 50, so hours alone never give a High score. The 8,000 hour interval is a placeholder. |
+
+These parts of PRISM are my own choices, and none of the four sources supports them: the 0 to 100 score as the highest of six checks, the Elevated (40 and above) and High (70 and above) bands, and the simulated readings.
+
+Limits: the sources are from 2009 to 2018. For Rastegari and Archenti and for Zhou and Xue I read the abstract page, not the full paper. I found no machine builder guide, and I could not open some pages I tried. Tool wear support rests on one review's abstract and reference titles.
 
 ## How the score works
 
