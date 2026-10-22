@@ -57,7 +57,7 @@
         <li><strong>Readings are simulated.</strong> PRISM does not connect to any real machine or sensor.</li>
         <li><strong>The score is rule-based.</strong> It uses limits drawn from the AI4I 2020 Predictive Maintenance Dataset, which is synthetic data.</li>
         <li><strong>Some checks are untested.</strong> AI4I has no vibration or machine run hours column. Those two readings are invented for this demo, and their checks are not tested on real failures.</li>
-        <li><strong>AI text is optional.</strong> When you press Explain this reading and the score is Elevated or High, PRISM asks an AI model to restate the result as a likely cause and a draft work order. The AI does not change the score. AI text can be wrong, so the score and the safety notice rule.</li>
+        <li><strong>AI text is optional.</strong> When you press Explain this reading and the score is Elevated or High, PRISM asks an AI model to check the result with read-only tools and write a likely cause and a draft work order. The AI does not change the score. AI text can be wrong, so the score and the safety notice rule.</li>
         <li><strong>PRISM flags risk under current conditions.</strong> It does not forecast a failure date.</li>
     </ul>
 

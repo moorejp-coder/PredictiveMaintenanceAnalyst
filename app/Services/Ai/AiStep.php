@@ -46,6 +46,16 @@ abstract class AiStep
         return true;
     }
 
+    /**
+     * The built-in text with no AI call, for a caller that already knows why.
+     *
+     * @return array{source: string, data: array, tokens: null, reason: string}
+     */
+    public function offline(array $input, string $reason): array
+    {
+        return $this->finish('fallback', $this->fallback($input), null, $input, $reason);
+    }
+
     /** @return array{source: string, data: array, tokens: array{input: int, output: int}|null, reason: string|null} */
     public function run(array $input): array
     {
@@ -128,7 +138,7 @@ abstract class AiStep
     }
 
     /** Decode a JSON object from a reply, even if the model wraps it in a code fence. */
-    protected static function decodeJson(string $text): ?array
+    public static function decodeJson(string $text): ?array
     {
         $start = strpos($text, '{');
         $end = strrpos($text, '}');
@@ -142,7 +152,7 @@ abstract class AiStep
     }
 
     /** A trimmed non-empty string no longer than $max characters, or null. */
-    protected static function cleanString(mixed $value, int $max): ?string
+    public static function cleanString(mixed $value, int $max): ?string
     {
         if (! is_string($value)) {
             return null;
@@ -154,7 +164,7 @@ abstract class AiStep
     }
 
     /** A list of 1 to $limit clean strings, or null if any item is unusable. */
-    protected static function cleanList(mixed $value, int $min, int $limit, int $maxEach): ?array
+    public static function cleanList(mixed $value, int $min, int $limit, int $maxEach): ?array
     {
         if (! is_array($value) || ! array_is_list($value)) {
             return null;

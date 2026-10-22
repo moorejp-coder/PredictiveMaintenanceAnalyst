@@ -49,8 +49,9 @@ Route::middleware(RequireLogin::class)->group(function () {
     Route::get('/api/readings', [DashboardController::class, 'readings']);
     // Two small AI calls, run only when a visitor presses "Explain this reading".
     // Rate limited so a script cannot run up the AI bill.
+    // The diagnosis route can run up to four model rounds, so its limit is lower.
     Route::get('/api/diagnosis', [AiController::class, 'diagnosis'])
-        ->middleware('throttle:30,1');
+        ->middleware('throttle:10,1');
     Route::get('/api/work-order', [AiController::class, 'workOrder'])
         ->middleware('throttle:30,1');
     // Override log. An operator who keeps a machine running after the High

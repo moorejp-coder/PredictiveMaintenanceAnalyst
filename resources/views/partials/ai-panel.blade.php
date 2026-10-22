@@ -53,6 +53,10 @@
                     <h3>Likely cause</h3>
                     <p id="ai-cause"></p>
                     <ul id="ai-checks"></ul>
+                    <div id="ai-trace" hidden>
+                        <h3>What the AI looked at</h3>
+                        <ul id="ai-trace-list"></ul>
+                    </div>
                 </div>
                 <div id="ai-order" hidden>
                     <h3 id="ai-order-title"></h3>
@@ -136,7 +140,7 @@
         async function get(base, latest) {
             const url = base + '?scenario=' + encodeURIComponent(latest.scenario) + '&tick=' + latest.tick;
             const ctrl = new AbortController();
-            const timer = setTimeout(() => ctrl.abort(), 12000);
+            const timer = setTimeout(() => ctrl.abort(), 24000);
             try {
                 const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: ctrl.signal });
                 if (!res.ok) { throw new Error('HTTP ' + res.status); }
@@ -165,7 +169,8 @@
                 low_risk: 'reading is low risk, so no AI call was made',
                 timeout: 'the AI did not answer in time',
                 api_error: 'the AI service returned an error',
-                bad_reply: 'the AI reply failed checks'
+                bad_reply: 'the AI reply failed checks',
+                ungrounded: 'the AI answer used a number or a tool it had not been given'
             };
             return 'Rule-based answer, ' + (why[result.reason] || 'AI was not used');
         }
@@ -183,11 +188,14 @@
             $('ai-label').hidden = true;
             $('ai-warn').hidden = true;
             rated = null;
-            $('ai-status').textContent = 'Reading the numbers...';
+            $('ai-status').textContent = 'Checking the readings with PRISM\'s tools...';
             try {
                 const d = await get(panel.dataset.diagnosis, latest);
                 $('ai-cause').textContent = d.data.cause;
                 fill($('ai-checks'), d.data.checks);
+                const trace = Array.isArray(d.trace) ? d.trace : [];
+                fill($('ai-trace-list'), trace.map((t) => t.summary));
+                $('ai-trace').hidden = trace.length === 0;
                 $('ai-diagnosis').hidden = false;
 
                 $('ai-status').textContent = 'Drafting a work order...';

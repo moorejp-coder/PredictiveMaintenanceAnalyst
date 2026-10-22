@@ -52,6 +52,106 @@ final class AiClient
      */
     public function complete(string $system, string $user, int $maxTokens): ?array
     {
+        $json = $this->send([
+            'model' => $this->model,
+            // Thinking tokens count toward max_tokens, so leave room for them
+            // or the model can run out before it writes the answer.
+            'max_tokens' => $maxTokens + self::THINKING_HEADROOM,
+            'output_config' => ['effort' => 'low'],
+            'system' => $system,
+            'messages' => [['role' => 'user', 'content' => $user]],
+        ], $this->timeoutSeconds);
+        if ($json === null) {
+            return null;
+        }
+
+        $text = self::firstText($json);
+        if ($text === null) {
+            $this->failure = 'bad_reply';
+            Log::warning('ai_call_failed', [
+                'reason' => 'empty_reply',
+                'stop_reason' => data_get($json, 'stop_reason'),
+                'block_types' => self::blockTypes($json),
+            ]);
+
+            return null;
+        }
+
+        return [
+            'text' => $text,
+            'input_tokens' => (int) data_get($json, 'usage.input_tokens', 0),
+            'output_tokens' => (int) data_get($json, 'usage.output_tokens', 0),
+        ];
+    }
+
+    /**
+     * One turn of a tool conversation. Returns the reply blocks exactly as the
+     * API sent them, so the caller passes them back unchanged on the next turn.
+     *
+     * @param  list<array<string, mixed>>  $messages
+     * @param  list<array<string, mixed>>  $tools
+     * @param  string  $toolChoice  "auto" lets Claude call tools, "none" forces a final answer
+     * @return array{content: list<array<string, mixed>>, stop_reason: string|null, input_tokens: int, output_tokens: int}|null
+     */
+    public function converse(string $system, array $messages, array $tools, int $maxTokens, string $toolChoice, int $timeoutSeconds): ?array
+    {
+        $json = $this->send([
+            'model' => $this->model,
+            'max_tokens' => $maxTokens + self::THINKING_HEADROOM,
+            'output_config' => ['effort' => 'low'],
+            'system' => $system,
+            'tools' => $tools,
+            'tool_choice' => ['type' => $toolChoice],
+            'messages' => $messages,
+        ], max(1, min($timeoutSeconds, $this->timeoutSeconds)));
+        if ($json === null) {
+            return null;
+        }
+
+        $content = data_get($json, 'content');
+        if (! is_array($content) || $content === []) {
+            $this->failure = 'bad_reply';
+            Log::warning('ai_call_failed', ['reason' => 'empty_reply', 'stop_reason' => data_get($json, 'stop_reason')]);
+
+            return null;
+        }
+
+        return [
+            'content' => array_values($content),
+            'stop_reason' => data_get($json, 'stop_reason'),
+            'input_tokens' => (int) data_get($json, 'usage.input_tokens', 0),
+            'output_tokens' => (int) data_get($json, 'usage.output_tokens', 0),
+        ];
+    }
+
+    /** The first non-empty text block of a reply, or null. */
+    public static function firstText(array $json): ?string
+    {
+        // The reply may start with a non-text block (for example thinking), so use the first text block.
+        foreach ((array) data_get($json, 'content', []) as $block) {
+            if (is_array($block) && ($block['type'] ?? null) === 'text' && is_string($block['text'] ?? null) && trim($block['text']) !== '') {
+                return $block['text'];
+            }
+        }
+
+        return null;
+    }
+
+    /** @return list<string> */
+    private static function blockTypes(array $json): array
+    {
+        return array_map(fn ($b) => is_array($b) ? ($b['type'] ?? '?') : '?', (array) data_get($json, 'content', []));
+    }
+
+    /**
+     * POST one Messages API request. Never throws. Returns the decoded reply,
+     * or null after setting failure().
+     *
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>|null
+     */
+    private function send(array $body, int $timeoutSeconds): ?array
+    {
         $this->failure = null;
 
         if (! $this->enabled()) {
@@ -66,17 +166,9 @@ final class AiClient
                 'anthropic-version' => '2023-06-01',
             ])
                 ->connectTimeout(3)
-                ->timeout($this->timeoutSeconds)
+                ->timeout($timeoutSeconds)
                 ->acceptJson()
-                ->post($this->baseUrl.'/v1/messages', [
-                    'model' => $this->model,
-                    // Thinking tokens count toward max_tokens, so leave room for them
-                    // or the model can run out before it writes the answer.
-                    'max_tokens' => $maxTokens + self::THINKING_HEADROOM,
-                    'output_config' => ['effort' => 'low'],
-                    'system' => $system,
-                    'messages' => [['role' => 'user', 'content' => $user]],
-                ]);
+                ->post($this->baseUrl.'/v1/messages', $body);
         } catch (\Throwable $e) {
             $this->failure = $e instanceof ConnectionException ? 'timeout' : 'api_error';
             Log::warning('ai_call_failed', ['reason' => 'exception', 'class' => $e::class]);
@@ -91,30 +183,8 @@ final class AiClient
             return null;
         }
 
-        // The reply may start with a non-text block (for example thinking), so use the first text block.
-        $blocks = (array) data_get($response->json(), 'content', []);
-        $text = null;
-        foreach ($blocks as $block) {
-            if (is_array($block) && ($block['type'] ?? null) === 'text' && is_string($block['text'] ?? null) && trim($block['text']) !== '') {
-                $text = $block['text'];
-                break;
-            }
-        }
-        if ($text === null) {
-            $this->failure = 'bad_reply';
-            Log::warning('ai_call_failed', [
-                'reason' => 'empty_reply',
-                'stop_reason' => data_get($response->json(), 'stop_reason'),
-                'block_types' => array_map(fn ($b) => is_array($b) ? ($b['type'] ?? '?') : '?', $blocks),
-            ]);
+        $json = $response->json();
 
-            return null;
-        }
-
-        return [
-            'text' => $text,
-            'input_tokens' => (int) data_get($response->json(), 'usage.input_tokens', 0),
-            'output_tokens' => (int) data_get($response->json(), 'usage.output_tokens', 0),
-        ];
+        return is_array($json) ? $json : null;
     }
 }

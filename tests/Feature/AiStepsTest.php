@@ -20,7 +20,7 @@ class AiStepsTest extends TestCase
         parent::setUp();
         $this->signIn();
         Cache::flush();
-        config(['services.anthropic.key' => 'test-key']);
+        config(['services.anthropic.key' => 'test-key', 'prism.investigator' => false]);
         // The client is a singleton, so rebuild it after the config change.
         $this->app->forgetInstance(AiClient::class);
     }
