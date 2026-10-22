@@ -79,7 +79,7 @@ final class ToolBox
             ],
             [
                 'name' => 'what_if',
-                'description' => 'Score a copy of the current reading with one channel set to a new value. Shows whether a change would clear the risk. The real score does not change.',
+                'description' => 'Score a copy of the current reading with one channel set to a new value. The effect field says lowers_score, no_change or raises_score. Only a change that lowers the score is a tested fix. The real score does not change.',
                 'input_schema' => ['type' => 'object', 'properties' => [
                     'channel' => $channel,
                     'value' => ['type' => 'number', 'description' => 'The value to try, in the same unit as the reading.'],
@@ -301,6 +301,12 @@ final class ToolBox
             }
         }
 
+        $effect = match (true) {
+            $new['score'] < $this->risk['score'] => 'lowers_score',
+            $new['score'] > $this->risk['score'] => 'raises_score',
+            default => 'no_change',
+        };
+
         return [
             'result' => [
                 'channel' => $channel,
@@ -309,6 +315,7 @@ final class ToolBox
                 'current_band' => $this->risk['band'],
                 'score_if_changed' => $new['score'],
                 'band_if_changed' => $new['band'],
+                'effect' => $effect,
                 'drivers_at_40_or_more' => $drivers,
             ],
             'summary' => sprintf('Tried %s = %s on a copy: score %d to %d (%s).', $channel, $value, $this->risk['score'], $new['score'], $new['band']),

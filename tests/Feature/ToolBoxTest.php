@@ -80,8 +80,17 @@ class ToolBoxTest extends TestCase
 
         $this->assertSame($real, $out['result']['current_score']);
         $this->assertLessThan($real, $out['result']['score_if_changed']);
+        $this->assertSame('lowers_score', $out['result']['effect']);
         // The real reading is unchanged after the call.
         $this->assertSame($real, (new RiskScorer('L'))->score((new SensorSimulator)->reading('overheating', 58))['score']);
+    }
+
+    public function test_what_if_marks_a_change_toward_failure_as_not_a_fix(): void
+    {
+        // Heat fails at a low speed, so a lower speed does not lower the score.
+        $out = $this->box('overheating', 58)->run('what_if', ['channel' => 'rotational_speed_rpm', 'value' => 700]);
+
+        $this->assertContains($out['result']['effect'], ['no_change', 'raises_score']);
     }
 
     public function test_get_backtest_reads_the_config_numbers(): void

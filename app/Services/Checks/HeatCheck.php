@@ -34,10 +34,10 @@ final class HeatCheck extends Check
     public function sentence(array $reading): string
     {
         return sprintf(
-            'Heat is not leaving the machine. The process runs only %.1f degrees warmer than the air (limit: under %.1f) at %s rpm (limit: under %s).',
+            'Heat is not leaving the machine. The process runs only %.1f degrees warmer than the air at %s rpm. In the AI4I data, heat failures happen when the gap is under %.1f degrees and the speed is under %s rpm.',
             $this->gap($reading),
-            $this->limits['gap_limit_k'],
             number_format((float) $reading['rotational_speed_rpm']),
+            $this->limits['gap_limit_k'],
             number_format($this->limits['speed_limit_rpm']),
         );
     }

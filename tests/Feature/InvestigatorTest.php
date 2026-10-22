@@ -33,6 +33,12 @@ class InvestigatorTest extends TestCase
         ];
     }
 
+    /** A what_if call that tries a lower torque. The gate asks for one before an answer. */
+    private function whatIf(string $id, float $torque = 30.0): array
+    {
+        return $this->toolUse($id, 'what_if', ['channel' => 'torque_nm', 'value' => $torque]);
+    }
+
     private function answer(array $payload): array
     {
         return [
@@ -47,22 +53,22 @@ class InvestigatorTest extends TestCase
         return $this->answer([
             'cause' => 'Tool wear is rising and the tool is near the failure window.',
             'checks' => ['Pull the tool and look at the cutting edge.', 'Change the tool if the edge is worn.'],
-            'evidence' => ['get_check'],
+            'evidence' => ['what_if'],
         ]);
     }
 
     public function test_a_tool_call_then_a_grounded_answer_is_used_and_traced(): void
     {
         Http::fake(['api.anthropic.com/*' => Http::sequence()
-            ->push($this->toolUse('toolu_1', 'get_check', ['driver' => 'tool_wear']), 200)
+            ->push($this->whatIf('toolu_1'), 200)
             ->push($this->good(), 200)]);
 
         $this->getJson('/api/diagnosis'.self::WORN)
             ->assertOk()
             ->assertJsonPath('source', 'ai')
             ->assertJsonPath('reason', null)
-            ->assertJsonPath('data.evidence.0', 'get_check')
-            ->assertJsonPath('trace.0.tool', 'get_check')
+            ->assertJsonPath('data.evidence.0', 'what_if')
+            ->assertJsonPath('trace.0.tool', 'what_if')
             ->assertJsonPath('trace.0.ok', true)
             ->assertJsonPath('tokens.input', 500)
             ->assertJsonPath('tokens.output', 80);
@@ -91,27 +97,87 @@ class InvestigatorTest extends TestCase
 
         Http::assertSent(fn ($r) => str_contains($r['system'], 'time_to_limit')
             && str_contains($r['system'], 'Call what_if once')
+            && str_contains($r['system'], 'lowers_score')
+            && str_contains($r['system'], 'Never write the words JSON')
             && str_contains($r['system'], 'shows stress 100')
             && str_contains($r['system'], 'Do not guess parts'));
+    }
+
+    public function test_the_gate_asks_for_a_what_if_before_the_answer(): void
+    {
+        $requests = [];
+        Http::fake(function ($request) use (&$requests) {
+            $requests[] = $request->data();
+            $n = count($requests);
+            if ($n === 1) {
+                return Http::response($this->good(), 200);
+            }
+            if ($n === 2) {
+                return Http::response($this->whatIf('toolu_9'), 200);
+            }
+
+            return Http::response($this->good(), 200);
+        });
+
+        $this->getJson('/api/diagnosis'.self::WORN)
+            ->assertJsonPath('source', 'ai')
+            ->assertJsonPath('trace.0.tool', 'what_if');
+
+        $this->assertCount(3, $requests);
+        $last = end($requests[1]['messages']);
+        $this->assertSame('user', $last['role']);
+        $this->assertStringContainsString('call what_if once', $last['content']);
+    }
+
+    public function test_a_value_that_did_not_lower_the_score_cannot_be_the_recommended_target(): void
+    {
+        // Torque 77.7 raises the worn tool score, so it is not a tested fix.
+        $bad = $this->answer([
+            'cause' => 'Tool wear is rising.',
+            'checks' => ['Reduce torque to 77.7 Nm.'],
+            'evidence' => ['what_if'],
+        ]);
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->whatIf('toolu_1', 77.7), 200)
+            ->push($bad, 200)
+            ->push([], 500)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('source', 'fallback');
+    }
+
+    public function test_a_value_that_lowered_the_score_can_be_named(): void
+    {
+        $ok = $this->answer([
+            'cause' => 'Tool wear is rising.',
+            'checks' => ['Bring torque down to 30 Nm.'],
+            'evidence' => ['what_if'],
+        ]);
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->whatIf('toolu_1', 30.0), 200)
+            ->push($ok, 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)
+            ->assertJsonPath('source', 'ai')
+            ->assertJsonPath('data.checks.0', 'Bring torque down to 30 Nm.');
     }
 
     public function test_the_second_click_is_served_from_the_cache(): void
     {
         Http::fake(['api.anthropic.com/*' => Http::sequence()
-            ->push($this->toolUse('toolu_1', 'get_check', ['driver' => 'tool_wear']), 200)
+            ->push($this->whatIf('toolu_1'), 200)
             ->push($this->good(), 200)]);
 
         $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('source', 'ai');
         $this->getJson('/api/diagnosis'.self::WORN)
             ->assertJsonPath('source', 'cache')
-            ->assertJsonPath('trace.0.tool', 'get_check');
+            ->assertJsonPath('trace.0.tool', 'what_if');
 
         Http::assertSentCount(2);
     }
 
     public function test_the_last_round_forces_an_answer(): void
     {
-        $call = $this->toolUse('toolu_x', 'get_check', ['driver' => 'heat']);
+        $call = $this->whatIf('toolu_x');
         Http::fake(['api.anthropic.com/*' => Http::sequence()
             ->push($call, 200)->push($call, 200)->push($call, 200)->push($this->good(), 200)]);
 
@@ -136,7 +202,7 @@ class InvestigatorTest extends TestCase
     {
         Http::fake(['api.anthropic.com/*' => Http::sequence()
             ->push($this->toolUse('toolu_1', 'delete_everything', []), 200)
-            ->push($this->toolUse('toolu_2', 'get_check', ['driver' => 'tool_wear']), 200)
+            ->push($this->whatIf('toolu_2'), 200)
             ->push($this->good(), 200)]);
 
         $this->getJson('/api/diagnosis'.self::WORN)
@@ -150,10 +216,10 @@ class InvestigatorTest extends TestCase
         $bad = $this->answer([
             'cause' => 'The spindle bearing failed at 777 hours.',
             'checks' => ['Check the bearing.'],
-            'evidence' => ['get_check'],
+            'evidence' => ['what_if'],
         ]);
         Http::fake(['api.anthropic.com/*' => Http::sequence()
-            ->push($this->toolUse('toolu_1', 'get_check', ['driver' => 'tool_wear']), 200)
+            ->push($this->whatIf('toolu_1'), 200)
             ->push($bad, 200)
             // The Diagnose call runs next, because the model did answer.
             ->push([
@@ -173,10 +239,10 @@ class InvestigatorTest extends TestCase
         $bad = $this->answer([
             'cause' => 'Tool wear is rising.',
             'checks' => ['Change the tool.'],
-            'evidence' => ['what_if'],
+            'evidence' => ['get_trend'],
         ]);
         Http::fake(['api.anthropic.com/*' => Http::sequence()
-            ->push($this->toolUse('toolu_1', 'get_check', ['driver' => 'tool_wear']), 200)
+            ->push($this->whatIf('toolu_1'), 200)
             ->push($bad, 200)
             // The Diagnose call runs next and the server fails it, so the built-in text shows.
             ->push([], 500)]);
@@ -218,7 +284,7 @@ class InvestigatorTest extends TestCase
     public function test_the_work_order_uses_the_investigation_and_code_sets_the_priority(): void
     {
         Http::fake(['api.anthropic.com/*' => Http::sequence()
-            ->push($this->toolUse('toolu_1', 'get_check', ['driver' => 'tool_wear']), 200)
+            ->push($this->whatIf('toolu_1'), 200)
             ->push($this->good(), 200)
             ->push([
                 'content' => [['type' => 'text', 'text' => json_encode(['title' => 'Change the tool on M-01', 'steps' => ['Stop the spindle.', 'Change the tool.']])]],

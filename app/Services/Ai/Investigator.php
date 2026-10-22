@@ -78,10 +78,13 @@ final class Investigator
         return 'You help a technician at a small machine shop. You get a JSON risk result for one CNC milling machine '
             .'and read-only tools that check that machine. Call one to three tools before you answer. '
             .'Call time_to_limit for the driver with the highest stress, so the technician learns how long they have. '
-            .'Call what_if once to test a fix: try a value for one channel that sits inside the limit stated in the JSON or a tool result. '
+            .'Call what_if once to test a fix: try a value for one channel that moves the reading away from the failure zone described in the JSON. '
+            .'A change is a tested fix only when the what_if effect is lowers_score. Recommend a change only if it is a tested fix. '
+            .'If no what_if lowers the score, say no tested change is known and give inspection checks only. Never advise a change toward a failure zone. '
             .'Call get_trend if you need to know whether a channel is rising or falling. Do not call get_check only to repeat numbers already in the JSON. '
-            .'A limit is crossed only when a tool result shows stress 100 for that check. Below that, write near the limit or inside the margin, and read each limit as the JSON words it. '
+            .'A limit is crossed only when a tool result shows stress 100 for that check. Below that, write near the limit or inside the margin. '
             .'Name a cause only when the JSON or a tool result states it. Do not guess parts such as bearings or motors. '
+            .'Write for the technician. Never write the words JSON, tool, input or what_if in the cause or the checks. '
             .'Use only facts in the JSON and in tool results. Do not invent numbers, parts or causes. Copy numbers exactly as given. '
             .'The tools never change the score. '
             .'Reply with JSON only, no other text: '
@@ -101,6 +104,8 @@ final class Investigator
         $numbers = self::numbers(json_encode($input));
         $tokens = ['input' => 0, 'output' => 0];
         $deadline = microtime(true) + self::BUDGET_SECONDS;
+        $whatIfCalled = false;
+        $nudged = false;
 
         for ($round = 1; $round <= self::MAX_ROUNDS; $round++) {
             $remaining = (int) floor($deadline - microtime(true));
@@ -136,7 +141,16 @@ final class Investigator
                     try {
                         $out = $box->run($name, $args);
                         $used[$name] = true;
-                        $numbers = array_merge($numbers, self::numbers(json_encode($out['result'])));
+                        $kept = $out['result'];
+                        if ($name === 'what_if') {
+                            $whatIfCalled = true;
+                            // A value that did not lower the score is not a tested fix,
+                            // so the answer may not recommend it as a target.
+                            if (($kept['effect'] ?? null) !== 'lowers_score') {
+                                unset($kept['tried_value']);
+                            }
+                        }
+                        $numbers = array_merge($numbers, self::numbers(json_encode($kept)));
                         $results[] = ['type' => 'tool_result', 'tool_use_id' => $block['id'] ?? '', 'content' => json_encode($out['result'])];
                         $trace[] = ['tool' => $name, 'summary' => $out['summary'], 'ok' => true];
                     } catch (\InvalidArgumentException $e) {
@@ -148,6 +162,16 @@ final class Investigator
                     return $this->finish(null, 'bad_reply', $trace, null);
                 }
                 $messages[] = ['role' => 'user', 'content' => $results];
+
+                continue;
+            }
+
+            // The gate: ask once for a what_if before the answer, while rounds remain
+            // for the call and the final answer.
+            if (! $whatIfCalled && ! $nudged && $round <= self::MAX_ROUNDS - 2) {
+                $nudged = true;
+                $messages[] = ['role' => 'assistant', 'content' => $reply['content']];
+                $messages[] = ['role' => 'user', 'content' => 'Before you answer, call what_if once on the channel that drives your top check, with a value that moves it away from the failure zone. Then answer again. If no what_if lowers the score, say no tested change is known.'];
 
                 continue;
             }
