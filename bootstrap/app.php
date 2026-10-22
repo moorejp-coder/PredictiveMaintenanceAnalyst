@@ -13,8 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // CloudFront terminates HTTPS and forwards over HTTP. Trust its
-        // forwarded headers so Laravel builds https links.
+        // nginx on the Elastic Beanstalk instance ends HTTPS and passes the
+        // request on over HTTP. Trust its forwarded headers so Laravel builds
+        // https links.
         $middleware->trustProxies(at: '*');
         $middleware->prepend(RedirectTrailingSlash::class);
     })

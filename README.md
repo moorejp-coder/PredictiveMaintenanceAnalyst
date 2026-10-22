@@ -64,7 +64,7 @@ PRISM is for the maintenance technician at a small machine shop who runs CNC mil
 - The score is rule-based. Each failure check is its own class in `app/Services/Checks`. Every limit and its source lives in `config/prism.php`. `app/Services/RiskScorer.php` only collects the results.
 - Per the code comments, the AI4I 2020 limits for heat, power and overstrain reproduce those labels in the dataset. Random failures cannot be predicted from any reading, so PRISM does not score them.
 - Readings come from `app/Services/SensorSimulator.php`. The same scenario and reading number always give the same reading.
-- AI4I has no vibration or machine run hours column. Those two readings are simulated, and their checks are not backtested. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) are the ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.
+- AI4I has no vibration or machine run hours column. Those two readings are simulated, and their checks are not backtested. The vibration limits (1.4, 2.8 and 4.5 mm/s RMS) match the Group 2 rigid-foundation zone boundaries listed for ISO 20816-3, which replaced ISO 10816-3. That standard covers industrial machines above 15 kW and does not list machine tools, so these are demo values for a milling machine. The 8,000 hour overhaul interval is a placeholder.
 - Run hours alone never score above 50 (Elevated). Tool wear alone never scores above 60.
 - Backtest of the four AI4I checks (tool wear, heat, power, overstrain) on the 10,000 AI4I records. A record counts as failed when its Machine failure label is 1. 18 records are left out (see below). Low: 6 of 7,448 failed (0.1%). Elevated: 42 of 1,889 failed (2.2%). High: 291 of 645 failed (45.1%).
 - Reproduce the figures with `php artisan prism:backtest`. The dataset file is `data/ai4i2020.csv`. The command also prints failures by AI4I failure mode.
@@ -124,7 +124,7 @@ Accessibility (goal: WCAG 2.2 Level AA, no independent audit)
 
 Fields PRISM draws on
 - Data science: AI4I 2020 dataset (Matzka, 2020).
-- Mechanical and reliability engineering: ISO 10816-3 Group 2 vibration zones.
+- Mechanical and reliability engineering: ISO 20816-3 Group 2 vibration zones (replaced ISO 10816-3).
 - Occupational safety: the stop instruction sits beside OSHA lockout/tagout, 29 CFR 1910.147. PRISM does not lock out or tag out anything.
 - Law and privacy: Terms, Privacy Policy and the `/ai` disclosure.
 

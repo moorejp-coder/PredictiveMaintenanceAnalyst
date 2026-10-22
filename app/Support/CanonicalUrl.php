@@ -8,8 +8,8 @@ class CanonicalUrl
      * The one origin search engines should treat as canonical.
      *
      * Uses APP_URL when it names a real host, so the same page reached
-     * through another host (for example the raw Elastic Beanstalk URL and a
-     * CloudFront URL) always points to one address. Falls back to the
+     * through another host (for example the raw Elastic Beanstalk URL and the
+     * public domain name) always points to one address. Falls back to the
      * request origin for local development.
      */
     public static function base(): string

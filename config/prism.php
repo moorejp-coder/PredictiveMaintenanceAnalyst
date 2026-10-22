@@ -12,7 +12,11 @@
 | Sources:
 | - AI4I limits: AI4I 2020 dataset documentation (Matzka, 2020). The heat,
 |   power and overstrain rules reproduce every label in the 10,000 records.
-| - Vibration: ISO 10816-3 Group 2 zone boundaries. Not in AI4I, not backtested.
+| - Vibration: Group 2 rigid-foundation zone boundaries listed for ISO 20816-3,
+|   which replaced ISO 10816-3. Checked in secondary sources, not in the
+|   standard's text. The standard covers industrial machines above 15 kW and
+|   does not list machine tools, so these are demo values. Not in AI4I, not
+|   backtested.
 | - Run hours: demo placeholder. Not in AI4I, not backtested.
 |
 */
@@ -100,6 +104,18 @@ return [
         'high' => ['failed' => 291, 'total' => 645],
         'elevated' => ['failed' => 42, 'total' => 1889],
         'low' => ['failed' => 6, 'total' => 7448],
+    ],
+
+    // Page dates. Each page shows its date from here. The hash is a SHA-256 of
+    // the page text from <main> to </main>. tests/Feature/PolicyDatesTest.php
+    // fails when the text changes and the hash here does not, and the failure
+    // message prints the new hash. When you update a hash, set that page's date
+    // to the day you changed the text.
+    'policy_dates' => [
+        'faq' => ['date' => 'October 21, 2026', 'hash' => 'e88347ac60050a869bdda8090addbac2cf2b5023c0c6d7c39334126829d78a5a'],
+        'privacy' => ['date' => 'October 21, 2026', 'hash' => '8d24a9913d4420b47772b5fc80b024959dc4fba2502d60eb2f0dff21003efe06'],
+        'terms' => ['date' => 'October 21, 2026', 'hash' => '99d6bd8b72113081729f1e5c6a7211a3154b3548e0f4a4731fdb35854d2c775a'],
+        'ai' => ['date' => 'October 21, 2026', 'hash' => 'c1695268aca30ad23bce5ae6ee2f4f7aa6d76325d4b466a3f3db1b1686975073'],
     ],
 
     'bands' => [

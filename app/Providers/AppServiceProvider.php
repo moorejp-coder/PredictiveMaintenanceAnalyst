@@ -23,9 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // CloudFront does not send X-Forwarded-Proto. When APP_URL is https,
-        // build every generated link as https so the browser does not block
-        // the dashboard's /api/readings call as mixed content.
+        // When APP_URL is https, build every generated link as https so the
+        // browser does not block the dashboard's /api/readings call as mixed
+        // content. nginx on the Elastic Beanstalk instance ends HTTPS.
         if (str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }

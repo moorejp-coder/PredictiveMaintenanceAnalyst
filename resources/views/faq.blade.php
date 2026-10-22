@@ -55,7 +55,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM FAQ</h1>
-    <p class="meta">Updated October 21, 2026</p>
+    <p class="meta">Updated {{ config('prism.policy_dates.faq.date') }}</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Read this first</h2>
@@ -138,7 +138,7 @@
         <summary>Where does the data come from?</summary>
         <div class="answer">
             <p>Every reading on the dashboard is simulated. Baselines and limits for temperature, speed, torque and tool wear come from the AI4I 2020 Predictive Maintenance Dataset (Matzka, 2020, UCI Machine Learning Repository, CC BY 4.0).</p>
-            <p>AI4I has no vibration or machine run hours. Those two readings are invented for this demo and their checks are not tested on real failures. The vibration limits PRISM uses (1.4 and 4.5 mm/s RMS) are ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</p>
+            <p>AI4I has no vibration or machine run hours. Those two readings are invented for this demo and their checks are not tested on real failures. The vibration limits PRISM uses (1.4 and 4.5 mm/s RMS) match Group 2 rigid-foundation zone boundaries listed for ISO 20816-3, which replaced ISO 10816-3. That standard covers industrial machines above 15 kW and does not list machine tools, so PRISM treats them as demo values. The 8,000 hour overhaul interval is a placeholder.</p>
             <p class="src">Sources: <code>config/prism.php</code>, <code>README.md</code>.</p>
         </div>
     </details>
@@ -247,8 +247,8 @@
         <summary>What needs regular upkeep?</summary>
         <div class="answer">
             <ul>
-                <li><strong>Scoring limits.</strong> The values in <code>config/prism.php</code>. The AI4I limits are fixed. The vibration limits (1.4 and 4.5 mm/s RMS) follow ISO 10816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</li>
-                <li><strong>Terms and Privacy Policy.</strong> Both carry an effective date of October 21, 2026. Update both dates when either text changes. Any new data collection means a new Privacy Policy first.</li>
+                <li><strong>Scoring limits.</strong> The values in <code>config/prism.php</code>. The AI4I limits are fixed. The vibration limits (1.4 and 4.5 mm/s RMS) are demo values that match ISO 20816-3 Group 2 zone boundaries. The 8,000 hour overhaul interval is a placeholder.</li>
+                <li><strong>Terms and Privacy Policy.</strong> The Terms carry an effective date of {{ config('prism.policy_dates.terms.date') }} and the Privacy Policy carries {{ config('prism.policy_dates.privacy.date') }}. The date on a page changes whenever its text changes, and a test fails when it does not. Any new data collection means a new Privacy Policy first.</li>
                 <li><strong>HTTPS.</strong> The live site uses a free Let's Encrypt certificate. A renewal check runs twice a day on the server. A rebuilt server requests a new certificate, and the DuckDNS name must point to the new address first.</li>
             </ul>
         </div>

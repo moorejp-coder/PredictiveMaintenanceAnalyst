@@ -34,7 +34,7 @@
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>PRISM Privacy Policy</h1>
-    <p class="meta">Effective October 21, 2026</p>
+    <p class="meta">Effective {{ config('prism.policy_dates.privacy.date') }}</p>
 
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Summary</h2>
