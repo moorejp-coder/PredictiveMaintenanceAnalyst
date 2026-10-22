@@ -76,7 +76,9 @@ final class Investigator
     private function system(): string
     {
         return 'You help a technician at a small machine shop. You get a JSON risk result for one CNC milling machine '
-            .'and read-only tools that check that machine. Call one to three tools to test the likely cause before you answer. '
+            .'and read-only tools that check that machine. Call one to three tools before you answer. '
+            .'Call time_to_limit for the driver with the highest stress, so the technician learns how long they have. '
+            .'Then call what_if or get_trend to test your likely cause. Do not call get_check only to repeat numbers already in the JSON. '
             .'Use only facts in the JSON and in tool results. Do not invent numbers, parts or causes. Copy numbers exactly as given. '
             .'The tools never change the score. '
             .'Reply with JSON only, no other text: '

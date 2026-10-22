@@ -83,6 +83,16 @@ class InvestigatorTest extends TestCase
         });
     }
 
+    public function test_the_prompt_asks_for_a_time_estimate_and_a_test_of_the_cause(): void
+    {
+        Http::fake(['api.anthropic.com/*' => Http::response($this->good(), 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertOk();
+
+        Http::assertSent(fn ($r) => str_contains($r['system'], 'time_to_limit')
+            && str_contains($r['system'], 'what_if or get_trend'));
+    }
+
     public function test_the_second_click_is_served_from_the_cache(): void
     {
         Http::fake(['api.anthropic.com/*' => Http::sequence()

@@ -59,6 +59,7 @@ final class WorkOrderStep extends AiStep
         return 'You write a short maintenance work order for a CNC milling machine from a JSON diagnosis. '
             .'Use only facts in the JSON. Do not invent parts, part numbers, times or costs. '
             .'Do not mention the priority, it is set elsewhere. '
+            .'Each step is a different action. Never say the same action twice in one step. '
             .'Reply with JSON only, no other text: '
             .'{"title": "under 10 words", "steps": ["3 or 4 imperative steps, each under 15 words"]}';
     }
