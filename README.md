@@ -87,14 +87,26 @@ How it works when on:
 
 ## The problem
 
-PRISM is for the maintenance technician at a small machine shop who runs CNC milling machines and has no data scientist. Raw sensor numbers do not say which failure is developing, so the shop repairs healthy machines or loses production to unplanned breakdowns. PRISM turns the numbers into one score, a reason a technician reads in a few seconds, and an instruction.
+PRISM is for the maintenance technician at a small machine shop who runs CNC milling machines and has no data scientist. In this README, small means fewer than 100 employees. That is my assumption, chosen because 44 of the 71 firms in the NIST survey below were that size. Raw sensor numbers do not say which failure is developing. PRISM turns the numbers into one score, a reason a technician reads in a few seconds, and an instruction.
+
+How maintenance is done without a tool like PRISM, according to the sources below:
+- 21% of the industrial businesses ABB surveyed still run equipment until it fails.
+- Neugebauer and Fischer (2009) report that time-based maintenance plans are often not followed consistently.
+
+What unplanned stops cost, according to the sources below:
+- ABB: close to $125,000 per hour for the typical industrial business (median, self-reported, not machine shops).
+- NIST: the half of respondents with the highest reactive maintenance spending averaged 10.4% unplanned downtime as a share of planned production time. The other half averaged 4.9%. The authors call this anecdotal.
+
+Reading these sources, I see a gap between running to failure and following a calendar: a technician with no reading-based reason to stop a machine. That reading is my interpretation. No source states it.
 
 ## Evidence behind the problem
 
-Two sources support the problem. Neither tests PRISM.
+Three sources support the problem. None tests PRISM.
 
-- ABB, Value of Reliability survey, press release of October 11, 2023. ABB surveyed 3,215 plant maintenance decision-makers worldwide. Unplanned downtime cost close to $125,000 per hour for the typical business. ABB used the median, and the figures are self-reported. More than two-thirds of the industrial businesses surveyed had unplanned outages at least once a month. The industries listed include energy, chemicals, metals and food and beverage. The release does not name machine shops or break results out by shop size. Source: https://new.abb.com/news/detail/107660/abb-survey-reveals-unplanned-downtime-costs-125000-per-hour. Dan Zeiger quotes the figure in an ISM article dated August 27, 2024.
+- ABB, Value of Reliability survey, press release of October 11, 2023. ABB surveyed 3,215 plant maintenance decision-makers worldwide. Unplanned downtime cost close to $125,000 per hour for the typical business. ABB used the median, and the figures are self-reported. More than two-thirds of the industrial businesses surveyed had unplanned outages at least once a month. The industries listed include energy, chemicals, metals and food and beverage. The release does not name machine shops or break results out by shop size. ABB also reports that 21 percent of businesses surveyed still rely on run-to-fail maintenance. Source: https://new.abb.com/news/detail/107660/abb-survey-reveals-unplanned-downtime-costs-125000-per-hour. Dan Zeiger quotes the figure in an ISM article dated August 27, 2024.
 - Adu-Amankwa, Attia, Janardhanan and Patel (2019), "A predictive maintenance cost model for CNC SMEs in the era of industry 4.0," The International Journal of Advanced Manufacturing Technology 104, 3567 to 3587. The authors found no earlier study with a predictive maintenance cost model for small and medium CNC shops. Their model predicts savings of 22,804 to 48,585 British pounds for setups of 1 to 50 machines. These are model predictions, not measured results. The page I read does not state the time period. Source: https://doi.org/10.1007/s00170-019-04094-2.
+- Thomas and Weiss (NIST), International Journal of Prognostics and Health Management 12(1). The survey has 71 usable responses, and 44 come from establishments with fewer than 100 employees. The authors estimate annual U.S. maintenance costs and losses at $222.0 billion on average. The half of respondents with the highest reactive maintenance spending averaged 10.4% unplanned downtime as a share of planned production time. The other half averaged 4.9%, which is 52.7% lower (Table 6). The paper does not report group sizes. Firms relying more on predictive maintenance spent 212.3% more on direct maintenance relative to shipments. The authors treat the results as anecdotal evidence. The paper does not report results for small firms or machine shops alone, and it cites earlier work saying small firms might rely more on reactive maintenance. Source: https://papers.phmsociety.org/index.php/ijphm/article/download/2883/1748
+- No technician or shop owner was interviewed for PRISM. The user need rests on published sources. The Thomas and Weiss NIST survey collected responses from 71 manufacturing establishments, 44 of them with fewer than 100 employees. It reports lower unplanned downtime among firms that rely less on reactive maintenance. The authors treat the results as anecdotal evidence. These sources show the problem exists in manufacturing. They do not show that a small shop would use PRISM.
 
 What the evidence does not show: PRISM's own savings. No shop has used PRISM, and AI4I is synthetic data. The value stays a goal (see What PRISM aims to deliver).
 
@@ -229,6 +241,8 @@ These items are not in the app today. They are goals, not commitments.
 - Letting the learned estimate drive the score or the action. Today the rules decide. The estimate needs real machine data first, because AI4I is synthetic.
 - Entry of real readings by a technician. Every reading today is simulated.
 - A live sensor feed.
+- Testing PRISM with a maintenance technician at a machine shop. No user has tried it yet.
+- Measuring results in a pilot: unplanned stops per machine per month, and the share of High alerts followed by a confirmed fault. PRISM records neither today.
 - Automated alerts. PRISM today shows its instruction on screen and sends nothing.
 - A predicted failure date. AI4I is a snapshot of operating conditions, not a time series, so PRISM flags risk under current conditions and does not forecast a date.
 
@@ -259,11 +273,14 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 
 ## What PRISM aims to deliver
 
-- Fewer unneeded repairs, by avoiding preventive maintenance on healthy equipment.
 - Less unplanned downtime, by catching risky operating conditions before they break production.
-- Longer equipment life, through timely intervention.
+- Alerts a technician trusts.
 
-These are goals. The dataset cannot prove dollar savings.
+These are goals. PRISM does not measure either one today. The app records no stops, no downtime and no confirmed faults. Besides judge accounts, it stores only the override log and the Helpful and Wrong ratings on AI answers. The dataset cannot prove dollar savings. A pilot would need to add the two measures in the Roadmap.
+
+Measured so far, on the AI4I backtest only: the High band holds 291 of 339 labeled failures (85.8%) in 6.5% of scored records, and 45.1% of High records failed, so most High alerts in that data did not. The backtest limits are in How the score works.
+
+Dropped claim: an earlier draft aimed at fewer unneeded repairs and longer equipment life. I found no verified source for either, so they are not goals here.
 
 ## Business value and scale
 
@@ -271,7 +288,7 @@ Assumptions are labeled. Nothing here is a measured result.
 
 - Who uses PRISM: the maintenance technician described in The problem.
 - Who would pay (assumption, not researched): the owner or maintenance manager of a small CNC shop.
-- Pricing: not researched. This README gives no revenue figure.
+- Pricing: no PRISM price is set and this README gives no revenue figure. For reference, maintenance work-order tools list these prices per user per month: MaintainX Essential $20 billed annually ($25 monthly) and Premium $65 ($75); UpKeep Essential $24 and Premium $55. MaintainX lists IoT sensor integrations under its Enterprise plan with custom pricing. I read these vendor pages on Oct 22, 2026. The pages show no effective date. I did not test whether these tools score failure risk from readings.
 - What exists today: one simulated milling machine (M-01), one server and one SQLite file. All readings come from `app/Services/SensorSimulator.php`, and one set of limits lives in `config/prism.php`.
 
 What growing past one machine would need (none of this is built):
