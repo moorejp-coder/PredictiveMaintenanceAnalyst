@@ -16,7 +16,7 @@ PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It 
 - Shows a seventh gray bar, rotational speed, as context. Speed has no limit of its own. It feeds the heat and power rules. The bar shows how close speed is to the 1,380 rpm heat limit and is not part of the score.
 - Runs seven simulated sensor readings (process and air temperature, vibration, machine run hours, rotational speed, torque, tool wear) and a chart of the last 30 risk scores.
 - Offers four simulated situations (worn tool, overheating, overload, healthy) to show how the score reacts.
-- "Explain this reading" asks Claude for a likely cause and a drafted work order. A built-in explanation shows if the AI is slow or off (see AI steps).
+- "Explain this reading" lets Claude check the reading with five read-only tools, then give a likely cause and a drafted work order. The page lists each tool call. A built-in explanation shows if the AI is slow or off (see AI steps).
 - Records an override when an operator keeps a machine running after PRISM says to stop it (see Override log).
 - Has a sign-in and an email invite flow for contest judges. The sign-in is on at the live site, so the dashboard needs a login (see Sign in and judge invites).
 - Includes a FAQ, Terms and Conditions and a Privacy Policy. Each says what PRISM does not do.
@@ -33,7 +33,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026. Th
 |---|---|---|
 | Problem/Opportunity Identification & Relevance | 20% | Names the user: a maintenance technician at a small machine shop with no data scientist (see The problem). The score is backtested on all 10,000 AI4I 2020 records (`php artisan prism:backtest`), and the limits of that test are stated. Cites an ABB survey and a 2019 CNC SME cost model paper, with their scope limits (see Evidence behind the problem). Compares the six checks with four condition monitoring sources (see What the literature monitors). |
 | Functionality & Technical Execution | 25% | Live on AWS Elastic Beanstalk over HTTPS. Sign-in is on, with an email invite flow for judges. AI calls have timeouts, token caps and a built-in fallback. Server-side checks and rate limits guard the override log and the AI routes. Automated tests run on every push (GitHub Actions, PHP 8.4 and 8.5). |
-| AI Integration & Innovation | 20% | Rules score the machine and the AI only explains, on request, in two small Claude calls (Diagnose, then Work order). PHP builds a short structured input for each call, and code sets the work order priority. See AI steps. |
+| AI Integration & Innovation | 20% | Rules score the machine. On request, Claude investigates the reading with five read-only tools (a check, a trend, a time-to-limit estimate, a what-if on a copy of the reading, and the backtest figures), then a second call drafts the work order. Code rejects any answer with a number or tool the AI was not given, and code sets the work order priority. The AI never changes the score. See AI steps. |
 | Code Quality, Documentation & GitHub Transparency | 15% | One class per failure check in `app/Services/Checks`, with every limit and its source in `config/prism.php`. Secrets live in environment properties, not in the repo. Login attempts are rate limited. Commit history starts Sep 28, 2026. See Run locally for setup steps. |
 | User Experience, Design & Polish | 10% | Plain-English "Why this score" and risk bands shown as words. Lighthouse accessibility score of 100 on the pages tested on Oct 20 and 21, 2026. Light and dark themes, keyboard and VoiceOver pass, reduced motion respected. See Ethical AI, accessibility and sources. |
 | Business/Real-World Impact & Presentation | 10% | Goals are fewer unneeded repairs and less unplanned downtime (see What PRISM aims to deliver). The README states that the dataset cannot prove dollar savings, and the Roadmap lists what is not built. Business value and scale marks each assumption and lists what growing past one machine needs. |
@@ -140,16 +140,20 @@ When PRISM says "Stop the machine and inspect it now," the dashboard shows a "Ke
 
 ## AI steps
 
-The rules do the math. AI explains the result in plain words, only when a visitor presses "Explain this reading" and only when the band is Elevated or High.
+The rules do the math. AI investigates and explains the result, only when a visitor presses "Explain this reading" and only when the band is Elevated or High.
 
-- Call 1, Diagnose (`app/Services/Ai/Diagnoser.php`): sends the score, the band, the scored drivers at 40 or above, the fact sentences the checks already wrote, and the derived metrics. Gets back a likely cause and one or two physical checks.
+- Call 1, Investigate (`app/Services/Ai/Investigator.php`): sends the score, the band, the scored drivers at 40 or above, the fact sentences the checks already wrote, and the derived metrics. Claude then calls up to five read-only tools (`app/Services/Ai/ToolBox.php`), in at most four rounds, and returns a likely cause, one or two physical checks and the names of the tools it used.
+- The five tools: `get_check` (one check's stress and sentence), `get_trend` (a channel's slope over the current cycle), `time_to_limit` (a straight-line estimate in readings and minutes, simulated data only), `what_if` (scores a copy of the reading with one channel changed) and `get_backtest` (AI4I failure counts by band). Arguments are fixed choices or numbers in a fixed range. No tool writes anything and no tool changes the real score.
+- Checked in code: the answer must name only tools it called, and every number in its words must appear in the input or in a tool result (whole numbers may be rounded, minutes may be written as hours). An answer that fails is dropped.
+- If the investigation fails, the older single Diagnose call runs (`app/Services/Ai/Diagnoser.php`), but only when the model answered and the answer failed a check. After a timeout or an API error PRISM goes straight to the built-in text, so the visitor does not wait for a second call. Set `PRISM_INVESTIGATOR=false` to use the single Diagnose call only.
 - Call 2, Work order (`app/Services/Ai/WorkOrderStep.php`): sends the diagnosis from call 1. Gets back a title and steps. Code sets the priority from the band. The model does not.
-- Neither call sees the scoring rules or the reading history. The server rebuilds the reading from the scenario and tick, so no visitor text reaches a prompt.
-- Each call asks for 220 or 260 output tokens, plus 1,024 tokens of thinking headroom, so the request sends a max_tokens of 1,244 or 1,284. Each call has an 8 second timeout, and is not retried. A test checks the input stays under 1,500 characters. The page shows the token counts the API reports.
-- If the key is missing, the API is slow, the API errors, or the reply does not parse, the page shows the built-in explanation from the checks. Good replies are cached for an hour. Fallbacks are cached for a minute.
-- Both routes are rate limited to 30 requests a minute.
+- The score and the work order priority never depend on the AI. The server rebuilds the reading from the scenario and tick, so no visitor text reaches a prompt or a tool.
+- Limits: the investigation stops after four rounds or 12 seconds, and each round asks for 400 output tokens plus 1,024 tokens of thinking headroom. The work order call asks for 260 plus 1,024 and has an 8 second timeout. A test checks the Diagnose input stays under 1,500 characters. The page shows the token counts the API reports, summed over the rounds.
+- If the key is missing, the API is slow, the API errors, or the reply does not parse or fails the number check, the page shows the built-in explanation from the checks. Good replies are cached for an hour. Fallbacks are cached for a minute.
+- The diagnosis route is rate limited to 10 requests a minute, because each press makes up to four model calls. The work order route is limited to 30 a minute.
+- Tests (`tests/Feature/ToolBoxTest.php`, `tests/Feature/InvestigatorTest.php`) fake the API and cover a tool call then an answer, the round cap, a refused tool, an invented number, a tool the answer did not call, a timeout, no key and the off switch.
 
-Set `ANTHROPIC_API_KEY` in `.env` (local) or as an Elastic Beanstalk environment property (live). `ANTHROPIC_MODEL` and `ANTHROPIC_TIMEOUT` are optional. With no key, PRISM makes no AI call.
+Set `ANTHROPIC_API_KEY` in `.env` (local) or as an Elastic Beanstalk environment property (live). `ANTHROPIC_MODEL`, `ANTHROPIC_TIMEOUT` and `PRISM_INVESTIGATOR` are optional. With no key, PRISM makes no AI call.
 
 ## Ethical AI, accessibility and sources
 

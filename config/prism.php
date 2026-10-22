@@ -100,6 +100,11 @@ return [
     // Backtest of the four AI4I checks on the 10,000 AI4I records, 18 random
     // failure records left out. Reproduce with `php artisan prism:backtest`.
     // Keep these in step with the README. Shown on the dashboard and /ai.
+    // The AI investigator: Claude checks the reading with PRISM's own read-only
+    // tools before it names a cause. Set PRISM_INVESTIGATOR=false to go back to
+    // the single Diagnose call. The score never depends on this switch.
+    'investigator' => (bool) env('PRISM_INVESTIGATOR', true),
+
     'backtest' => [
         'high' => ['failed' => 291, 'total' => 645],
         'elevated' => ['failed' => 42, 'total' => 1889],
@@ -112,10 +117,10 @@ return [
     // message prints the new hash. When you update a hash, set that page's date
     // to the day you changed the text.
     'policy_dates' => [
-        'faq' => ['date' => 'October 21, 2026', 'hash' => 'e88347ac60050a869bdda8090addbac2cf2b5023c0c6d7c39334126829d78a5a'],
+        'faq' => ['date' => 'October 21, 2026', 'hash' => 'cfc688156929e5b5865cb7a49446b82116866ad795b3f46a1a3cf76a151717ca'],
         'privacy' => ['date' => 'October 21, 2026', 'hash' => '8d24a9913d4420b47772b5fc80b024959dc4fba2502d60eb2f0dff21003efe06'],
-        'terms' => ['date' => 'October 21, 2026', 'hash' => '99d6bd8b72113081729f1e5c6a7211a3154b3548e0f4a4731fdb35854d2c775a'],
-        'ai' => ['date' => 'October 21, 2026', 'hash' => 'c1695268aca30ad23bce5ae6ee2f4f7aa6d76325d4b466a3f3db1b1686975073'],
+        'terms' => ['date' => 'October 21, 2026', 'hash' => '7775b60201d819989e74d537265540b9fabc92bbbf96f2b2d914fb8864cfe9bb'],
+        'ai' => ['date' => 'October 21, 2026', 'hash' => '338bd5097a8bee96b6cc0e77fe0c089769c07741a071278728f2b7247551c52a'],
     ],
 
     'bands' => [
