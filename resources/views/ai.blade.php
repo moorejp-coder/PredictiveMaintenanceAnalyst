@@ -26,7 +26,7 @@
         <ul>
             <li>Fixed rules calculate the risk score. The AI does not.</li>
             <li>The AI runs only when you press "Explain this reading", and only for Elevated or High scores.</li>
-            <li>The AI checks the reading with five read-only tools, then writes a likely cause and a drafted work order. A qualified technician decides what to do.</li>
+            <li>The AI checks the reading with six read-only tools, then writes a likely cause and a drafted work order. A qualified technician decides what to do.</li>
             <li>If the AI is slow, off or wrong in format, PRISM shows a built-in explanation written by the checks.</li>
             <li>Every sensor reading is simulated. PRISM is a student demo and is not ready for real equipment.</li>
         </ul>
@@ -42,14 +42,14 @@
         <tr><td>Risk score and band</td><td>No</td><td>Six rule-based checks. The score is the highest of the six. Limits live in <code>config/prism.php</code>.</td></tr>
         <tr><td>Learned estimate</td><td>Yes, trained model</td><td>A gradient boosting model trained offline on AI4I (<code>ml/train_model.py</code>) and run in PHP from <code>resources/ml/failure_model.json</code>. It shows a chance of failure beside the score and never changes the score, band or action. Test results and caveats are in <code>resources/ml/model_card.json</code>.</td></tr>
         <tr><td>"Why this score" text</td><td>No</td><td>Fixed sentence templates written by the checks.</td></tr>
-        <tr><td>Likely cause</td><td>Yes, on request</td><td>Call 1 in <code>app/Services/Ai/Investigator.php</code>. Claude calls up to five read-only tools in <code>app/Services/Ai/ToolBox.php</code>, in at most four rounds. If the investigator fails a check, the older single call in <code>Diagnoser.php</code> runs, then the built-in text.</td></tr>
+        <tr><td>Likely cause</td><td>Yes, on request</td><td>Call 1 in <code>app/Services/Ai/Investigator.php</code>. Claude calls up to six read-only tools in <code>app/Services/Ai/ToolBox.php</code>, in at most four rounds. If the investigator fails a check, the older single call in <code>Diagnoser.php</code> runs, then the built-in text.</td></tr>
         <tr><td>Drafted work order</td><td>Yes, on request</td><td>Call 2 in <code>app/Services/Ai/WorkOrderStep.php</code>. Code sets the priority from the band. The model does not.</td></tr>
         <tr><td>Override log</td><td>No</td><td>Records who kept a machine running after a stop warning, when and why.</td></tr>
     </table>
 
     <h2 id="data">2. What the AI receives</h2>
     <ul>
-        <li><strong>Sent in call 1:</strong> the score, the band, the action line, the drivers scored at 40 or above with their stress values, the fact sentences the checks already wrote, and four derived metrics (power, temperature gap, strain percent and vibration). The AI then asks for more through five read-only tools: one check, a sensor trend, a straight-line time to limit, a what-if on a copy of the reading, and the backtest figures. Each tool result goes back to the AI. The page lists every tool call under "What the AI looked at".</li>
+        <li><strong>Sent in call 1:</strong> the score, the band, the action line, the drivers scored at 40 or above with their stress values, the fact sentences the checks already wrote, and four derived metrics (power, temperature gap, strain percent and vibration). The AI then asks for more through six read-only tools: one check, a sensor trend, a straight-line time to limit, a what-if on a copy of the reading, the trained model's chance of failure, and the backtest figures. Each tool result goes back to the AI. The page lists every tool call under "What the AI looked at".</li>
         <li><strong>Sent in call 2:</strong> the machine ID (M-01), the band, the priority, the action line, the names of the drivers scored at 40 or above, and the cause and checks from call 1. Call 2 does not receive the score, the fact sentences or the metrics.</li>
         <li><strong>Never sent:</strong> text typed by a visitor, names, IP addresses, or the scoring rules. The tools return results, not rules, and a what-if shows only the score a changed value would give. The server rebuilds the reading from the scenario and reading number, so a visitor cannot put words in a tool call.</li>
         <li><strong>Provider and model:</strong> Anthropic's API. The model name is set by the <code>ANTHROPIC_MODEL</code> property. The default in <code>config/services.php</code> is <code>{{ config('services.anthropic.model') }}</code>.</li>
@@ -62,7 +62,7 @@
     <ul>
         <li>Every AI answer carries an "AI-GENERATED" label and a reminder that a technician decides. When PRISM shows its built-in explanation instead, the label reads "RULE-BASED, NO AI USED".</li>
         <li>The AI cannot change the score, the band or the action. Those come from the rules.</li>
-        <li>PRISM has no tool to act on a machine. The AI's five tools only read, and a what-if scores a copy. PRISM sends no alerts and changes nothing outside its own page.</li>
+        <li>PRISM has no tool to act on a machine. The AI's six tools only read, and a what-if scores a copy. PRISM sends no alerts and changes nothing outside its own page.</li>
         <li>When PRISM says to stop and an operator keeps running, the override log records a name, a reason and the time. Someone with the password reviews the log.</li>
         <li>You can rate an AI answer "Helpful" or "Wrong". PRISM stores the rating, the step, the source, the scenario, the reading number and the time. It stores no name, no text and no IP address in that row.</li>
     </ul>
@@ -88,6 +88,7 @@
         <li>Random failure cannot be predicted from any reading. PRISM does not score it.</li>
         <li>AI4I has no vibration or run-hours column. Those two checks are simulated and are not backtested.</li>
         <li>The AI can be wrong. It sees the score and the fact sentences, not the machine.</li>
+        <li>On October 22, 2026, the investigator ran once on 38 simulated Elevated or High readings. 35 answers passed the code checks (92.1%). 3 fell back to the built-in text (2 with a number the AI was not given, 1 with an unusable reply). Passing the checks does not show the advice is correct, and no technician graded the answers. The full report is <code>docs/EVAL.md</code>.</li>
     </ul>
     <p class="src">Source: <code>README.md</code> section "How the score works".</p>
 

@@ -116,11 +116,36 @@ final class AiClient
         }
 
         return [
-            'content' => array_values($content),
+            'content' => self::keepEmptyInputsAsObjects(array_values($content)),
             'stop_reason' => data_get($json, 'stop_reason'),
             'input_tokens' => (int) data_get($json, 'usage.input_tokens', 0),
             'output_tokens' => (int) data_get($json, 'usage.output_tokens', 0),
         ];
+    }
+
+    /**
+     * A tool that takes no arguments comes back as "input": {}. PHP decodes that
+     * to an empty array, and an empty array encodes as [] when the caller sends
+     * the turn back. The API refuses [] as a tool input. An empty object keeps
+     * the original shape.
+     *
+     * @param  list<mixed>  $content
+     * @return list<array<string, mixed>>
+     */
+    private static function keepEmptyInputsAsObjects(array $content): array
+    {
+        $out = [];
+        foreach ($content as $block) {
+            if (is_array($block) && ($block['type'] ?? null) === 'tool_use' && ($block['input'] ?? null) === []) {
+                $block['input'] = new \stdClass;
+            }
+            if (is_array($block)) {
+                /** @var array<string, mixed> $block */
+                $out[] = $block;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -184,7 +209,15 @@ final class AiClient
 
         if (! $response->successful()) {
             $this->failure = 'api_error';
-            Log::warning('ai_call_failed', ['reason' => 'status', 'status' => $response->status()]);
+            // The API's own error type and message name the bad field or the bad key.
+            // They hold no key and no prompt text.
+            $error = $response->json('error');
+            Log::warning('ai_call_failed', [
+                'reason' => 'status',
+                'status' => $response->status(),
+                'error_type' => is_array($error) && is_string($error['type'] ?? null) ? $error['type'] : null,
+                'error_message' => is_array($error) && is_string($error['message'] ?? null) ? mb_substr($error['message'], 0, 300) : null,
+            ]);
 
             return null;
         }

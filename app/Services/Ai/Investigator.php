@@ -77,7 +77,8 @@ final class Investigator
     private function system(): string
     {
         return 'You help a technician at a small machine shop. You get a JSON risk result for one CNC milling machine '
-            .'and read-only tools that check that machine. Call one to three tools before you answer. '
+            .'and read-only tools that check that machine. Call one to four tools before you answer. '
+            .'Call get_learned_estimate once, so the technician sees the trained model\'s chance of failure next to the rule score. Call it a second opinion from a model trained on the AI4I dataset. If it disagrees with the band, say so plainly. '
             .'Call time_to_limit for the driver with the highest stress, so the technician learns how long they have. '
             .'Call what_if once to test a fix: try a value for one channel that moves the reading away from the failure zone described in the JSON. '
             .'A change is a tested fix only when the what_if effect is lowers_score. Recommend a change only if it is a tested fix. '
@@ -277,21 +278,31 @@ final class Investigator
         [$label, $unit] = ToolBox::CHANNEL_LABELS[$r['channel']];
         $value = rtrim(rtrim(number_format((float) $r['tried_value'], 2, '.', ','), '0'), '.');
 
+        $learned = isset($r['learned_chance_percent_now'], $r['learned_chance_percent_if_changed'])
+            ? sprintf(' The learned estimate of failure moves from %s%% to %s%%.', self::percent((float) $r['learned_chance_percent_now']), self::percent((float) $r['learned_chance_percent_if_changed']))
+            : '';
+
         return [
             'channel' => $r['channel'],
             'value' => $r['tried_value'],
             'score_from' => $r['current_score'],
             'score_to' => $r['score_if_changed'],
             'text' => sprintf(
-                'PRISM scored a copy of the reading with %s set to %s %s. The score falls from %d to %d (%s). This is a test only. It changes nothing on the machine.',
+                'PRISM scored a copy of the reading with %s set to %s %s. The score falls from %d to %d (%s).%s This is a test only. It changes nothing on the machine.',
                 strtolower($label),
                 $value,
                 $unit,
                 $r['current_score'],
                 $r['score_if_changed'],
                 $r['band_if_changed'],
+                $learned,
             ),
         ];
+    }
+
+    private static function percent(float $p): string
+    {
+        return rtrim(rtrim(number_format($p, 1, '.', ','), '0'), '.');
     }
 
     /** @return list<float> */
