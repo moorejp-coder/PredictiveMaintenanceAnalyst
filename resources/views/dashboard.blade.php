@@ -85,9 +85,10 @@
         .tile polyline { fill: none; stroke: var(--prism-accent); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
         .tile circle { fill: var(--prism-accent); }
 
-        .row-2 { grid-template-columns: 1fr 1fr; margin-top: var(--prism-space-3); align-items: start; }
+        .row-2 { grid-template-columns: 1fr 1fr; margin-top: var(--prism-space-3); align-items: stretch; }
         @media (max-width: 800px) { .row-2 { grid-template-columns: 1fr; } }
-        .row-2 .ai { margin-top: 0; }
+        /* Same height as the chart card beside it. Content sits in the middle. */
+        .row-2 .ai { margin-top: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
         .chart { padding: var(--prism-space-4); margin-top: var(--prism-space-3); }
         .row-2 .chart { margin-top: 0; align-self: stretch; }
         .chart svg { width: 100%; height: auto; display: block; }
