@@ -29,6 +29,9 @@ final class Investigator
 {
     public const MAX_ROUNDS = 4;
 
+    /** Why the last answer was refused, for the log only. */
+    private ?string $lastDetail = null;
+
     public const BUDGET_SECONDS = 12;
 
     private const MAX_TOKENS = 400;
@@ -45,6 +48,7 @@ final class Investigator
      */
     public function run(string $scenario, int $tick, array $risk): array
     {
+        $this->lastDetail = null;
         $input = Diagnoser::input($risk);
 
         if ($input['band'] === 'low') {
@@ -239,6 +243,8 @@ final class Investigator
         // The answer must name only tools it called, and name at least one.
         foreach ($evidence as $name) {
             if (! in_array($name, $usedTools, true)) {
+                $this->lastDetail = 'evidence names a tool that was not called: '.$name;
+
                 return false;
             }
         }
@@ -246,6 +252,8 @@ final class Investigator
         // Every number in the words must come from the input or a tool result.
         foreach (self::numbers($cause.' '.implode(' ', $checks)) as $n) {
             if (! self::grounded($n, $numbers)) {
+                $this->lastDetail = 'number not found in input or tool results: '.$n;
+
                 return false;
             }
         }
@@ -427,6 +435,7 @@ final class Investigator
             'source' => $result['source'],
             'reason' => $result['reason'],
             'tool_calls' => count($result['trace']),
+            'detail' => $this->lastDetail,
             'input_tokens' => $result['tokens']['input'] ?? null,
             'output_tokens' => $result['tokens']['output'] ?? null,
         ]);
