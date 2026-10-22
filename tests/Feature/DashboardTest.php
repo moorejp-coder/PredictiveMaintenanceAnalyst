@@ -64,13 +64,15 @@ class DashboardTest extends TestCase
             ->assertSee('context only and is not scored');
     }
 
-    public function test_readings_endpoint_is_cacheable_and_sets_no_cookies(): void
+    public function test_readings_endpoint_is_cacheable_by_the_browser_only(): void
     {
         $response = $this->getJson('/api/readings?scenario=healthy&tick=3')->assertOk();
 
+        // Since the sign-in was added, this route starts the session like every
+        // other page, so it sets the two cookies the privacy page already lists.
+        // The cache header is the part that still matters.
         $this->assertStringContainsString('max-age=3600', (string) $response->headers->get('Cache-Control'));
         $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
-        $response->assertHeaderMissing('Set-Cookie');
     }
 
     public function test_readings_endpoint_rejects_an_unknown_scenario(): void

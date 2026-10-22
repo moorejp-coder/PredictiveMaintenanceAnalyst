@@ -52,6 +52,9 @@ class InviteTest extends TestCase
         $this->withHeaders($this->admin())->get('/admin/invites')->assertNotFound();
 
         config(['prism.invite_admin_password' => self::ADMIN]);
+        // withHeaders() above stays on every later request in this test, so
+        // clear it before checking that a request with no password gets 401.
+        $this->flushHeaders();
         $this->get('/admin/invites')->assertStatus(401);
         $this->get('/admin/invites', ['Authorization' => 'Basic '.base64_encode('entrant:wrong')])->assertStatus(401);
         $this->withHeaders($this->admin())->get('/admin/invites')->assertOk()->assertSee('Invite a judge');
