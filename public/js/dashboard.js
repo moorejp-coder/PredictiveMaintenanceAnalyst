@@ -90,18 +90,21 @@
             '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="2.6"></circle>';
     }
 
+    // The chart is drawn at the size it is shown, so the one-screen layout can give it any height.
     let chartWidth = 640;
+    let chartHeight = 84;
     function measureChart() {
-        const w = Math.round(el.chart.getBoundingClientRect().width);
-        chartWidth = Math.max(260, Math.min(1040, w || 640));
-        el.chart.setAttribute('viewBox', '0 0 ' + chartWidth + ' 84');
+        const box = el.chart.getBoundingClientRect();
+        chartWidth = Math.max(260, Math.min(1040, Math.round(box.width) || 640));
+        chartHeight = Math.max(84, Math.min(320, Math.round(box.height) || 84));
+        el.chart.setAttribute('viewBox', '0 0 ' + chartWidth + ' ' + chartHeight);
     }
 
     // Chart colors come from the active theme's CSS tokens.
     function themeColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
     function chartSvg(scores) {
-        const W = chartWidth, H = 84, L = 34, R = 10, T = 8, B = 10;
+        const W = chartWidth, H = chartHeight, L = 34, R = 10, T = 8, B = 10;
         const cHigh = themeColor('--prism-risk-high'), cElev = themeColor('--prism-risk-elevated'), cLow = themeColor('--prism-risk-low');
         const cGrid = themeColor('--prism-border'), cMuted = themeColor('--prism-muted'), cLine = themeColor('--prism-accent');
         const x = (i) => L + (i * (W - L - R)) / (MAX_POINTS - 1);
