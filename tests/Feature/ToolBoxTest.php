@@ -18,7 +18,7 @@ class ToolBoxTest extends TestCase
     {
         $names = array_column(ToolBox::definitions(), 'name');
 
-        $this->assertSame(['get_check', 'get_trend', 'time_to_limit', 'what_if', 'get_backtest'], $names);
+        $this->assertSame(['get_check', 'get_trend', 'time_to_limit', 'what_if', 'get_learned_estimate', 'get_backtest'], $names);
         foreach (ToolBox::definitions() as $tool) {
             $this->assertSame('object', $tool['input_schema']['type']);
             $this->assertNotEmpty($tool['description']);
@@ -100,6 +100,37 @@ class ToolBoxTest extends TestCase
         $out = $this->box('overheating', 58)->run('what_if', ['channel' => 'rotational_speed_rpm', 'value' => 700]);
 
         $this->assertContains($out['result']['effect'], ['no_change', 'raises_score']);
+    }
+
+    public function test_get_learned_estimate_returns_the_model_chance_and_its_range(): void
+    {
+        $out = $this->box('worn_tool', 59)->run('get_learned_estimate', []);
+
+        $this->assertGreaterThan(0, $out['result']['chance_percent']);
+        $this->assertLessThanOrEqual(100, $out['result']['chance_percent']);
+        $this->assertArrayHasKey('range_of_estimates', $out['result']);
+        $this->assertGreaterThan(0, $out['result']['records_in_range']);
+        $this->assertStringContainsString('chance of failure', $out['summary']);
+    }
+
+    public function test_get_learned_estimate_leaves_the_rule_score_alone(): void
+    {
+        $reading = (new SensorSimulator)->reading('worn_tool', 59);
+        $before = (new RiskScorer('L'))->score($reading)['score'];
+
+        $this->box('worn_tool', 59)->run('get_learned_estimate', []);
+
+        $this->assertSame($before, (new RiskScorer('L'))->score($reading)['score']);
+    }
+
+    public function test_what_if_reports_the_learned_chance_before_and_after(): void
+    {
+        $out = $this->box('overheating', 58)->run('what_if', ['channel' => 'rotational_speed_rpm', 'value' => 1500]);
+
+        $this->assertIsFloat($out['result']['learned_chance_percent_now']);
+        $this->assertIsFloat($out['result']['learned_chance_percent_if_changed']);
+        $this->assertGreaterThanOrEqual(0, $out['result']['learned_chance_percent_if_changed']);
+        $this->assertLessThanOrEqual(100, $out['result']['learned_chance_percent_if_changed']);
     }
 
     public function test_get_backtest_reads_the_config_numbers(): void

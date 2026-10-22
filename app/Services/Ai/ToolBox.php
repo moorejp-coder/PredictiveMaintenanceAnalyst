@@ -3,11 +3,12 @@
 namespace App\Services\Ai;
 
 use App\Services\Limits;
+use App\Services\Ml\LearnedEstimate;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
 
 /**
- * The five read-only tools Claude calls in the Investigator.
+ * The six read-only tools Claude calls in the Investigator.
  *
  * The server rebuilds the reading from the scenario and tick, so a tool never
  * takes data from the browser or from the model. Arguments are fixed choices
@@ -101,6 +102,11 @@ final class ToolBox
                 ], 'required' => ['channel', 'value'], 'additionalProperties' => false],
             ],
             [
+                'name' => 'get_learned_estimate',
+                'description' => 'Read the trained model\'s chance of failure for the current reading, and how often readings in the same range failed in the AI4I records. It is a second opinion next to the rule score. It never changes the score.',
+                'input_schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false],
+            ],
+            [
                 'name' => 'get_backtest',
                 'description' => 'How often readings in a risk band were real failures in the 10,000 AI4I 2020 records.',
                 'input_schema' => ['type' => 'object', 'properties' => [
@@ -123,6 +129,7 @@ final class ToolBox
             'get_trend' => $this->getTrend($this->channel($input), $this->window($input)),
             'time_to_limit' => $this->timeToLimit($this->driver($input)),
             'what_if' => $this->whatIf($this->channel($input), $input['value'] ?? null),
+            'get_learned_estimate' => $this->getLearnedEstimate(),
             'get_backtest' => $this->getBacktest($input['band'] ?? null),
             default => throw new \InvalidArgumentException('Unknown tool.'),
         };
@@ -324,6 +331,8 @@ final class ToolBox
             }
         }
 
+        $chance = $this->chances($copy);
+
         $effect = match (true) {
             $new['score'] < $this->risk['score'] => 'lowers_score',
             $new['score'] > $this->risk['score'] => 'raises_score',
@@ -340,9 +349,75 @@ final class ToolBox
                 'band_if_changed' => $new['band'],
                 'effect' => $effect,
                 'drivers_at_40_or_more' => $drivers,
-            ],
+            ] + ($chance === null ? [] : [
+                'learned_chance_percent_now' => $chance['now'],
+                'learned_chance_percent_if_changed' => $chance['if_changed'],
+            ]),
             'summary' => sprintf('Tried %s = %s on a copy: score %d to %d (%s).', $channel, $value, $this->risk['score'], $new['score'], $new['band']),
         ];
+    }
+
+    /**
+     * The five columns the learned model reads, as floats.
+     *
+     * @param  array<string, float|int>  $reading
+     * @return array{air_temp_k: float, process_temp_k: float, rotational_speed_rpm: float, torque_nm: float, tool_wear_min: float}
+     */
+    private static function shaped(array $reading): array
+    {
+        return [
+            'air_temp_k' => (float) $reading['air_temp_k'],
+            'process_temp_k' => (float) $reading['process_temp_k'],
+            'rotational_speed_rpm' => (float) $reading['rotational_speed_rpm'],
+            'torque_nm' => (float) $reading['torque_nm'],
+            'tool_wear_min' => (float) $reading['tool_wear_min'],
+        ];
+    }
+
+    /**
+     * The trained model's chance of failure, in percent, for the real reading
+     * and for a changed copy. Null when the model file cannot be read, so the
+     * what_if still works without it.
+     *
+     * @param  array<string, float|int>  $copy
+     * @return array{now: float, if_changed: float}|null
+     */
+    private function chances(array $copy): ?array
+    {
+        try {
+            $learned = new LearnedEstimate;
+
+            return [
+                'now' => round(100 * $learned->estimate(self::shaped($this->reading), $this->quality)['probability'], 1),
+                'if_changed' => round(100 * $learned->estimate(self::shaped($copy), $this->quality)['probability'], 1),
+            ];
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** @return array{result: array<string, mixed>, summary: string} */
+    private function getLearnedEstimate(): array
+    {
+        try {
+            $e = (new LearnedEstimate)->estimate(self::shaped($this->reading), $this->quality);
+        } catch (\Throwable) {
+            throw new \InvalidArgumentException('The learned estimate is not available.');
+        }
+
+        $result = [
+            'chance_percent' => round(100 * $e['probability'], 1),
+            'source' => 'Gradient boosting trained on the AI4I 2020 records. A second opinion. The rule score stays the score.',
+        ];
+        $summary = sprintf('Read the learned estimate: %s chance of failure.', $e['percent']);
+        if ($e['range'] !== null) {
+            $result['range_of_estimates'] = $e['range'];
+            $result['records_in_range'] = $e['range_records'];
+            $result['failed_in_range'] = $e['range_failed'];
+            $summary = sprintf('Read the learned estimate: %s chance of failure. In the AI4I data, %d of %d readings with an estimate from %s failed.', $e['percent'], $e['range_failed'], $e['range_records'], $e['range']);
+        }
+
+        return ['result' => $result, 'summary' => $summary];
     }
 
     /** @return array{result: array<string, mixed>, summary: string} */

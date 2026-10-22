@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
  *   appear in the input or in a tool result. Otherwise the answer is rejected
  *   and the caller shows the older Diagnose answer or the built-in text.
  *
- * @phpstan-type InvestigationResult array{source: string, data: array{cause: string, checks: list<string>, evidence: list<string>}|null, tokens: array{input: int, output: int}|null, reason: string|null, trace: list<array{tool: string, summary: string, ok: bool}>}
+ * @phpstan-type InvestigationResult array{source: string, data: array{cause: string, checks: list<string>, evidence: list<string>, tested_fix?: array{channel: string, value: float|int, score_from: int, score_to: int, text: string}|null}|null, tokens: array{input: int, output: int}|null, reason: string|null, trace: list<array{tool: string, summary: string, ok: bool}>}
  *
  * run() returns the same shape as AiStep::run() plus trace: a list of
  * {tool, summary, ok} for the page to show as "What the AI looked at".
@@ -77,7 +77,8 @@ final class Investigator
     private function system(): string
     {
         return 'You help a technician at a small machine shop. You get a JSON risk result for one CNC milling machine '
-            .'and read-only tools that check that machine. Call one to three tools before you answer. '
+            .'and read-only tools that check that machine. Call one to four tools before you answer. '
+            .'Call get_learned_estimate once, so the technician sees the trained model\'s chance of failure next to the rule score. Call it a second opinion from a model trained on the AI4I dataset. If it disagrees with the band, say so plainly. '
             .'Call time_to_limit for the driver with the highest stress, so the technician learns how long they have. '
             .'Call what_if once to test a fix: try a value for one channel that moves the reading away from the failure zone described in the JSON. '
             .'A change is a tested fix only when the what_if effect is lowers_score. Recommend a change only if it is a tested fix. '
@@ -250,19 +251,42 @@ final class Investigator
         if (stripos($cause, 'straight') !== false) {
             return $cause;
         }
-        $quoted = self::numbers($cause);
         foreach ($timeResults as $r) {
             if (($r['status'] ?? null) !== 'rising') {
                 continue;
             }
-            foreach ([$r['readings_to_limit'] ?? null, $r['minutes_to_limit'] ?? null] as $n) {
-                if ($n !== null && in_array((float) $n, $quoted, true)) {
+            $minutes = $r['minutes_to_limit'] ?? null;
+            $candidates = [
+                [$r['readings_to_limit'] ?? null, 'readings?'],
+                [$minutes, 'minutes?|mins?'],
+                [is_numeric($minutes) ? (float) $minutes / 60 : null, 'hours?|hrs?'],
+            ];
+            foreach ($candidates as [$n, $unit]) {
+                if ($n !== null && self::quotesWithUnit($cause, (float) $n, $unit)) {
                     return $cause.' This is a straight-line estimate on simulated data.';
                 }
             }
         }
 
         return $cause;
+    }
+
+    /**
+     * True when the text writes the number followed by a time unit, such as
+     * "4 readings" or "150 minutes". A bare "4%" is not a time estimate.
+     */
+    private static function quotesWithUnit(string $text, float $n, string $unitPattern): bool
+    {
+        if (preg_match_all('/(\d+(?:\.\d+)?)\s*(?:'.$unitPattern.')\b/i', $text, $m) < 1) {
+            return false;
+        }
+        foreach ($m[1] as $found) {
+            if (abs((float) $found - $n) <= max(0.05, 0.005 * abs($n))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -277,21 +301,38 @@ final class Investigator
         [$label, $unit] = ToolBox::CHANNEL_LABELS[$r['channel']];
         $value = rtrim(rtrim(number_format((float) $r['tried_value'], 2, '.', ','), '0'), '.');
 
+        $learned = '';
+        if (isset($r['learned_chance_percent_now'], $r['learned_chance_percent_if_changed'])) {
+            $now = self::percent((float) $r['learned_chance_percent_now']);
+            $then = self::percent((float) $r['learned_chance_percent_if_changed']);
+            $learned = match (true) {
+                $now === $then => sprintf(' The learned estimate of failure stays at %s%%.', $now),
+                (float) $r['learned_chance_percent_if_changed'] > (float) $r['learned_chance_percent_now'] => sprintf(' The learned estimate of failure moves from %s%% to %s%%, so the rules and the model disagree on this change. Inspect before relying on it.', $now, $then),
+                default => sprintf(' The learned estimate of failure moves from %s%% to %s%%.', $now, $then),
+            };
+        }
+
         return [
             'channel' => $r['channel'],
             'value' => $r['tried_value'],
             'score_from' => $r['current_score'],
             'score_to' => $r['score_if_changed'],
             'text' => sprintf(
-                'PRISM scored a copy of the reading with %s set to %s %s. The score falls from %d to %d (%s). This is a test only. It changes nothing on the machine.',
+                'PRISM scored a copy of the reading with %s set to %s %s. The score falls from %d to %d (%s).%s This is a test only. It changes nothing on the machine.',
                 strtolower($label),
                 $value,
                 $unit,
                 $r['current_score'],
                 $r['score_if_changed'],
                 $r['band_if_changed'],
+                $learned,
             ),
         ];
+    }
+
+    private static function percent(float $p): string
+    {
+        return rtrim(rtrim(number_format($p, 1, '.', ','), '0'), '.');
     }
 
     /** @return list<float> */
@@ -320,7 +361,7 @@ final class Investigator
     }
 
     /**
-     * @param  array{cause: string, checks: list<string>, evidence: list<string>}|null  $data
+     * @param  array{cause: string, checks: list<string>, evidence: list<string>, tested_fix?: array{channel: string, value: float|int, score_from: int, score_to: int, text: string}|null}|null  $data
      * @param  list<array{tool: string, summary: string, ok: bool}>  $trace
      * @param  array{input: int, output: int}|null  $tokens
      * @return InvestigationResult

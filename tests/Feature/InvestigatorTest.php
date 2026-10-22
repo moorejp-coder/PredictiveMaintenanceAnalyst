@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Services\Ai\AiClient;
 use App\Services\Ai\Investigator;
+use App\Services\Ai\ToolBox;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -103,6 +104,87 @@ class InvestigatorTest extends TestCase
             && str_contains($r['system'], 'Never write the words JSON')
             && str_contains($r['system'], 'shows stress 100')
             && str_contains($r['system'], 'Do not guess parts'));
+    }
+
+    public function test_the_prompt_asks_for_the_learned_estimate_as_a_second_opinion(): void
+    {
+        Http::fake(['api.anthropic.com/*' => Http::response($this->good(), 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertOk();
+
+        Http::assertSent(fn ($r) => str_contains($r['system'], 'Call get_learned_estimate once')
+            && str_contains($r['system'], 'second opinion')
+            && in_array('get_learned_estimate', array_column($r['tools'], 'name'), true));
+    }
+
+    public function test_a_learned_estimate_call_is_traced_and_its_number_can_be_quoted(): void
+    {
+        $chance = (new ToolBox('worn_tool', 59))->run('get_learned_estimate', [])['result']['chance_percent'];
+        $answer = $this->answer([
+            'cause' => 'The trained model puts the chance of failure at '.$chance.' percent. Tool wear is rising.',
+            'checks' => ['Pull the tool and look at the cutting edge.'],
+            'evidence' => ['get_learned_estimate', 'what_if'],
+        ]);
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->toolUse('toolu_1', 'get_learned_estimate', []), 200)
+            ->push($this->whatIf('toolu_2', 30.0), 200)
+            ->push($answer, 200)]);
+
+        $res = $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('source', 'ai');
+
+        $this->assertSame('get_learned_estimate', $res->json('trace.0.tool'));
+        $this->assertStringContainsString((string) $chance, $res->json('data.cause'));
+    }
+
+    public function test_a_tool_with_no_arguments_is_sent_back_with_an_empty_object_input(): void
+    {
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->toolUse('toolu_1', 'get_learned_estimate', []), 200)
+            ->push($this->whatIf('toolu_2', 30.0), 200)
+            ->push($this->good(), 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)->assertOk();
+
+        // The second request carries Claude's first turn back. Its input must be {} and not [].
+        $second = Http::recorded()[1][0];
+        $this->assertStringContainsString('"name":"get_learned_estimate","input":{}', $second->body());
+        $this->assertStringNotContainsString('"input":[]', $second->body());
+    }
+
+    public function test_an_invented_learned_chance_is_rejected(): void
+    {
+        $real = (new ToolBox('worn_tool', 59))->run('get_learned_estimate', [])['result']['chance_percent'];
+        $invented = $real > 50 ? 7.3 : 83.7;
+        $bad = $this->answer([
+            'cause' => 'The trained model puts the chance of failure at '.$invented.' percent.',
+            'checks' => ['Pull the tool.'],
+            'evidence' => ['get_learned_estimate'],
+        ]);
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->toolUse('toolu_1', 'get_learned_estimate', []), 200)
+            ->push($this->whatIf('toolu_2', 30.0), 200)
+            ->push($bad, 200)
+            ->push([
+                'content' => [['type' => 'text', 'text' => json_encode(['cause' => 'The tool is worn.', 'checks' => ['Change the tool.']])]],
+                'usage' => ['input_tokens' => 10, 'output_tokens' => 5],
+            ], 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)
+            ->assertOk()
+            ->assertJsonPath('data.cause', 'The tool is worn.')
+            ->assertJsonPath('trace', []);
+    }
+
+    public function test_the_tested_fix_sentence_shows_how_the_learned_chance_moves(): void
+    {
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->whatIf('toolu_1', 30.0), 200)
+            ->push($this->good(), 200)]);
+
+        $res = $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('source', 'ai');
+
+        $this->assertMatchesRegularExpression('/The learned estimate of failure (moves from [\d.]+% to [\d.]+%|stays at [\d.]+%)/', $res->json('data.tested_fix.text'));
+        $this->assertStringContainsString('This is a test only', $res->json('data.tested_fix.text'));
     }
 
     public function test_the_gate_asks_for_a_what_if_before_the_answer(): void
@@ -207,6 +289,37 @@ class InvestigatorTest extends TestCase
         // A driver that is not rising has no estimate to quote.
         $flat = [['status' => 'not_rising']];
         $this->assertSame('It stays at 150.', Investigator::addCaveat('It stays at 150.', $flat));
+    }
+
+    public function test_a_percentage_that_matches_the_reading_count_does_not_add_the_caveat(): void
+    {
+        // The screenshot case: "4%" next to a time estimate of 4 readings.
+        $rising = [['status' => 'rising', 'readings_to_limit' => 4, 'minutes_to_limit' => 120]];
+        $cause = 'The learned model gives only a 4% chance, which disagrees with the high band.';
+
+        $this->assertSame($cause, Investigator::addCaveat($cause, $rising));
+        // A number with a time unit still adds it, in readings, minutes or hours.
+        foreach (['It reaches the limit in about 4 readings.', 'It reaches the limit in 120 minutes.', 'It reaches the limit in 2 hours.'] as $quoted) {
+            $this->assertStringEndsWith('straight-line estimate on simulated data.', Investigator::addCaveat($quoted, $rising));
+        }
+    }
+
+    public function test_the_tested_fix_says_so_when_the_rules_and_the_model_disagree(): void
+    {
+        $base = ['channel' => 'torque_nm', 'tried_value' => 40, 'current_score' => 76, 'score_if_changed' => 60, 'band_if_changed' => 'elevated'];
+
+        $worse = Investigator::testedFix($base + ['learned_chance_percent_now' => 4.0, 'learned_chance_percent_if_changed' => 4.6]);
+        $this->assertStringContainsString('moves from 4% to 4.6%, so the rules and the model disagree on this change. Inspect before relying on it.', $worse['text']);
+
+        $better = Investigator::testedFix($base + ['learned_chance_percent_now' => 4.6, 'learned_chance_percent_if_changed' => 2.1]);
+        $this->assertStringContainsString('moves from 4.6% to 2.1%.', $better['text']);
+        $this->assertStringNotContainsString('disagree', $better['text']);
+
+        $same = Investigator::testedFix($base + ['learned_chance_percent_now' => 4.0, 'learned_chance_percent_if_changed' => 4.0]);
+        $this->assertStringContainsString('stays at 4%.', $same['text']);
+
+        $none = Investigator::testedFix($base);
+        $this->assertStringNotContainsString('learned estimate', $none['text']);
     }
 
     public function test_the_second_click_is_served_from_the_cache(): void
