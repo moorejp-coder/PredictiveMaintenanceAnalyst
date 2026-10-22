@@ -61,6 +61,7 @@ final class WorkOrderStep extends AiStep
             .'Do not mention the priority, it is set elsewhere. '
             .'Each step is a different action. Never say the same action twice in one step. '
             .'Do not mention lockout or tagout, and do not name a part that the JSON does not name. '
+            .'Do not put time estimates or predictions in the steps. '
             .'Reply with JSON only, no other text: '
             .'{"title": "under 10 words", "steps": ["3 or 4 imperative steps, each under 15 words"]}';
     }

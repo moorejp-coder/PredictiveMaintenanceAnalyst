@@ -25,6 +25,15 @@ class ToolBoxTest extends TestCase
         }
     }
 
+    public function test_every_channel_has_a_plain_label_and_unit(): void
+    {
+        $this->assertSame(array_keys(ToolBox::CHANNELS), array_keys(ToolBox::CHANNEL_LABELS));
+        foreach (ToolBox::CHANNEL_LABELS as [$label, $unit]) {
+            $this->assertNotSame('', $label);
+            $this->assertNotSame('', $unit);
+        }
+    }
+
     public function test_get_check_returns_the_check_stress_and_sentence(): void
     {
         $out = $this->box()->run('get_check', ['driver' => 'tool_wear']);

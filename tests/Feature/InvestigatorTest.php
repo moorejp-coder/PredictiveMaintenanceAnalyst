@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\Ai\AiClient;
+use App\Services\Ai\Investigator;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -98,6 +99,7 @@ class InvestigatorTest extends TestCase
         Http::assertSent(fn ($r) => str_contains($r['system'], 'time_to_limit')
             && str_contains($r['system'], 'Call what_if once')
             && str_contains($r['system'], 'lowers_score')
+            && str_contains($r['system'], 'straight-line estimate on simulated data')
             && str_contains($r['system'], 'Never write the words JSON')
             && str_contains($r['system'], 'shows stress 100')
             && str_contains($r['system'], 'Do not guess parts'));
@@ -159,6 +161,52 @@ class InvestigatorTest extends TestCase
         $this->getJson('/api/diagnosis'.self::WORN)
             ->assertJsonPath('source', 'ai')
             ->assertJsonPath('data.checks.0', 'Bring torque down to 30 Nm.');
+    }
+
+    public function test_a_what_if_that_lowers_the_score_becomes_a_tested_fix_sentence(): void
+    {
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->whatIf('toolu_1', 30.0), 200)
+            ->push($this->good(), 200)]);
+
+        $res = $this->getJson('/api/diagnosis'.self::WORN)->assertJsonPath('source', 'ai');
+
+        $fix = $res->json('data.tested_fix');
+        $this->assertSame('torque_nm', $fix['channel']);
+        $this->assertLessThan($fix['score_from'], $fix['score_to']);
+        $this->assertStringContainsString('torque set to 30 Nm', $fix['text']);
+        $this->assertStringContainsString('This is a test only', $fix['text']);
+    }
+
+    public function test_no_tested_fix_when_the_what_if_did_not_lower_the_score(): void
+    {
+        $ok = $this->answer(['cause' => 'Tool wear is rising.', 'checks' => ['Inspect the tool.'], 'evidence' => ['what_if']]);
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push($this->whatIf('toolu_1', 77.7), 200)
+            ->push($ok, 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)
+            ->assertJsonPath('source', 'ai')
+            ->assertJsonPath('data.tested_fix', null);
+    }
+
+    public function test_code_adds_the_straight_line_caveat_to_a_quoted_estimate(): void
+    {
+        $rising = [['status' => 'rising', 'readings_to_limit' => 5, 'minutes_to_limit' => 150]];
+
+        $this->assertStringEndsWith(
+            'straight-line estimate on simulated data.',
+            Investigator::addCaveat('Power reaches its top in 150 minutes.', $rising),
+        );
+        // Already said, so no second sentence.
+        $said = 'About 150 minutes, a straight-line estimate.';
+        $this->assertSame($said, Investigator::addCaveat($said, $rising));
+        // The estimate is not quoted, so nothing is added.
+        $plain = 'Power is high.';
+        $this->assertSame($plain, Investigator::addCaveat($plain, $rising));
+        // A driver that is not rising has no estimate to quote.
+        $flat = [['status' => 'not_rising']];
+        $this->assertSame('It stays at 150.', Investigator::addCaveat('It stays at 150.', $flat));
     }
 
     public function test_the_second_click_is_served_from_the_cache(): void

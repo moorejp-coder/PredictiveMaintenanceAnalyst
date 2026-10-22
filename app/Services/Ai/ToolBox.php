@@ -30,6 +30,17 @@ final class ToolBox
         'run_hours' => [0.0, 20000.0],
     ];
 
+    /** Channel => [plain label, unit], for the sentences code writes. */
+    public const CHANNEL_LABELS = [
+        'air_temp_k' => ['Air temperature', 'K'],
+        'process_temp_k' => ['Process temperature', 'K'],
+        'rotational_speed_rpm' => ['Rotational speed', 'rpm'],
+        'torque_nm' => ['Torque', 'Nm'],
+        'tool_wear_min' => ['Tool wear', 'min'],
+        'vibration_mm_s' => ['Vibration', 'mm/s'],
+        'run_hours' => ['Machine run hours', 'h'],
+    ];
+
     public const DRIVERS = ['tool_wear', 'heat', 'power', 'overstrain', 'vibration', 'run_hours'];
 
     /** @var array<string, float|int> */

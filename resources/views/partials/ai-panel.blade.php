@@ -53,6 +53,10 @@
                     <h3>Likely cause</h3>
                     <p id="ai-cause"></p>
                     <ul id="ai-checks"></ul>
+                    <div id="ai-tested" hidden>
+                        <h3>Tested on a copy</h3>
+                        <p id="ai-tested-text"></p>
+                    </div>
                     <div id="ai-trace" hidden>
                         <h3>What the AI looked at</h3>
                         <ul id="ai-trace-list"></ul>
@@ -193,6 +197,9 @@
                 const d = await get(panel.dataset.diagnosis, latest);
                 $('ai-cause').textContent = d.data.cause;
                 fill($('ai-checks'), d.data.checks);
+                const tested = d.data.tested_fix;
+                $('ai-tested').hidden = !(tested && tested.text);
+                if (tested && tested.text) { $('ai-tested-text').textContent = tested.text; }
                 const trace = Array.isArray(d.trace) ? d.trace : [];
                 fill($('ai-trace-list'), trace.map((t) => t.summary));
                 $('ai-trace').hidden = trace.length === 0;
