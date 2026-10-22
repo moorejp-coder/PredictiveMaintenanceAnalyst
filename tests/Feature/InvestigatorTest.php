@@ -10,6 +10,7 @@ use App\Services\SensorSimulator;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class InvestigatorTest extends TestCase
@@ -91,6 +92,25 @@ class InvestigatorTest extends TestCase
                 && $messages[2]['content'][0]['tool_use_id'] === 'toolu_1'
                 && $request['tool_choice']['type'] === 'auto';
         });
+    }
+
+    public function test_the_answer_has_room_and_a_cut_off_reply_falls_back_with_the_stop_reason_logged(): void
+    {
+        Log::spy();
+        $cut = [
+            'stop_reason' => 'max_tokens',
+            'content' => [['type' => 'thinking', 'thinking' => 'Working it out.']],
+            'usage' => ['input_tokens' => 300, 'output_tokens' => 2024],
+        ];
+        Http::fake(['api.anthropic.com/*' => Http::response($cut, 200)]);
+
+        $this->getJson('/api/diagnosis'.self::WORN)
+            ->assertOk()
+            ->assertJsonPath('reason', 'bad_reply');
+
+        Http::assertSent(fn ($r) => $r['max_tokens'] === 1000 + 1024);
+        Log::shouldHaveReceived('info')->withArgs(fn ($m, $c = []) => $m === 'ai_step'
+            && str_contains((string) ($c['detail'] ?? ''), 'stop_reason max_tokens'))->once();
     }
 
     public function test_a_number_written_with_a_thousands_separator_counts_as_one_number(): void
