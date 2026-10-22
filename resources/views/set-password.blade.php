@@ -9,25 +9,15 @@
     <meta name="description" content="Choose a password for your PRISM contest judge account, then sign in to the milling machine failure-risk dashboard.">
     @include('partials.brand-head')
     <style nonce="{{ $cspNonce ?? '' }}">
-        body { line-height: 1.6; }
-        .wrap { max-width: 480px; margin: 0 auto; padding: var(--prism-space-8) max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
-        h1 { margin: 0 0 var(--prism-space-2); font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }
-        p.lead { margin: 0 0 var(--prism-space-4); color: var(--prism-muted); }
-        .field { margin-bottom: var(--prism-space-4); }
-        label { display: block; margin-bottom: var(--prism-space-1); font-weight: 600; }
-        input[type="email"], input[type="password"] {
-            width: 100%; min-height: 44px; padding: 8px 12px; font: inherit; color: var(--prism-text);
-            background: var(--prism-bg); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-md);
-        }
-        input[readonly] { color: var(--prism-muted); }
-        input[aria-invalid="true"] { border-color: var(--prism-risk-high); border-width: 2px; padding: 7px 11px; }
-        .hint { margin: var(--prism-space-1) 0 0; color: var(--prism-muted); font-size: 0.875rem; }
-        .error { margin: 0 0 var(--prism-space-4); padding: var(--prism-space-3) var(--prism-space-4); border: 1px solid var(--prism-risk-high); border-left-width: 4px; border-radius: var(--prism-radius-md); color: var(--prism-text); }
-        .error strong { color: var(--prism-risk-high); }
-        .actions { margin-top: var(--prism-space-2); }
+        .wrap { max-width: 440px; margin: 0 auto; padding: var(--prism-space-12) max(16px, env(safe-area-inset-right)) max(48px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+        .wrap > .card { padding: var(--prism-space-8); border-top: 3px solid var(--prism-accent); }
+        h1 { margin: 0 0 var(--prism-space-2); font-size: 1.75rem; letter-spacing: -0.02em; }
+        p.lead { margin: 0 0 var(--prism-space-6); color: var(--prism-muted); }
+        .actions { margin-top: var(--prism-space-6); }
         .actions .btn { width: 100%; }
-        .help { margin-top: var(--prism-space-6); color: var(--prism-muted); font-size: 0.9rem; }
+        .help { margin-top: var(--prism-space-6); padding-top: var(--prism-space-4); border-top: 1px solid var(--prism-border); color: var(--prism-muted); font-size: 0.875rem; }
         .help p { margin: 0 0 var(--prism-space-2); }
+        @media (max-width: 480px) { .wrap > .card { padding: var(--prism-space-6) var(--prism-space-4); } }
     </style>
 </head>
 <body>

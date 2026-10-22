@@ -13,13 +13,15 @@
     @include('partials.brand-head')
     <style nonce="{{ $cspNonce ?? '' }}">
         body { min-height: 100vh; display: flex; align-items: center; justify-content: center; line-height: 1.6; }
-        .panel { width: 100%; max-width: 520px; margin: 24px 16px; padding: var(--prism-space-8) var(--prism-space-6); text-align: center; }
-        .panel .prism-logo { margin-bottom: var(--prism-space-6); }
-        .code { margin: 0 0 var(--prism-space-2); font-family: var(--prism-font-data); font-weight: 500; font-size: 0.875rem; letter-spacing: 0.08em; color: var(--prism-muted); }
-        h1 { margin: 0 0 var(--prism-space-2); font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }
+        .panel { width: 100%; max-width: 520px; margin: 24px 16px; padding: var(--prism-space-8); text-align: left; border-top: 3px solid var(--prism-accent); }
+        .panel .prism-logo { margin-bottom: var(--prism-space-8); align-items: flex-start; }
+        .panel .prism-logo--stacked { text-align: left; }
+        .panel .prism-logo__text { align-items: flex-start; }
+        .code { margin: 0 0 var(--prism-space-1); font-family: var(--prism-font-data); font-weight: 500; font-size: 0.875rem; color: var(--prism-muted); }
+        h1 { margin: 0 0 var(--prism-space-2); font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem); letter-spacing: -0.02em; }
         p.lead { margin: 0 0 var(--prism-space-6); color: var(--prism-muted); }
-        .links { display: flex; flex-wrap: wrap; gap: var(--prism-space-2); justify-content: center; }
-        .secondary-links { margin-top: var(--prism-space-3); }
+        .links { display: flex; flex-wrap: wrap; gap: var(--prism-space-2); }
+        .secondary-links { margin-top: var(--prism-space-3); margin-left: calc(-1 * var(--prism-space-3)); }
     </style>
 </head>
 <body>

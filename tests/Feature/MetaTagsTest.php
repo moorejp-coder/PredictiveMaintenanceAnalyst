@@ -39,7 +39,7 @@ class MetaTagsTest extends TestCase
         $html = $this->get($path)->assertOk()->getContent();
 
         $this->assertStringContainsString('<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">', $html);
-        $this->assertStringContainsString('<meta name="theme-color" content="#0b1220">', $html);
+        $this->assertStringContainsString('<meta name="theme-color" content="#101725">', $html);
     }
 
     public function test_titles_and_descriptions_are_unique(): void

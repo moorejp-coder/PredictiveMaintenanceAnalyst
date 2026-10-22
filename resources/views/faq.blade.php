@@ -9,47 +9,27 @@
     @include('partials.brand-head')
     <style nonce="{{ $cspNonce ?? '' }}">
         html { scroll-behavior: smooth; }
-        body { line-height: 1.6; }
-        .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
-        h1 { margin: 0 0 4px; font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }
-        h2 { margin: 36px 0 12px; font-size: 1.25rem; padding-top: 16px; border-top: 1px solid var(--prism-border); }
-        p, li { color: var(--prism-muted); }
-        li { margin-bottom: 6px; }
-        strong { color: var(--prism-text); }
-        a { color: var(--prism-accent); }
-        code { color: var(--prism-text); font-size: 0.9em; overflow-wrap: anywhere; }
-        .meta { color: var(--prism-muted); font-size: 0.875rem; margin: 0 0 16px; }
-        .summary { background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 10px; padding: 4px 18px 12px; }
-        .safety { background: var(--prism-surface); border: 1px solid var(--prism-accent); border-radius: 10px; padding: 12px 18px; margin: 16px 0; }
-        .safety p { margin: 0; color: var(--prism-text); }
-        table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.9rem; }
-        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--prism-border); vertical-align: top; color: var(--prism-muted); }
-        th { color: var(--prism-text); }
-        @media (max-width: 560px) {
-            table { font-size: 0.8125rem; }
-            th, td { padding: 6px 6px; overflow-wrap: anywhere; }
-            .tag { white-space: normal; }
-        }
-        .tag { display: inline-block; font-size: 0.8125rem; font-weight: 600; padding: 1px 8px; border-radius: var(--prism-radius-sm); border: 1px solid; white-space: nowrap; }
-        .tag.ok { color: var(--prism-accent); border-color: var(--prism-accent); }
-        .tag.partial { color: var(--prism-text); border-color: var(--prism-muted); }
-        .tag.none { color: var(--prism-muted); border-color: var(--prism-muted); border-style: dashed; }
-        details { background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 10px; margin: 8px 0; }
-        summary { cursor: pointer; padding: 12px 16px; font-weight: 600; color: var(--prism-text); list-style: none; display: flex; gap: 10px; align-items: baseline; }
-        summary::-webkit-details-marker { display: none; }
-        summary::before { content: "+"; content: "+" / ""; color: var(--prism-accent); font-weight: 700; width: 1ch; flex: none; }
-        details[open] > summary::before { content: "-"; content: "-" / ""; }
-        .answer { padding: 0 16px 12px 40px; }
+        .tag.ok { border-color: var(--prism-accent); color: var(--prism-accent); }
+        .tag.partial { border-color: var(--prism-muted); }
+        .tag.none { color: var(--prism-muted); border-style: dashed; }
+        @media (max-width: 560px) { .tag { white-space: normal; } }
+        .doc-page main details { border-top: 1px solid var(--prism-border); }
+        .doc-page main details:last-of-type { border-bottom: 1px solid var(--prism-border); }
+        .doc-page main summary { cursor: pointer; padding: 16px 0; font-size: 1.0625rem; font-weight: 600; color: var(--prism-text); list-style: none; display: flex; gap: 14px; align-items: baseline; }
+        .doc-page main summary::-webkit-details-marker { display: none; }
+        .doc-page main summary::before { content: "+"; content: "+" / ""; color: var(--prism-accent); font-family: var(--prism-font-data); font-weight: 500; width: 1ch; flex: none; }
+        .doc-page main details[open] > summary::before { content: "\2212"; content: "\2212" / ""; }
+        .doc-page main summary:hover { color: var(--prism-accent); }
+        .answer { padding: 0 0 var(--prism-space-4) calc(1ch + 14px); }
         .answer p { margin: 8px 0; }
-        .src { font-size: 0.8125rem; }
+        .tools { display: flex; gap: 8px; margin: var(--prism-space-6) 0 var(--prism-space-3); }
+        .tools button { min-height: 40px; padding: 6px 14px; font: inherit; font-size: 0.875rem; font-weight: 500; color: var(--prism-text); background: transparent; border: 1px solid var(--prism-control); border-radius: var(--prism-radius-md); cursor: pointer; }
+        .tools button:hover { background: var(--prism-surface-raised); border-color: var(--prism-text); }
+        @media (pointer: coarse) { .tools button { min-height: 44px; padding: 8px 16px; } .doc-page main summary { min-height: 44px; align-items: center; } }
         @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-        .tools { display: flex; gap: 8px; margin: 16px 0 0; }
-        button { background: var(--prism-surface); color: var(--prism-text); border: 1px solid var(--prism-border); border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 0.875rem; cursor: pointer; }
-        button:hover { border-color: var(--prism-accent); }
-        @media (pointer: coarse) { button { min-height: 44px; padding: 8px 16px; } summary { min-height: 44px; align-items: center; } }
     </style>
 </head>
-<body>
+<body class="doc-page">
 @include('partials.skip-link')
 @include('partials.app-header', ['active' => 'faq'])
 <main class="wrap" id="main" tabindex="-1">

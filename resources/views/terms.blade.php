@@ -8,21 +8,11 @@
     <link rel="canonical" href="{{ $canonicalUrl }}">
     @include('partials.brand-head')
     <style nonce="{{ $cspNonce ?? '' }}">
-        body { line-height: 1.6; }
-        .wrap { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
-        h1 { margin: 0 0 4px; font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }
-        h2 { margin: 32px 0 8px; font-size: 1.25rem; padding-top: 16px; border-top: 1px solid var(--prism-border); }
-        p, li { color: var(--prism-muted); }
-        li { margin-bottom: 6px; }
-        strong { color: var(--prism-text); }
-        a { color: var(--prism-accent); }
-        .meta { color: var(--prism-muted); font-size: 0.875rem; margin: 0 0 16px; }
-        .summary { background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 10px; padding: 4px 18px 8px; }
-        .safety { background: var(--prism-surface); border: 1px solid var(--prism-accent); border-radius: 10px; padding: 12px 18px; margin: 16px 0; }
-        .safety p { margin: 0; color: var(--prism-text); }
+        html { scroll-behavior: smooth; }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     </style>
 </head>
-<body>
+<body class="doc-page">
 @include('partials.skip-link')
 @include('partials.app-header')
 <main class="wrap" id="main" tabindex="-1">

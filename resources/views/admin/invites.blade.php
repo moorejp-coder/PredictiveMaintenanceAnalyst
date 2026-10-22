@@ -8,25 +8,11 @@
     <meta name="description" content="Entrant page for inviting contest judges to PRISM by email. Each judge gets a link to choose a password.">
     @include('partials.brand-head')
     <style nonce="{{ $cspNonce ?? '' }}">
-        body { line-height: 1.6; }
-        .wrap { max-width: 760px; margin: 0 auto; padding: var(--prism-space-8) max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
-        h1 { margin: 0 0 var(--prism-space-2); font-size: clamp(1.75rem, 1.5rem + 1vw, 2rem); }
-        h2 { margin: var(--prism-space-8) 0 var(--prism-space-3); font-size: 1.25rem; }
-        p.lead { margin: 0 0 var(--prism-space-4); color: var(--prism-muted); }
-        .field { margin-bottom: var(--prism-space-4); }
-        label { display: block; margin-bottom: var(--prism-space-1); font-weight: 600; }
-        input[type="email"], input[type="text"] {
-            width: 100%; min-height: 44px; padding: 8px 12px; font: inherit; color: var(--prism-text);
-            background: var(--prism-bg); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-md);
-        }
-        input[aria-invalid="true"] { border-color: var(--prism-risk-high); border-width: 2px; padding: 7px 11px; }
-        .hint { margin: var(--prism-space-1) 0 0; color: var(--prism-muted); font-size: 0.875rem; }
-        .error { margin: 0 0 var(--prism-space-4); padding: var(--prism-space-3) var(--prism-space-4); border: 1px solid var(--prism-risk-high); border-left-width: 4px; border-radius: var(--prism-radius-md); color: var(--prism-text); }
-        .error strong { color: var(--prism-risk-high); }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--prism-border); vertical-align: top; color: var(--prism-muted); overflow-wrap: anywhere; }
-        th { color: var(--prism-text); }
-        .tag { display: inline-block; padding: 1px 8px; border: 1px solid var(--prism-border); border-radius: var(--prism-radius-sm); font-size: 0.8125rem; color: var(--prism-text); }
+        .wrap { max-width: 760px; margin: 0 auto; padding: var(--prism-space-8) max(16px, env(safe-area-inset-right)) max(48px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+        h1 { margin: 0 0 var(--prism-space-2); font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem); letter-spacing: -0.02em; }
+        h2 { margin: var(--prism-space-12) 0 var(--prism-space-3); font-size: 1.25rem; }
+        p.lead { margin: 0 0 var(--prism-space-4); color: var(--prism-muted); max-width: 62ch; }
+        th, td { overflow-wrap: anywhere; }
     </style>
 </head>
 <body>

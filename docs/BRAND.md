@@ -29,7 +29,7 @@ Standalone SVG wordmarks use live text set in IBM Plex Sans with a system fallba
 - Default symbol color #8AB4F8. Wordmark #E8EEFB on dark backgrounds.
 - Clear space: at least the height of one dot row spacing (about 20% of mark height) on every side.
 - Minimum size: mark 24 px wide in UI. Use the favicon artwork below 24 px.
-- Allowed backgrounds: #0B1220, #111A2E, white (ink version).
+- Allowed backgrounds: #101725, #162033, white (ink version).
 - All four paths use one color. Never use risk colors in a logo.
 
 ### Incorrect usage
@@ -45,10 +45,10 @@ Tokens live in `public/css/prism.css` as `--prism-*`.
 
 | Token | Hex | Use |
 |---|---|---|
-| bg | #0B1220 | Canvas |
-| surface | #111A2E | Cards, panels |
-| surface-raised | #172340 | Pressed toggles, notices, bars |
-| border | #26355A | Dividers, outlines |
+| bg | #101725 | Canvas |
+| surface | #162033 | Panels |
+| surface-raised | #1E2A41 | Readout panel, selected toggles, notices, bar tracks |
+| border | #33435F | Dividers, outlines |
 | accent | #8AB4F8 | Primary actions, active states, charts for non-risk data |
 | text | #E8EEFB | Main text |
 | muted | #A3B3D1 | Supporting text |
@@ -67,7 +67,12 @@ Scale: page heading 28 to 32 px, section 20 to 24 px, card heading 16 px, body 1
 
 ## Components
 - **Buttons:** `.btn` secondary, `.btn--primary`, `.btn--tertiary`. States: hover, focus-visible, active, disabled, `aria-busy="true"` loading, `aria-pressed="true"` selected. Minimum 44 px tall.
-- **Cards:** `.card`, surface background, 1 px border, 12 px radius, no shadow.
+- **Shape:** controls 4 px, panels 6 px, dialogs 8 px, readout cells and table cells 0. No shadows except on dialogs and the cookie notice.
+- **Panels:** `.card`, surface background, 1 px border. The dashboard readout is one panel in two halves: the score on the raised tone, the reasons beside it.
+- **Segmented control:** `.seg` joins buttons that act as one choice. The selected button carries a 3 px accent bar.
+- **Form fields:** 1 px `--prism-control` border (3:1 or better against the surface), accent border on focus.
+- **Tables:** horizontal rules only. The header row sits over a heavier rule.
+- **Long-form pages:** `body.doc-page` sets one 68ch measure, 1.65 line height and sections set apart by space.
 - **Notice:** `.notice` for instructions and technical failures. Not a risk alert.
 - **Risk result:** large Plex Mono score, text classification, reason, next action, disclaimer. Color appears only after a real result.
 - **Navigation:** `partials/app-header.blade.php`. Active page uses `aria-current="page"` and a blue underline.
@@ -82,10 +87,11 @@ PRISM follows the visitor's system setting (`prefers-color-scheme`). A switch in
 
 | Token | Dark | Light |
 | --- | --- | --- |
-| --prism-bg | #0B1220 | #F6F8FC |
-| --prism-surface | #111A2E | #FFFFFF |
-| --prism-surface-raised | #172340 | #EAEFF8 |
-| --prism-border | #26355A | #AEBAD3 |
+| --prism-bg | #101725 | #F3F5F9 |
+| --prism-surface | #162033 | #FFFFFF |
+| --prism-surface-raised | #1E2A41 | #E7ECF4 |
+| --prism-border | #33435F | #B3BFD4 |
+| --prism-control | #6B7FA6 | #6B7C9C |
 | --prism-accent | #8AB4F8 | #1A4FBF |
 | --prism-accent-hover | #A9C7FA | #153F99 |
 | --prism-accent-pressed | #7AA5EE | #10337D |
@@ -106,3 +112,6 @@ Measured contrast for the light theme (WCAG 2.2 relative luminance formula, calc
 - Elevated: 5.6, 6.0, 5.2
 - High: 6.2, 6.6, 5.7
 - Border #AEBAD3: 1.83 on bg. As in the dark theme, the border is decorative. Controls carry a text label and a focus outline.
+
+## Update, October 22, 2026
+Neutrals shifted to a lighter slate in both themes. Text, muted, accent and risk colors are unchanged. Contrast, calculated by script on the new neutrals (bg, surface, raised): dark text 15.4, 14.0, 12.3; dark muted 8.5, 7.7, 6.8; dark accent 8.5, 7.7, 6.8; light text 15.9, 17.3, 14.6; light muted 6.8, 7.4, 6.2; light accent 6.6, 7.2, 6.1. Risk colors stay at 4.6 or higher in both themes. Control borders reach 3.5 or higher on the surface. The score ring and each stress bar mark the 40 and 70 band edges. This update was checked in Chromium screenshots of every page in both themes, not with a screen reader.

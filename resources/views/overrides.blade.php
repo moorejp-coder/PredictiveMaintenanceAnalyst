@@ -7,18 +7,15 @@
     <title>Override Log | {{ config('app.name', 'PRISM') }}</title>
     @include('partials.brand-head')
     <style nonce="{{ $cspNonce ?? '' }}">
-        body { line-height: 1.6; }
-        .wrap { max-width: 1120px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
-        h1 { margin: 0 0 4px; font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.75rem); }
-        p { color: var(--prism-muted); }
-        a { color: var(--prism-accent); }
-        .table-wrap { overflow-x: auto; margin-top: 16px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 760px; }
-        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--prism-border); vertical-align: top; }
-        th { color: var(--prism-text); white-space: nowrap; }
-        td { color: var(--prism-muted); }
+        .wrap { max-width: 1120px; margin: 0 auto; padding: var(--prism-space-8) max(16px, env(safe-area-inset-right)) max(64px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+        h1 { margin: 0 0 var(--prism-space-3); font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem); letter-spacing: -0.02em; }
+        p { color: var(--prism-muted); max-width: 78ch; }
+        strong { color: var(--prism-text); }
+        .table-wrap { overflow-x: auto; margin-top: var(--prism-space-6); }
+        table { min-width: 760px; font-size: 0.875rem; }
+        th { white-space: nowrap; }
         td.reason { color: var(--prism-text); overflow-wrap: anywhere; max-width: 42ch; }
-        td.num { font-family: var(--prism-font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        td.num { font-family: var(--prism-font-data); white-space: nowrap; }
     </style>
 </head>
 <body>

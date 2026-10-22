@@ -8,5 +8,5 @@
     var theme = root.getAttribute('data-theme');
     var light = theme ? theme === 'light' : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta && light) { meta.setAttribute('content', '#F6F8FC'); }
+    if (meta && light) { meta.setAttribute('content', '#F3F5F9'); }
 })();

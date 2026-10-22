@@ -5,15 +5,14 @@
   Button names below match the real buttons on the dashboard.
 --}}
 <style nonce="{{ $cspNonce ?? '' }}">
-    .guide-modal { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 2px solid var(--prism-accent); border-radius: 12px; background: var(--prism-surface-raised); color: var(--prism-text); overflow: auto; }
-    .guide-modal::backdrop { background: rgba(0, 0, 0, 0.7); }
-    .guide-inner { padding: 20px 24px 24px; }
+    .guide-modal { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border-top: 3px solid var(--prism-accent); }
+    .guide-inner { padding: 24px 28px 28px; }
     .guide-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--prism-space-3); margin-bottom: var(--prism-space-2); }
-    .guide-head h2 { margin: 0; font-size: 1.375rem; }
-    .guide-lead { margin: 0 0 var(--prism-space-4); color: var(--prism-muted); font-size: 0.9375rem; }
-    .guide-modal ol { list-style: none; counter-reset: guide; margin: 0; padding: 0; display: grid; gap: var(--prism-space-3); }
-    .guide-modal li { counter-increment: guide; display: grid; grid-template-columns: 2rem 1fr; column-gap: var(--prism-space-3); background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: var(--prism-radius-md); padding: var(--prism-space-3) var(--prism-space-4); font-size: 0.9375rem; }
-    .guide-modal li::before { content: counter(guide); grid-row: 1 / span 2; display: inline-flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; border: 2px solid var(--prism-accent); border-radius: 50%; color: var(--prism-accent); font-family: var(--prism-font-data); font-weight: 600; }
+    .guide-head h2 { margin: 0; font-size: 1.5rem; }
+    .guide-lead { margin: 0 0 var(--prism-space-6); color: var(--prism-muted); font-size: 0.9375rem; max-width: 56ch; }
+    .guide-modal ol { list-style: none; counter-reset: guide; margin: 0; padding: 0; }
+    .guide-modal li { counter-increment: guide; display: grid; grid-template-columns: 2.5rem 1fr; column-gap: var(--prism-space-3); padding: var(--prism-space-4) 0; border-top: 1px solid var(--prism-border); font-size: 0.9375rem; }
+    .guide-modal li::before { content: counter(guide); grid-row: 1 / span 2; font-family: var(--prism-font-data); font-size: 1.5rem; font-weight: 500; line-height: 1.2; color: var(--prism-accent); }
     .guide-modal li strong { display: block; }
     .guide-modal li span { color: var(--prism-muted); }
     .guide-foot { margin: var(--prism-space-4) 0; color: var(--prism-muted); font-size: 0.8125rem; }

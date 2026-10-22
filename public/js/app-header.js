@@ -10,7 +10,7 @@
     function paint() {
         btn.textContent = isLight() ? 'Dark theme' : 'Light theme';
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) { meta.setAttribute('content', isLight() ? '#F6F8FC' : '#0b1220'); }
+        if (meta) { meta.setAttribute('content', isLight() ? '#F3F5F9' : '#101725'); }
         window.dispatchEvent(new Event('prism-theme'));
     }
     btn.addEventListener('click', function () {
