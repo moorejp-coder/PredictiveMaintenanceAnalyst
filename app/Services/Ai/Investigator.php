@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Log;
  *   appear in the input or in a tool result. Otherwise the answer is rejected
  *   and the caller shows the older Diagnose answer or the built-in text.
  *
+ * @phpstan-type InvestigationResult array{source: string, data: array{cause: string, checks: list<string>, evidence: list<string>}|null, tokens: array{input: int, output: int}|null, reason: string|null, trace: list<array{tool: string, summary: string, ok: bool}>}
+ *
  * run() returns the same shape as AiStep::run() plus trace: a list of
  * {tool, summary, ok} for the page to show as "What the AI looked at".
  * The reason is null unless the source is "fallback". Then it is one of
@@ -35,13 +37,11 @@ final class Investigator
 
     private const FALLBACK_TTL_SECONDS = 60;
 
-    public function __construct(private readonly AiClient $ai)
-    {
-    }
+    public function __construct(private readonly AiClient $ai) {}
 
     /**
-     * @param  array<string, mixed>  $risk  The RiskScorer result for the reading.
-     * @return array{source: string, data: array|null, tokens: array{input: int, output: int}|null, reason: string|null, trace: list<array{tool: string, summary: string, ok: bool}>}
+     * @param  array{score: int, band: string, action: string, explanation: string, drivers: list<array{key: string, label: string, stress: int, scored?: bool}>, metrics: array<string, float>}  $risk  The RiskScorer result for the reading.
+     * @return InvestigationResult
      */
     public function run(string $scenario, int $tick, array $risk): array
     {
@@ -58,6 +58,7 @@ final class Investigator
         $key = 'ai:investigate:'.sha1($scenario.'|'.$tick.'|'.json_encode($input));
         $cached = $this->cacheGet($key);
         if (is_array($cached) && isset($cached['source'])) {
+            /** @var InvestigationResult $cached Written by this class, so the shape is known. */
             $source = $cached['source'] === 'ai' ? 'cache' : 'fallback';
             $cached['source'] = $source;
             if ($source === 'cache') {
@@ -94,7 +95,10 @@ final class Investigator
             .'"evidence": ["names of the tools you used"]}';
     }
 
-    /** @param  array<string, mixed>  $input */
+    /**
+     * @param  array<string, mixed>  $input
+     * @return InvestigationResult
+     */
     private function loop(string $scenario, int $tick, array $input): array
     {
         $box = new ToolBox($scenario, $tick);
@@ -102,7 +106,7 @@ final class Investigator
         $messages = [['role' => 'user', 'content' => "Risk result:\n".json_encode($input, JSON_UNESCAPED_SLASHES)]];
         $trace = [];
         $used = [];
-        $numbers = self::numbers(json_encode($input));
+        $numbers = self::numbers((string) json_encode($input));
         $tokens = ['input' => 0, 'output' => 0];
         $deadline = microtime(true) + self::BUDGET_SECONDS;
         $whatIfCalled = false;
@@ -136,7 +140,7 @@ final class Investigator
                 $messages[] = ['role' => 'assistant', 'content' => $reply['content']];
                 $results = [];
                 foreach ($reply['content'] as $block) {
-                    if (! is_array($block) || ($block['type'] ?? null) !== 'tool_use') {
+                    if (($block['type'] ?? null) !== 'tool_use') {
                         continue;
                     }
                     $name = is_string($block['name'] ?? null) ? $block['name'] : '';
@@ -160,7 +164,7 @@ final class Investigator
                                 unset($kept['tried_value']);
                             }
                         }
-                        $numbers = array_merge($numbers, self::numbers(json_encode($kept)));
+                        $numbers = array_merge($numbers, self::numbers((string) json_encode($kept)));
                         $results[] = ['type' => 'tool_result', 'tool_use_id' => $block['id'] ?? '', 'content' => json_encode($out['result'])];
                         $trace[] = ['tool' => $name, 'summary' => $out['summary'], 'ok' => true];
                     } catch (\InvalidArgumentException $e) {
@@ -204,7 +208,7 @@ final class Investigator
     /**
      * @param  list<string>  $usedTools
      * @param  list<float>  $numbers
-     * @return array{cause: string, checks: list<string>, evidence: list<string>}|false|null  null for an unusable reply, false for an ungrounded one
+     * @return array{cause: string, checks: list<string>, evidence: list<string>}|false|null null for an unusable reply, false for an ungrounded one
      */
     private function parse(string $text, array $usedTools, array $numbers): array|false|null
     {
@@ -319,6 +323,7 @@ final class Investigator
      * @param  array{cause: string, checks: list<string>, evidence: list<string>}|null  $data
      * @param  list<array{tool: string, summary: string, ok: bool}>  $trace
      * @param  array{input: int, output: int}|null  $tokens
+     * @return InvestigationResult
      */
     private function finish(?array $data, ?string $reason, array $trace, ?array $tokens): array
     {
@@ -331,6 +336,10 @@ final class Investigator
         ];
     }
 
+    /**
+     * @param  InvestigationResult  $result
+     * @return InvestigationResult
+     */
     private function log(array $result): array
     {
         Log::info('ai_step', [
@@ -354,6 +363,7 @@ final class Investigator
         }
     }
 
+    /** @param  array<string, mixed>  $value */
     private function cachePut(string $key, array $value, int $seconds): void
     {
         try {

@@ -8,7 +8,7 @@ class SecurityHeadersTest extends TestCase
 {
     private function nonceFrom(string $csp): string
     {
-        $this->assertSame(1, preg_match("/script-src 'self' 'nonce-([^']+)'/", $csp, $m));
+        $this->assertSame(1, preg_match("/style-src 'self' 'nonce-([^']+)'/", $csp, $m));
 
         return $m[1];
     }
@@ -34,8 +34,11 @@ class SecurityHeadersTest extends TestCase
             $nonce = $this->nonceFrom($response->headers->get('Content-Security-Policy'));
             $html = $response->getContent();
 
-            $this->assertStringContainsString('<script nonce="'.$nonce.'">', $html, $path);
-            $this->assertDoesNotMatchRegularExpression('/<(script|style)(?![^>]*nonce=)/', $html, $path);
+            $this->assertStringContainsString('<script src=', $html, $path);
+            $this->assertDoesNotMatchRegularExpression('/<style(?![^>]*nonce=)/', $html, $path);
+            $this->assertStringContainsString('<style nonce="'.$nonce.'">', $html, $path);
+            // No inline JavaScript: every script tag loads a file.
+            $this->assertDoesNotMatchRegularExpression('/<script(?![^>]*\bsrc=)[^>]*>/', $html, $path);
         }
     }
 

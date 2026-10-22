@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -23,7 +24,7 @@ class JudgeSeeder extends Seeder
         $password = (string) config('prism.judge.password');
 
         if ($email === '' || $password === '') {
-            $this->command?->warn('JUDGE_EMAIL or JUDGE_PASSWORD is not set. No judge account was created.');
+            Log::warning('JUDGE_EMAIL or JUDGE_PASSWORD is not set. No judge account was created.');
 
             return;
         }
@@ -38,6 +39,6 @@ class JudgeSeeder extends Seeder
             'email_verified_at' => $user->email_verified_at ?? now(),
         ])->save();
 
-        $this->command?->info('Judge account is ready.');
+        Log::info('Judge account is ready.');
     }
 }

@@ -15,9 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class RequireLogin
 {
-    public function __construct(private Authenticate $authenticate)
-    {
-    }
+    public function __construct(private Authenticate $authenticate) {}
 
     public function handle(Request $request, Closure $next): Response
     {

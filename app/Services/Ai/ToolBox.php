@@ -63,7 +63,11 @@ final class ToolBox
         return new RiskScorer($this->quality);
     }
 
-    /** Tool definitions for the Messages API. */
+    /**
+     * Tool definitions for the Messages API.
+     *
+     * @return list<array<string, mixed>>
+     */
     public static function definitions(): array
     {
         $driver = ['type' => 'string', 'enum' => self::DRIVERS, 'description' => 'One of the six scored checks.'];
@@ -157,6 +161,7 @@ final class ToolBox
         return max(3, min(30, (int) $window));
     }
 
+    /** @return array{result: array<string, mixed>, summary: string} */
     private function getCheck(string $driver): array
     {
         foreach ($this->scorer()->checks() as $check) {
@@ -203,7 +208,11 @@ final class ToolBox
         return $rows;
     }
 
-    /** Least-squares slope per step of a list of numbers. */
+    /**
+     * Least-squares slope per step of a list of numbers.
+     *
+     * @param  list<float>  $values
+     */
     private static function slope(array $values): float
     {
         $n = count($values);
@@ -211,7 +220,7 @@ final class ToolBox
         $meanY = array_sum($values) / $n;
         $num = 0.0;
         $den = 0.0;
-        foreach (array_values($values) as $i => $y) {
+        foreach ($values as $i => $y) {
             $num += ($i - $meanX) * ($y - $meanY);
             $den += ($i - $meanX) ** 2;
         }
@@ -219,6 +228,7 @@ final class ToolBox
         return $den == 0.0 ? 0.0 : $num / $den;
     }
 
+    /** @return array{result: array<string, mixed>, summary: string} */
     private function getTrend(string $channel, int $window): array
     {
         $rows = $this->history($window);
@@ -243,6 +253,7 @@ final class ToolBox
         ];
     }
 
+    /** @return array{result: array<string, mixed>, summary: string} */
     private function timeToLimit(string $driver): array
     {
         $rows = $this->history(10);
@@ -258,7 +269,7 @@ final class ToolBox
         foreach ($rows as $row) {
             foreach ($scorer->score($row)['drivers'] as $d) {
                 if ($d['key'] === $driver) {
-                    $series[] = $d['stress'];
+                    $series[] = (float) $d['stress'];
                 }
             }
         }
@@ -291,6 +302,7 @@ final class ToolBox
         return ['result' => $result, 'summary' => $text];
     }
 
+    /** @return array{result: array<string, mixed>, summary: string} */
     private function whatIf(string $channel, mixed $value): array
     {
         [$min, $max] = self::CHANNELS[$channel];
@@ -307,7 +319,7 @@ final class ToolBox
 
         $drivers = [];
         foreach ($new['drivers'] as $d) {
-            if (($d['scored'] ?? true) && $d['stress'] >= 40) {
+            if ($d['scored'] && $d['stress'] >= 40) {
                 $drivers[] = ['driver' => $d['label'], 'stress' => $d['stress']];
             }
         }
@@ -333,6 +345,7 @@ final class ToolBox
         ];
     }
 
+    /** @return array{result: array<string, mixed>, summary: string} */
     private function getBacktest(mixed $band): array
     {
         $table = config('prism.backtest');

@@ -40,6 +40,7 @@ final class LearnedEstimate
     /**
      * Same order as FEATURES in ml/train_model.py.
      *
+     * @param  array<string, float|int>  $reading
      * @return list<float|int>
      */
     public function vector(array $reading, string $quality = 'L'): array

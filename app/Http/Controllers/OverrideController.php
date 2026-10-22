@@ -54,7 +54,7 @@ class OverrideController extends Controller
 
         return response()->json([
             'id' => $log->id,
-            'recorded_at' => $log->created_at->toIso8601String(),
+            'recorded_at' => $log->created_at?->toIso8601String(),
         ], 201);
     }
 

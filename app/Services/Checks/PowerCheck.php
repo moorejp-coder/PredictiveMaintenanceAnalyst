@@ -5,9 +5,7 @@ namespace App\Services\Checks;
 final class PowerCheck extends Check
 {
     /** @param  array<string, float|int>  $limits */
-    public function __construct(private readonly array $limits)
-    {
-    }
+    public function __construct(private readonly array $limits) {}
 
     public function key(): string
     {
@@ -49,6 +47,7 @@ final class PowerCheck extends Check
         return ['power_w' => round($this->powerW($reading), 0)];
     }
 
+    /** @param  array<string, float|int>  $reading */
     private function powerW(array $reading): float
     {
         return (float) $reading['torque_nm'] * (float) $reading['rotational_speed_rpm'] * 2 * M_PI / 60;

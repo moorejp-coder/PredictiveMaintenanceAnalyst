@@ -69,7 +69,7 @@ final class RiskScorer
     }
 
     /**
-     * @param  array{air_temp_k: float, process_temp_k: float, rotational_speed_rpm: float, torque_nm: float, tool_wear_min: float, vibration_mm_s?: float, run_hours?: float}  $reading
+     * @param  array<string, float|int>  $reading  Needs air_temp_k, process_temp_k, rotational_speed_rpm, torque_nm and tool_wear_min. vibration_mm_s and run_hours are optional.
      * @return array{score: int, band: string, band_label: string, action: string, explanation: string, drivers: list<array{key: string, label: string, stress: int, scored: bool}>, metrics: array<string, float>}
      */
     public function score(array $reading): array

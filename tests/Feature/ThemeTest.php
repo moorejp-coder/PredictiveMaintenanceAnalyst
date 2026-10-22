@@ -22,8 +22,10 @@ class ThemeTest extends TestCase
     public function test_pages_apply_a_saved_theme_before_paint(): void
     {
         foreach (['/', '/ai', '/faq', '/privacy', '/terms'] as $path) {
-            $this->get($path)->assertOk()->assertSee("localStorage.getItem('prism-theme')", false);
+            $this->get($path)->assertOk()->assertSee('js/theme-init.js', false);
         }
+
+        $this->assertStringContainsString("localStorage.getItem('prism-theme')", file_get_contents(public_path('js/theme-init.js')));
     }
 
     public function test_the_stylesheet_defines_light_tokens_for_both_triggers(): void
@@ -37,9 +39,7 @@ class ThemeTest extends TestCase
 
     public function test_the_chart_reads_its_colors_from_theme_tokens(): void
     {
-        $this->get('/')
-            ->assertOk()
-            ->assertSee("themeColor('--prism-risk-high')", false)
-            ->assertDontSee('stroke="#26355A"', false);
+        $this->get('/')->assertOk()->assertDontSee('stroke="#26355A"', false);
+        $this->assertStringContainsString("themeColor('--prism-risk-high')", file_get_contents(public_path('js/dashboard.js')));
     }
 }

@@ -47,7 +47,7 @@ The live site uses a free Let's Encrypt certificate on a free DuckDNS name. ngin
 
 `app/Http/Middleware/SecurityHeaders.php` adds browser security headers to every page Laravel serves. `tests/Feature/SecurityHeadersTest.php` checks them.
 
-- Content-Security-Policy: scripts and styles run only with a random nonce the server makes for each request. Every inline `<script>` and `<style>` in `resources/views` carries it. The policy allows no `unsafe-inline` or `unsafe-eval` for scripts, loads everything from PRISM's own origin, blocks plugins and blocks framing (`frame-ancestors 'none'`). The site loads no outside scripts, styles or fonts, so none are listed.
+- Content-Security-Policy: all JavaScript lives in files under `public/js`, and `script-src` allows only PRISM's own origin. The views hold no inline `<script>`, and a test fails if one appears. Inline `<style>` blocks run only with a random nonce the server makes for each request. The policy allows no `unsafe-inline` or `unsafe-eval` for scripts, loads everything from PRISM's own origin, blocks plugins and blocks framing (`frame-ancestors 'none'`). The site loads no outside scripts, styles or fonts, so none are listed.
 - Strict-Transport-Security (one year) and `upgrade-insecure-requests`, sent only when the request is HTTPS or `APP_URL` starts with `https://`.
 - X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy and Cross-Origin-Opener-Policy. A controller that sets its own value keeps it (the set-password page sends `no-referrer`).
 - The session cookie is marked Secure when `APP_URL` starts with `https://`. `SESSION_SECURE_COOKIE` overrides this.
@@ -239,6 +239,13 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 - One rule file became six check classes (`app/Services/Checks`) with every limit and its source in `config/prism.php`. `RiskScorer` only collects the results.
 - AI work is split into two small calls. Each gets a short structured input built in PHP, not a rule dump.
 - Every AI call has a timeout, a token cap, a cache and a built-in fallback, and runs on a button press, never inside the 1.2 second reading poll.
+
+## Code quality
+
+- All JavaScript is in `public/js` (no inline scripts). Each file is loaded with a version query so a deploy never serves stale code.
+- `.github/workflows/lint.yml` runs on every push and pull request: Pint (code style, `vendor/bin/pint --test`), Larastan at level 8 (`phpstan.neon`) and a syntax check of every JavaScript file. `.github/workflows/tests.yml` runs the PHPUnit suite on PHP 8.4 and 8.5.
+- Run the same checks locally: `vendor/bin/pint --test`, then `composer require --dev larastan/larastan:^3.0` once and `vendor/bin/phpstan analyse`.
+- Limits: Larastan is installed during the CI run and is not in `composer.lock` yet. Level 8 passes with no ignored errors and no baseline. Level 9 (the strictest) reports about 70 findings, mostly values read from `config()` that are not cast to a type, and I have not fixed them. The JavaScript has syntax checks but no unit tests. The browser behavior was checked by hand and with Playwright, which is not part of CI.
 
 ## Run locally
 

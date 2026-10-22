@@ -2,8 +2,10 @@
 
 namespace App\Notifications;
 
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use InvalidArgumentException;
 
 /**
  * The invite email for a contest judge. It holds a link, never a password.
@@ -12,9 +14,7 @@ use Illuminate\Notifications\Notification;
  */
 class JudgeInvite extends Notification
 {
-    public function __construct(#[\SensitiveParameter] public string $token)
-    {
-    }
+    public function __construct(#[\SensitiveParameter] public string $token) {}
 
     /** @return array<int, string> */
     public function via(object $notifiable): array
@@ -24,6 +24,10 @@ class JudgeInvite extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        if (! $notifiable instanceof CanResetPassword) {
+            throw new InvalidArgumentException('The invite goes to a user that can reset a password.');
+        }
+
         $url = url(route('invite.show', [
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),

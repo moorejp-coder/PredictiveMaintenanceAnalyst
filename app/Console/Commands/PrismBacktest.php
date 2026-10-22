@@ -49,8 +49,16 @@ final class PrismBacktest extends Command
         }
 
         $handle = fopen($path, 'r');
-        $header = fgetcsv($handle, null, ',', '"', '\\');
-        $col = $this->columns(is_array($header) ? $header : []);
+        $header = $handle === false ? false : fgetcsv($handle, null, ',', '"', '\\');
+        if ($handle === false || ! is_array($header)) {
+            if ($handle !== false) {
+                fclose($handle);
+            }
+            $this->error("Cannot read a header row from: {$path}");
+
+            return self::FAILURE;
+        }
+        $col = $this->columns($header);
         $needed = ['type', 'air temperature', 'process temperature', 'rotational speed', 'torque', 'tool wear',
             'machine failure', 'twf', 'hdf', 'pwf', 'osf', 'rnf'];
         $missing = array_values(array_diff($needed, array_keys($col)));
@@ -68,7 +76,10 @@ final class PrismBacktest extends Command
         $randomOnly = 0;
         $skippedType = 0;
         $keepRandom = (bool) $this->option('keep-random');
-        $bands = array_fill_keys(array_keys(self::BANDS), ['records' => 0, 'failed' => 0]);
+        $bands = [];
+        foreach (array_keys(self::BANDS) as $bandKey) {
+            $bands[$bandKey] = ['records' => 0, 'failed' => 0];
+        }
         $unflagged = array_fill_keys(array_keys(self::BANDS), 0);
         $modeBands = [];
         foreach (self::MODES as $mode) {
@@ -111,8 +122,10 @@ final class PrismBacktest extends Command
 
             $band = $result['band'];
             $failed = (int) $row[$col['machine failure']] === 1;
-            $bands[$band]['records']++;
-            $bands[$band]['failed'] += $failed ? 1 : 0;
+            $entry = $bands[$band] ?? ['records' => 0, 'failed' => 0];
+            $entry['records']++;
+            $entry['failed'] += $failed ? 1 : 0;
+            $bands[$band] = $entry;
             // Labeled as a machine failure, but no failure mode column is set.
             if ($failed && ! $rnf && ! in_array(true, $modes, true)) {
                 $unflagged[$band]++;

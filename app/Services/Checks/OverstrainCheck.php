@@ -5,9 +5,7 @@ namespace App\Services\Checks;
 final class OverstrainCheck extends Check
 {
     /** @param  array<string, mixed>  $limits */
-    public function __construct(private readonly array $limits, private readonly string $quality = 'L')
-    {
-    }
+    public function __construct(private readonly array $limits, private readonly string $quality = 'L') {}
 
     public function key(): string
     {
@@ -41,6 +39,7 @@ final class OverstrainCheck extends Check
         return ['strain_percent' => round(100 * $this->ratio($reading), 0)];
     }
 
+    /** @param  array<string, float|int>  $reading */
     private function ratio(array $reading): float
     {
         $strain = (float) $reading['tool_wear_min'] * (float) $reading['torque_nm'];

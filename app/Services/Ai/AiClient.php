@@ -22,8 +22,7 @@ final class AiClient
         private readonly string $model,
         private readonly int $timeoutSeconds = 8,
         private readonly string $baseUrl = 'https://api.anthropic.com',
-    ) {
-    }
+    ) {}
 
     private ?string $failure = null;
 
@@ -124,7 +123,11 @@ final class AiClient
         ];
     }
 
-    /** The first non-empty text block of a reply, or null. */
+    /**
+     * The first non-empty text block of a reply, or null.
+     *
+     * @param  array<string, mixed>  $json
+     */
     public static function firstText(array $json): ?string
     {
         // The reply may start with a non-text block (for example thinking), so use the first text block.
@@ -137,10 +140,13 @@ final class AiClient
         return null;
     }
 
-    /** @return list<string> */
+    /**
+     * @param  array<string, mixed>  $json
+     * @return list<string>
+     */
     private static function blockTypes(array $json): array
     {
-        return array_map(fn ($b) => is_array($b) ? ($b['type'] ?? '?') : '?', (array) data_get($json, 'content', []));
+        return array_values(array_map(fn ($b) => is_array($b) && is_string($b['type'] ?? null) ? $b['type'] : '?', (array) data_get($json, 'content', [])));
     }
 
     /**

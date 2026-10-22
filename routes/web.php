@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\AiController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AiFeedbackController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\JudgePasswordController;

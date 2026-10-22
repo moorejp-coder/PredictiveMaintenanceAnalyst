@@ -5,9 +5,7 @@ namespace App\Services\Checks;
 final class ToolWearCheck extends Check
 {
     /** @param  array<string, float|int>  $limits */
-    public function __construct(private readonly array $limits)
-    {
-    }
+    public function __construct(private readonly array $limits) {}
 
     public function key(): string
     {

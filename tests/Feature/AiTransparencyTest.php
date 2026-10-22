@@ -34,8 +34,9 @@ class AiTransparencyTest extends TestCase
             ->assertOk()
             ->assertSee('How often a High score is right')
             ->assertSee('View the chart data as a table')
-            ->assertSee('role="meter"', false)
             ->assertSee('AI-GENERATED');
+
+        $this->assertStringContainsString('role="meter"', file_get_contents(public_path('js/dashboard.js')));
     }
 
     public function test_a_rating_is_stored_without_personal_data(): void

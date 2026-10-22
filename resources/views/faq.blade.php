@@ -345,17 +345,7 @@
     <p style="margin-top:32px"><a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a> &middot; <a href="{{ url('/') }}">Dashboard</a></p>
 </main>
 
-<script nonce="{{ $cspNonce ?? '' }}">
-    (function () {
-        var all = function () { return document.querySelectorAll('details'); };
-        document.getElementById('expand-all').addEventListener('click', function () {
-            all().forEach(function (d) { d.open = true; });
-        });
-        document.getElementById('collapse-all').addEventListener('click', function () {
-            all().forEach(function (d) { d.open = false; });
-        });
-    })();
-</script>
+<script src="{{ asset('js/faq.js') }}?v={{ filemtime(public_path('js/faq.js')) }}"></script>
 @include('partials.cookie-notice')
 </body>
 </html>

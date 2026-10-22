@@ -14,7 +14,8 @@ class ExplainPausesFeedTest extends TestCase
 {
     public function test_the_dashboard_exposes_hold_and_release(): void
     {
-        $html = $this->get('/')->assertOk()->getContent();
+        $this->get('/')->assertOk();
+        $html = file_get_contents(public_path('js/dashboard.js')).$this->get('/')->getContent();
 
         $this->assertStringContainsString('window.prismFeed = {', $html);
         $this->assertStringContainsString('hold() {', $html);
@@ -25,7 +26,7 @@ class ExplainPausesFeedTest extends TestCase
 
     public function test_the_explain_panel_holds_before_reading_and_releases_on_close(): void
     {
-        $html = $this->get('/')->assertOk()->getContent();
+        $html = file_get_contents(public_path('js/ai-panel.js')).$this->get('/')->assertOk()->getContent();
 
         $hold = strpos($html, 'window.prismFeed.hold()');
         $read = strpos($html, 'const latest = window.prismLatest;');

@@ -10,9 +10,10 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Adds browser security headers to every page Laravel serves.
  *
- * The Content-Security-Policy uses a new random nonce on each request. The
- * views put the nonce on their inline script and style tags through the
- * shared $cspNonce value, so no script can run unless the server tagged it.
+ * Scripts live in files under public/js and script-src allows only PRISM's own
+ * origin, so no inline script runs. The Content-Security-Policy uses a new
+ * random nonce on each request for the inline style blocks, which the views
+ * tag through the shared $cspNonce value.
  * Inline style attributes stay allowed (style-src-attr), because several
  * pages use them. Files nginx serves directly (CSS, fonts, images) do not
  * pass through Laravel and so carry no PRISM headers.
@@ -33,7 +34,7 @@ class SecurityHeaders
 
         $csp = [
             "default-src 'self'",
-            "script-src 'self' 'nonce-{$nonce}'",
+            "script-src 'self'",
             "style-src 'self' 'nonce-{$nonce}'",
             "style-src-attr 'unsafe-inline'",
             "img-src 'self' data:",

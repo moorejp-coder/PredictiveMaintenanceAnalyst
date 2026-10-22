@@ -15,9 +15,7 @@ namespace App\Services\Checks;
 final class SpeedCheck extends Check
 {
     /** @param  array<string, float|int>  $limits  The 'heat' limits. */
-    public function __construct(private readonly array $limits)
-    {
-    }
+    public function __construct(private readonly array $limits) {}
 
     public function key(): string
     {

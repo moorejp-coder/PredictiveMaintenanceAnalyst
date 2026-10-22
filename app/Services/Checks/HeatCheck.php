@@ -5,9 +5,7 @@ namespace App\Services\Checks;
 final class HeatCheck extends Check
 {
     /** @param  array<string, float|int>  $limits */
-    public function __construct(private readonly array $limits)
-    {
-    }
+    public function __construct(private readonly array $limits) {}
 
     public function key(): string
     {
@@ -47,6 +45,7 @@ final class HeatCheck extends Check
         return ['temp_gap_k' => round($this->gap($reading), 1)];
     }
 
+    /** @param  array<string, float|int>  $reading */
     private function gap(array $reading): float
     {
         return (float) $reading['process_temp_k'] - (float) $reading['air_temp_k'];

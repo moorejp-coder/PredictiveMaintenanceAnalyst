@@ -83,7 +83,7 @@ class ErrorPagesTest extends TestCase
         Route::get('/__abort-419b', fn () => abort(419));
 
         $response = $this->get('/__abort-419b');
-        $this->assertSame(1, preg_match("/script-src 'self' 'nonce-([^']+)'/", $response->headers->get('Content-Security-Policy'), $m));
+        $this->assertSame(1, preg_match("/style-src 'self' 'nonce-([^']+)'/", $response->headers->get('Content-Security-Policy'), $m));
         $this->assertStringContainsString('<style nonce="'.$m[1].'">', $response->getContent());
     }
 }

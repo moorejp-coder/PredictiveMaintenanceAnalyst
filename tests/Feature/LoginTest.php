@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Support\CanonicalUrl;
 use App\Models\User;
+use App\Support\CanonicalUrl;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\JudgeSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

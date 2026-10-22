@@ -10,6 +10,7 @@ namespace App\Services;
  */
 final class Limits
 {
+    /** @var array<string, array<string, mixed>>|null */
     private static ?array $cache = null;
 
     /** @return array<string, array<string, mixed>> */

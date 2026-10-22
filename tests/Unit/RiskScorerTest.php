@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\Services\Ai\Diagnoser;
+use App\Services\Ai\WorkOrderStep;
 use App\Services\RiskScorer;
 use PHPUnit\Framework\TestCase;
 
@@ -131,8 +133,8 @@ class RiskScorerTest extends TestCase
         $result = (new RiskScorer('L'))->score($this->reading(300.0, 310.0, 1390, 40.0, 20));
 
         $this->assertSame(0, $result['score']);
-        $this->assertSame([], \App\Services\Ai\Diagnoser::input($result)['drivers']);
-        $this->assertSame([], \App\Services\Ai\WorkOrderStep::input($result, ['cause' => 'x', 'checks' => []])['drivers']);
+        $this->assertSame([], Diagnoser::input($result)['drivers']);
+        $this->assertSame([], WorkOrderStep::input($result, ['cause' => 'x', 'checks' => []])['drivers']);
     }
 
     public function test_score_is_always_between_0_and_100(): void

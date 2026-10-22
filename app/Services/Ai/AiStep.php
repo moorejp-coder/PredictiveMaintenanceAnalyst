@@ -24,9 +24,7 @@ abstract class AiStep
 
     private const FALLBACK_TTL_SECONDS = 60;
 
-    public function __construct(protected readonly AiClient $ai)
-    {
-    }
+    public function __construct(protected readonly AiClient $ai) {}
 
     abstract protected function name(): string;
 
@@ -34,13 +32,27 @@ abstract class AiStep
 
     abstract protected function maxTokens(): int;
 
-    /** Validated reply data, or null when the reply is unusable. */
+    /**
+     * Validated reply data, or null when the reply is unusable.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>|null
+     */
     abstract protected function parse(string $text, array $input): ?array;
 
-    /** Deterministic text built from the same input. Must always work. */
+    /**
+     * Deterministic text built from the same input. Must always work.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
     abstract protected function fallback(array $input): array;
 
-    /** Return false when there is nothing worth an AI call. */
+    /**
+     * Return false when there is nothing worth an AI call.
+     *
+     * @param  array<string, mixed>  $input
+     */
     protected function shouldCall(array $input): bool
     {
         return true;
@@ -49,14 +61,18 @@ abstract class AiStep
     /**
      * The built-in text with no AI call, for a caller that already knows why.
      *
-     * @return array{source: string, data: array, tokens: null, reason: string}
+     * @param  array<string, mixed>  $input
+     * @return array{source: string, data: array<string, mixed>, tokens: array{input: int, output: int}|null, reason: string|null}
      */
     public function offline(array $input, string $reason): array
     {
         return $this->finish('fallback', $this->fallback($input), null, $input, $reason);
     }
 
-    /** @return array{source: string, data: array, tokens: array{input: int, output: int}|null, reason: string|null} */
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array{source: string, data: array<string, mixed>, tokens: array{input: int, output: int}|null, reason: string|null}
+     */
     public function run(array $input): array
     {
         if (! $this->shouldCall($input)) {
@@ -106,6 +122,12 @@ abstract class AiStep
         return $this->finish($result['source'], $result['data'], $result['tokens'], $input, $result['reason']);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array{input: int, output: int}|null  $tokens
+     * @param  array<string, mixed>  $input
+     * @return array{source: string, data: array<string, mixed>, tokens: array{input: int, output: int}|null, reason: string|null}
+     */
     private function finish(string $source, array $data, ?array $tokens, array $input, ?string $reason = null): array
     {
         Log::info('ai_step', [
@@ -128,6 +150,7 @@ abstract class AiStep
         }
     }
 
+    /** @param  array<string, mixed>  $value */
     private function cachePut(string $key, array $value, int $seconds): void
     {
         try {
@@ -137,7 +160,11 @@ abstract class AiStep
         }
     }
 
-    /** Decode a JSON object from a reply, even if the model wraps it in a code fence. */
+    /**
+     * Decode a JSON object from a reply, even if the model wraps it in a code fence.
+     *
+     * @return array<string, mixed>|null
+     */
     public static function decodeJson(string $text): ?array
     {
         $start = strpos($text, '{');
@@ -163,7 +190,11 @@ abstract class AiStep
         return $value !== '' && mb_strlen($value) <= $max ? $value : null;
     }
 
-    /** A list of 1 to $limit clean strings, or null if any item is unusable. */
+    /**
+     * A list of 1 to $limit clean strings, or null if any item is unusable.
+     *
+     * @return list<string>|null
+     */
     public static function cleanList(mixed $value, int $min, int $limit, int $maxEach): ?array
     {
         if (! is_array($value) || ! array_is_list($value)) {

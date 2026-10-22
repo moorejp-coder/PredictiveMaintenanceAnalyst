@@ -32,9 +32,17 @@ final class PrismExportFeatures extends Command
         }
 
         $in = fopen($path, 'r');
-        $header = fgetcsv($in, null, ',', '"', '\\');
+        $header = $in === false ? false : fgetcsv($in, null, ',', '"', '\\');
+        if ($in === false || ! is_array($header)) {
+            if ($in !== false) {
+                fclose($in);
+            }
+            $this->error("Cannot read a header row from: {$path}");
+
+            return self::FAILURE;
+        }
         $col = [];
-        foreach ((is_array($header) ? $header : []) as $i => $name) {
+        foreach ($header as $i => $name) {
             $name = strtolower(trim(ltrim((string) $name, "\xEF\xBB\xBF")));
             $col[trim((string) preg_replace('/\s*\[.*\]\s*/', '', $name))] = $i;
         }

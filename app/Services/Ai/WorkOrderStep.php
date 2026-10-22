@@ -20,8 +20,9 @@ final class WorkOrderStep extends AiStep
     ];
 
     /**
-     * @param  array{score: int, band: string, action: string, drivers: list<array{key: string, label: string, stress: int}>}  $risk
+     * @param  array{score: int, band: string, action: string, drivers: list<array{key: string, label: string, stress: int, scored?: bool}>}  $risk
      * @param  array{cause: string, checks: list<string>}  $diagnosis
+     * @return array{machine: string, band: string, priority: string, action: string, drivers: list<string>, cause: string, checks: list<string>}
      */
     public static function input(array $risk, array $diagnosis): array
     {

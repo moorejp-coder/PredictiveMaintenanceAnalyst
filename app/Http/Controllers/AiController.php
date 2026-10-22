@@ -64,6 +64,7 @@ class AiController extends Controller
     }
 
     /** @return array<string, mixed> */
+    /** @return array{score: int, band: string, band_label: string, action: string, explanation: string, drivers: list<array{key: string, label: string, stress: int, scored: bool}>, metrics: array<string, float>} */
     private function risk(Request $request): array
     {
         $data = $request->validate([
@@ -76,6 +77,7 @@ class AiController extends Controller
         return (new RiskScorer('L'))->score($reading);
     }
 
+    /** @param  array<string, mixed>  $result */
     private function respond(array $result): JsonResponse
     {
         return response()->json($result)

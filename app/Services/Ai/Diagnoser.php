@@ -25,7 +25,8 @@ final class Diagnoser extends AiStep
     ];
 
     /**
-     * @param  array{score: int, band: string, action: string, explanation: string, drivers: list<array{key: string, label: string, stress: int}>, metrics: array<string, float>}  $risk
+     * @param  array{score: int, band: string, action: string, explanation: string, drivers: list<array{key: string, label: string, stress: int, scored?: bool}>, metrics: array<string, float>}  $risk
+     * @return array{score: int, band: string, action: string, facts: string, drivers: list<array{driver: string, stress: int}>, metrics: array<string, float>}
      */
     public static function input(array $risk): array
     {

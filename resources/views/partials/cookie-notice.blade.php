@@ -16,24 +16,5 @@
     <p>PRISM sets two cookies, a session cookie and a security cookie. Both are required for the site to work. PRISM sets no analytics, advertising or tracking cookies. <a href="{{ url('/privacy') }}">Read the privacy policy</a>.</p>
     <button type="button" id="cookie-notice-ok">Got it</button>
 </div>
-<script nonce="{{ $cspNonce ?? '' }}">
-(function () {
-    var KEY = 'prism_cookie_notice_v1';
-    var box = document.getElementById('cookie-notice');
-    var ok = document.getElementById('cookie-notice-ok');
-    if (!box || !ok) { return; }
-
-    function seen() {
-        try { return window.localStorage.getItem(KEY) === 'seen'; } catch (e) { return false; }
-    }
-    function remember() {
-        try { window.localStorage.setItem(KEY, 'seen'); } catch (e) {}
-    }
-
-    ok.addEventListener('click', function () { remember(); box.hidden = true; });
-    window.prismCookieNotice = { open: function () { box.hidden = false; ok.focus(); } };
-
-    if (!seen()) { box.hidden = false; }
-})();
-</script>
+<script src="{{ asset('js/cookie-notice.js') }}?v={{ filemtime(public_path('js/cookie-notice.js')) }}"></script>
 </div>
