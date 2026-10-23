@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use App\Models\AiFeedback;
 use App\Models\OverrideLog;
 use App\Models\User;
+use App\Services\RiskScorer;
+use App\Services\SensorSimulator;
+use App\Support\DemoSamples;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -87,6 +90,79 @@ class JudgeDemoTest extends TestCase
             'scenario' => 'worn_tool',
             'tick' => 59,
         ])->assertStatus(201);
+    }
+
+    public function test_the_demo_can_open_a_sample_override_log_without_a_password(): void
+    {
+        config(['prism.override_log_password' => 'secret-password']);
+        $this->get('/demo');
+
+        $this->get('/overrides')
+            ->assertOk()
+            ->assertSee('Sample data, read only.')
+            ->assertSee('Sample Operator A')
+            ->assertSee('Override log (sample)')
+            ->assertSee('Recent AI ratings');
+    }
+
+    public function test_the_sample_override_log_works_with_no_password_set(): void
+    {
+        config(['prism.override_log_password' => '']);
+        $this->get('/demo');
+        $this->get('/overrides')->assertOk()->assertSee('Sample data, read only.');
+    }
+
+    public function test_the_sample_override_log_never_shows_real_entries(): void
+    {
+        OverrideLog::create([
+            'operator_name' => 'Real Person Zed',
+            'reason' => 'A real reason that must stay private.',
+            'machine' => 'Milling Machine M-01',
+            'scenario' => 'overload',
+            'tick' => 59,
+            'risk_score' => 90,
+            'action_shown' => 'Stop the machine and inspect it now.',
+            'reading' => [],
+        ]);
+
+        $this->get('/demo');
+        $this->get('/overrides')
+            ->assertOk()
+            ->assertDontSee('Real Person Zed')
+            ->assertDontSee('A real reason that must stay private.');
+    }
+
+    public function test_the_sample_rows_are_all_high_readings_scored_by_the_real_scorer(): void
+    {
+        $rows = DemoSamples::overrides();
+        $this->assertNotEmpty($rows);
+
+        foreach ($rows as $row) {
+            $risk = (new RiskScorer('L'))
+                ->score((new SensorSimulator)->reading($row['scenario'], $row['tick']));
+            $this->assertSame('high', $risk['band'], $row['scenario']);
+            $this->assertSame($risk['score'], $row['risk_score']);
+        }
+    }
+
+    public function test_the_override_log_still_needs_its_password_without_the_demo(): void
+    {
+        config(['prism.override_log_password' => 'secret-password']);
+
+        $this->get('/overrides')->assertStatus(401);
+        $this->get('/demo');
+        $this->get('/overrides')->assertOk();
+        $this->post('/logout');
+        $this->get('/overrides')->assertStatus(401);
+    }
+
+    public function test_a_signed_in_user_without_the_password_does_not_get_the_sample(): void
+    {
+        config(['prism.override_log_password' => 'secret-password']);
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/demo');
+
+        $this->actingAs($user)->get('/overrides')->assertStatus(401);
     }
 
     public function test_the_demo_link_does_nothing_when_the_sign_in_is_off(): void

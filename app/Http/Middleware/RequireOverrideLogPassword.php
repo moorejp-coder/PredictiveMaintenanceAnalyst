@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\DemoMode;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,12 +13,17 @@ use Symfony\Component\HttpFoundation\Response;
  * Guards the override log page. The log holds names and free text typed by
  * visitors, so it is not public. Set OVERRIDE_LOG_PASSWORD in the environment.
  * With no password set the page does not exist (404). Sign in with any user
- * name and that password.
+ * name and that password. A read-only demo session skips the password because
+ * the controller then shows fixed sample rows and reads nothing from the log.
  */
 class RequireOverrideLogPassword
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if (DemoMode::active($request)) {
+            return $next($request);
+        }
+
         $password = (string) config('prism.override_log_password');
 
         if ($password === '') {

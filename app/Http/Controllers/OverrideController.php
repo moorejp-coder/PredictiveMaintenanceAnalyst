@@ -8,8 +8,11 @@ use App\Models\AiFeedback;
 use App\Models\OverrideLog;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
+use App\Support\DemoMode;
+use App\Support\DemoSamples;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -61,8 +64,14 @@ class OverrideController extends Controller
     }
 
     /** The review page: newest 200 entries and the newest 50 AI ratings. */
-    public function index(): View
+    public function index(Request $request): View
     {
+        // A read-only demo visitor sees fixed sample rows. This branch never
+        // touches the database, so no real name or reason can reach the page.
+        if (DemoMode::active($request)) {
+            return $this->sample();
+        }
+
         // If the ratings table cannot be read, say so on the page. A silent
         // zero would look the same as "nobody has rated an answer yet".
         $ratings = null;
@@ -82,6 +91,40 @@ class OverrideController extends Controller
             'ratings' => $ratings,
             'helpful' => $helpful,
             'wrong' => $wrong,
+        ]);
+    }
+
+    /** The sample review page for the read-only Judge Demo. */
+    private function sample(): View
+    {
+        $logs = collect(DemoSamples::overrides())->map(fn (array $row): object => (object) [
+            'id' => $row['id'],
+            'created_at' => Carbon::parse($row['at'], 'UTC'),
+            'operator_name' => $row['operator'],
+            'reason' => $row['reason'],
+            'machine' => $row['machine'],
+            'risk_score' => $row['risk_score'],
+            'scenario' => $row['scenario'],
+            'tick' => $row['tick'],
+        ]);
+
+        $ratings = collect(DemoSamples::ratings())->map(fn (array $row): object => (object) [
+            'id' => $row['id'],
+            'created_at' => Carbon::parse($row['at'], 'UTC'),
+            'step' => $row['step'],
+            'rating' => $row['rating'],
+            'source' => $row['source'],
+            'scenario' => $row['scenario'],
+            'tick' => $row['tick'],
+        ]);
+
+        return view('overrides', [
+            'sample' => true,
+            'logs' => $logs,
+            'cycle' => SensorSimulator::CYCLE,
+            'ratings' => $ratings,
+            'helpful' => $ratings->where('rating', 'helpful')->count(),
+            'wrong' => $ratings->where('rating', 'wrong')->count(),
         ]);
     }
 }
