@@ -287,11 +287,13 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 
 - All JavaScript is in `public/js` (no inline scripts). Each file is loaded with a version query so a deploy never serves stale code.
 - `.github/workflows/lint.yml` runs on every push and pull request: Pint (code style, `vendor/bin/pint --test`), Larastan at level 8 (`phpstan.neon`) and a syntax check of every JavaScript file. `.github/workflows/tests.yml` runs the PHPUnit suite on PHP 8.4 and 8.5.
-- Run the same checks locally: `vendor/bin/pint --test`, then `composer require --dev larastan/larastan:^3.0` once and `vendor/bin/phpstan analyse`.
-- Limits: Larastan is installed during the CI run and is not in `composer.lock` yet. Level 8 passes with no ignored errors and no baseline. Level 9 (the strictest) reports about 70 findings, mostly values read from `config()` that are not cast to a type, and I have not fixed them. The JavaScript has syntax checks but no unit tests. The browser behavior was checked by hand and with Playwright, which is not part of CI.
+- Run the same checks locally: `vendor/bin/pint --test`, then `vendor/bin/phpstan analyse --memory-limit=1G`. PHPStan stops at PHP's default 128M limit without the flag.
+- Limits: Larastan 3.13.1 (PHPStan 2.3.1) is in `composer.lock`. Level 8 passes with no ignored errors and no baseline (checked locally on Oct 22, 2026). Level 9 (the strictest) reports about 70 findings, mostly values read from `config()` that are not cast to a type, and I have not fixed them. The JavaScript has syntax checks but no unit tests. The browser behavior was checked by hand and with Playwright, which is not part of CI.
 - Dependency check, Oct 22, 2026: GitHub Dependabot alerts are on. The dependency graph listed 257 dependencies, 109 of them from `composer.lock`. The list also includes packages from `package-lock.json` and `ml/requirements.txt`. Dependabot showed 0 open and 0 closed vulnerability alerts and 0 open and 0 closed malware alerts. This covers only the advisories GitHub knows about on that date. It is not a full security audit.
 
 ## Run locally
+
+Requirements: PHP 8.4 or newer with the mbstring, xml, curl, zip and sqlite3 extensions (the set `scripts/run-tests-cloud.sh` installs), and Composer. No Node or npm step is needed. The pages load the CSS and JavaScript already committed in `public/css` and `public/js`.
 
 1. `composer install`
 2. `cp .env.example .env && php artisan key:generate`
@@ -300,6 +302,7 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 5. Optional, to try the sign-in: set `REQUIRE_LOGIN=true` and `INVITE_ADMIN_PASSWORD` in `.env`. Keep `MAIL_MAILER=log`, then open `/admin/invites`, invite an address and copy the link from `storage/logs/laravel.log`. Or set `JUDGE_EMAIL` and `JUDGE_PASSWORD` and run `php artisan db:seed --class=JudgeSeeder`
 6. `php artisan serve`
 7. Open http://127.0.0.1:8000/
+8. Run the tests: `php artisan test`
 
 ## What PRISM aims to deliver
 

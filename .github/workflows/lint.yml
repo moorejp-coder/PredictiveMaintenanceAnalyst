@@ -55,9 +55,6 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      - name: Install Larastan
-        run: composer require --dev larastan/larastan:^3.0 --no-interaction --no-progress
-
       - name: Copy environment file
         run: cp .env.example .env
 
