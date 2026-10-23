@@ -335,6 +335,7 @@
                 let message = 'The override was not saved. Try again, or stop the machine.';
                 if (res.status === 422 && data.errors) { message = Object.values(data.errors)[0][0]; }
                 else if (res.status === 422 && data.message) { message = data.message; }
+                else if (res.status === 403 && data.message) { message = data.message; }
                 else if (res.status === 429) { message = 'Too many entries. Wait a minute and try again.'; }
                 else if (res.status === 419) { message = 'This page expired. Reload it and try again.'; }
                 else if (res.status === 401) { message = 'Your session ended. Reload the page and sign in again.'; }

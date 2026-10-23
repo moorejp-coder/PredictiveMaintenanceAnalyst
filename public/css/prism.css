@@ -171,6 +171,7 @@ code { font-family: var(--prism-font-data); font-size: 0.875em; padding: 0.1em 0
 
 /* Theme switch. The glyph is half filled, like a contrast control. */
 .btn.theme-toggle { min-height: 40px; padding: 6px 12px; gap: 10px; background: transparent; border-color: transparent; color: var(--prism-muted); font-size: 0.875rem; }
+.demo-badge { padding: 4px 10px; border: 1px solid var(--prism-border); border-radius: 999px; color: var(--prism-muted); font-size: 0.8125rem; white-space: nowrap; }
 .theme-toggle::before {
     content: ""; width: 14px; height: 14px; border: 1.5px solid currentColor; border-radius: 50%;
     background: linear-gradient(90deg, currentColor 50%, transparent 50%);

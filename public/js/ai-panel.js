@@ -43,6 +43,10 @@
         });
         try {
             const [a, b] = await Promise.all([post('diagnosis', rated.diagnosis), post('work_order', rated.order)]);
+            if (a.status === 403 || b.status === 403) {
+                status.textContent = 'This is the read-only demo. Ratings are not saved.';
+                return;
+            }
             if (!a.ok || !b.ok) { throw new Error('HTTP ' + a.status + '/' + b.status); }
             status.textContent = 'Thank you. Your rating is saved. PRISM stores no name or text with it.';
         } catch (err) {

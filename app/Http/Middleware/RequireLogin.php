@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\DemoMode;
 use Closure;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * The sign-in gate, switched by REQUIRE_LOGIN. Off (the default), every
  * request passes and the dashboard is public. On, a guest is sent to /login
- * (or gets 401 JSON on /api/ routes). The setting is read on each request,
+ * (or gets 401 JSON on /api/ routes). A read-only demo session also passes. The setting is read on each request,
  * so tests can flip it.
  */
 class RequireLogin
@@ -22,6 +23,11 @@ class RequireLogin
     public function handle(Request $request, Closure $next): Response
     {
         if (! config('prism.require_login')) {
+            return $next($request);
+        }
+
+        // A judge who opened /demo has a read-only session and no account.
+        if (DemoMode::active($request)) {
             return $next($request);
         }
 
