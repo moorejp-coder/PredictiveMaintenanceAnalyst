@@ -291,6 +291,28 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 - Limits: Larastan 3.13.1 (PHPStan 2.3.1) is in `composer.lock`. Level 8 passes with no ignored errors and no baseline (checked locally on Oct 22, 2026). Level 9 (the strictest) reports about 70 findings, mostly values read from `config()` that are not cast to a type, and I have not fixed them. The JavaScript has syntax checks but no unit tests. The browser behavior was checked by hand and with Playwright, which is not part of CI.
 - Dependency check, Oct 22, 2026: GitHub Dependabot alerts are on. The dependency graph listed 257 dependencies, 109 of them from `composer.lock`. The list also includes packages from `package-lock.json` and `ml/requirements.txt`. Dependabot showed 0 open and 0 closed vulnerability alerts and 0 open and 0 closed malware alerts. This covers only the advisories GitHub knows about on that date. It is not a full security audit.
 
+## Progress log
+
+Merged pull requests #2 to #16, taken from the merge commits on `main`. The last column is the final commit on each branch. Work before PR #2 is in the commit history on `main`. This list is a snapshot from Oct 22, 2026 and does not update itself.
+
+| PR | Merged | Branch | Commits | Final commit on the branch |
+|---|---|---|---|---|
+| #2 | Oct 21 | `storage-persistence` | 1 | Add recovery runbook for server replacement |
+| #3 | Oct 21 | `problem-evidence` | 1 | Add problem evidence and business value sections to README |
+| #4 | Oct 21 | `literature-sources` | 1 | Add literature comparison for the six checks to README |
+| #5 | Oct 22 | `ai-investigator` | 5 | Gate the investigator on a tested fix and clarify the heat sentence |
+| #6 | Oct 22 | `investigator-polish` | 1 | Show the tested fix and label time estimates |
+| #7 | Oct 22 | `learned-estimate-tool` | 3 | Fix the PHPStan level 8 errors in the learned estimate tool |
+| #8 | Oct 22 | `forecast-from-model` | 1 | Project the learned chance of failure ahead from the recent trend |
+| #9 | Oct 22 | `cause-wording` | 1 | Stop the cause from saying the model disagrees without its projection |
+| #10 | Oct 22 | `log-ungrounded-detail` | 1 | Log which number or tool failed the investigator grounding check |
+| #11 | Oct 22 | `tidy-explain-wording` | 1 | Say 20% and 50% once when both land on the same reading; ignore tiny rises in the tested fix |
+| #12 | Oct 22 | `tidy-explain-wording` | 2 | Read a number with a thousands separator as one number in the grounding check |
+| #13 | Oct 22 | `answer-token-room` | 1 | Give the investigator answer more output room and log the stop reason when a reply is refused |
+| #14 | Oct 22 | `eval-results` | 1 | Record the 38 of 38 evaluation run and the fixes that led to it |
+| #15 | Oct 22 | `readme-ai-row` | 1 | Make the AI Integration row match the code: grounding scope, work order checks, trained model |
+| #16 | Oct 22 | `reproducible-setup` | 3 | Install Larastan from the lock file and document the PHPStan memory flag |
+
 ## Run locally
 
 Requirements: PHP 8.4 or newer with the mbstring, xml, curl, zip and sqlite3 extensions (the set `scripts/run-tests-cloud.sh` installs), and Composer. No Node or npm step is needed. The pages load the CSS and JavaScript already committed in `public/css` and `public/js`.
