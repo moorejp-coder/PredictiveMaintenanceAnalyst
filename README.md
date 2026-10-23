@@ -3,6 +3,7 @@
 [![Tests](https://github.com/moorejp-coder/PredictiveMaintenanceAnalyst/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/moorejp-coder/PredictiveMaintenanceAnalyst/actions/workflows/tests.yml)
 
 Live site: https://prismcua.duckdns.org/ (HTTPS)
+Judge Demo (no login, no password, read-only): https://prismcua.duckdns.org/demo
 Local site: http://127.0.0.1:8000/ (run `php artisan serve` in the project folder first)
 
 Stack: Laravel (PHP 8.4), SQLite, AWS Elastic Beanstalk with nginx and a Let's Encrypt certificate, the Anthropic Claude API for explanations, GitHub Actions for tests.
@@ -20,7 +21,7 @@ PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It 
 - Offers four simulated situations (worn tool, overheating, overload, healthy) to show how the score reacts.
 - "Explain this reading" lets Claude check the reading with six read-only tools, then give a likely cause and a drafted work order. The page lists each tool call. A built-in explanation shows if the AI is slow or off (see AI steps). The simulated feed pauses while the pop-up is open and resumes on Close, so the answer matches the reading on screen. A visitor who paused the feed stays paused. The pop-up is wide, with the cause on the left and the work order on the right, so a long answer fits a laptop screen without scrolling. On a phone it stacks in one column and scrolls.
 - Records an override when an operator keeps a machine running after PRISM says to stop it (see Override log).
-- Has a sign-in and an email invite flow for contest judges. The sign-in is on at the live site, so the dashboard needs a login (see Sign in and judge invites).
+- Has a sign-in and an email invite flow. The sign-in is on at the live site, so the dashboard needs a login. Contest judges skip it with the read-only Judge Demo at `/demo` (see Sign in and judge invites).
 - Includes a FAQ, Terms and Conditions and a Privacy Policy. Each says what PRISM does not do.
 - Explains its AI use on the page `/ai`: where AI runs, what it receives, who decides, the backtest limits, a NIST AI RMF mapping and an accessibility statement.
 - Labels every AI answer "AI-GENERATED" and lets a visitor rate it Helpful or Wrong (see Ethical AI, accessibility and sources).
@@ -59,7 +60,11 @@ The live site uses a free Let's Encrypt certificate on a free DuckDNS name. ngin
 
 The sign-in and the judge invite flow are on at the live site (`REQUIRE_LOGIN=true`), which runs on HTTPS. The contest asks for a working login. With the switch off, which is the default for a local copy, the dashboard is public, `/login` goes back to `/`, and the login, invite and set-password routes return 404.
 
-How a judge gets in:
+Judge Demo (the way judges get in): open `/demo`, or press "Open the Judge Demo" on the sign-in page. No account, password or email is involved. The page sets a flag in the visitor's session that opens the dashboard and the AI explanation, and blocks the two routes that write, the override log and AI ratings (HTTP 403, nothing saved). The link works any number of times and has no end date. If a session times out, open `/demo` again. "Exit demo" in the header ends the demo session. A signed-in account is never treated as a demo visitor. Tests: `JudgeDemoTest`. With the sign-in off, `/demo` goes to `/`.
+
+The invite flow below is still built. Judges do not need it.
+
+How an invited user gets in:
 
 1. The entrant opens `/admin/invites`, signs in with the `INVITE_ADMIN_PASSWORD` value and types the judge's email address.
 2. PRISM creates the account with a random password nobody knows and emails the judge a link. The email holds a link, never a password.
@@ -89,7 +94,7 @@ How it works when on:
 
 ## Test the live app
 
-Live site: https://prismcua.duckdns.org/ . Every reading is simulated. Sign in with the account from your invite email (see Sign in and judge invites). If you have no account yet, ask the entrant.
+Live site: https://prismcua.duckdns.org/ . Every reading is simulated. Judges: open https://prismcua.duckdns.org/demo . It needs no account and is read-only. Other users: sign in with the account from your invite email (see Sign in and judge invites).
 
 Checks that need no account. Run on Oct 22, 2026 against the live site:
 - `/api/readings`, `/api/diagnosis`, `/overrides` and `/admin/invites` return 401 when you are signed out.

@@ -18,6 +18,13 @@
         @endif
         <div class="prism-header__actions">
             <button type="button" class="btn theme-toggle" id="theme-toggle">Light theme</button>
+            @if (\App\Support\DemoMode::active(request()))
+                <span class="demo-badge" role="status">Read-only demo</span>
+                <form method="POST" action="{{ url('/logout') }}">
+                    @csrf
+                    <button type="submit" class="btn">Exit demo</button>
+                </form>
+            @endif
             @auth
                 <form method="POST" action="{{ url('/logout') }}">
                     @csrf

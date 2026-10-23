@@ -4,10 +4,12 @@ use App\Http\Controllers\AiController;
 use App\Http\Controllers\AiFeedbackController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DemoController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\JudgePasswordController;
 use App\Http\Controllers\OverrideController;
+use App\Http\Middleware\BlockInDemo;
 use App\Http\Middleware\EnsureLoginEnabled;
 use App\Http\Middleware\RequireInviteAdminPassword;
 use App\Http\Middleware\RequireLogin;
@@ -24,6 +26,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 });
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Judge Demo. A link that opens the dashboard read-only, with no account and
+// no password. It works more than once. The override log and AI ratings are
+// blocked for a demo session (BlockInDemo).
+Route::get('/demo', [DemoController::class, 'start'])->name('demo');
 
 // Judge invites. The entrant types a judge's email on /admin/invites (its own
 // password). The judge gets an email with a link to /set-password/{token},
@@ -59,10 +66,10 @@ Route::middleware(RequireLogin::class)->group(function () {
     // "Stop the machine" warning records who, why and which reading. The write
     // uses the session and CSRF check. The review page needs its own password.
     Route::post('/api/overrides', [OverrideController::class, 'store'])
-        ->middleware('throttle:10,1');
+        ->middleware([BlockInDemo::class, 'throttle:10,1']);
     // A user rates an AI answer "helpful" or "wrong". Fixed choices only, no free text.
     Route::post('/api/ai-feedback', [AiFeedbackController::class, 'store'])
-        ->middleware('throttle:20,1');
+        ->middleware([BlockInDemo::class, 'throttle:20,1']);
 });
 Route::get('/overrides', [OverrideController::class, 'index'])
     ->middleware(RequireOverrideLogPassword::class);
