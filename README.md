@@ -39,7 +39,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026. Th
 | AI Integration & Innovation | 20% | Rules score the machine. A gradient boosting model trained on the AI4I data gives a second opinion, and a straight-line projection of the five model inputs shows when its chance would reach 20% and 50%. On request, Claude investigates the reading with six read-only tools (a check, a trend, a time-to-limit estimate, a what-if on a copy of the reading, the trained model's chance of failure with that projection, and the backtest figures), then a second call drafts the work order. Code rejects an investigator cause or check that names a tool the AI did not call or quotes a number it was not given, within rounding. The work order is checked for structure only. Code sets the work order priority and the tested fix. The AI never changes the score. `php artisan prism:eval-investigator` measures the investigator. A recorded run on 38 simulated readings passed the code checks 38 times (100%), after two fixes found by earlier runs. One run is not a rate. No technician graded the answers. See AI steps. |
 | Code Quality, Documentation & GitHub Transparency | 15% | One class per failure check in `app/Services/Checks`, with every limit and its source in `config/prism.php`. Secrets live in environment properties, not in the repo. Login attempts are rate limited. Commit history starts Sep 28, 2026. See Run locally for setup steps. |
 | User Experience, Design & Polish | 10% | Plain-English "Why this score" and risk bands shown as words. Lighthouse accessibility score of 100 on the pages tested on Oct 20 and 21, 2026. Light and dark themes, keyboard and VoiceOver pass, reduced motion respected. See Ethical AI, accessibility and sources. |
-| Business/Real-World Impact & Presentation | 10% | The goal is less unplanned downtime, and PRISM does not measure it today (see What PRISM aims to deliver). The README states that the dataset cannot prove dollar savings, and the Roadmap lists what is not built. Business value and scale marks each assumption, gives a break-even formula with its limits and lays out four phases past one machine, each with an end check. Lessons from this build records what changed and why. |
+| Business/Real-World Impact & Presentation | 10% | The goal is less unplanned downtime, and PRISM does not measure it today (see What PRISM aims to deliver). The README states that the dataset cannot prove dollar savings, and the Roadmap lists what is not built. Business value and scale marks each assumption, gives the measured model cost per investigation, gives a break-even formula with its limits and lays out four phases past one machine, each with an end check. Lessons from this build records what changed and why. |
 | Bonus (up to 5) | | Ethical AI: AI-GENERATED labels, a rating on every AI answer, a NIST AI RMF mapping on `/ai`. Accessibility: WCAG 2.2 AA goal with the known gaps listed. Cross-disciplinary: data science, mechanical engineering, occupational safety, law and privacy. |
 
 ## HTTPS
@@ -360,6 +360,17 @@ Assumptions are labeled. Nothing here is a measured result.
 - Who would pay (assumption, not researched): the owner or maintenance manager of a small CNC shop.
 - Pricing: no PRISM price is set and this README gives no revenue figure. For reference, maintenance work-order tools list these prices per user per month: MaintainX Essential $20 billed annually ($25 monthly) and Premium $65 ($75); UpKeep Essential $24 and Premium $55. MaintainX lists IoT sensor integrations under its Enterprise plan with custom pricing. I read these vendor pages on Oct 22, 2026. The pages show no effective date. I did not test whether these tools score failure risk from readings.
 - What exists today: one simulated milling machine (M-01), one server and one SQLite file. All readings come from `app/Services/SensorSimulator.php`, and one set of limits lives in `config/prism.php`.
+
+### Cost to run the AI
+
+A press of "Explain this reading" makes the investigation call and then the work order call. Only the investigation call has been measured.
+
+- Measured tokens: docs/EVAL.md (run Oct 22, 2026) reports 5,911 input and 1,377 output tokens per accepted answer.
+- Price: Anthropic lists Claude Haiku 5.5, the default model in `config/services.php`, at $0.10 per million input tokens and $0.50 per million output tokens for prompts up to 100,000 tokens. I read the pricing page on Oct 23, 2026. The page shows no effective date.
+- Arithmetic: 5,911 x $0.10 / 1,000,000 = $0.00059. 1,377 x $0.50 / 1,000,000 = $0.00069. The sum is $0.00128 per investigation, or about $1.28 per 1,000.
+- Illustration with a made-up volume, not measured: 1,000 presses a month would cost about $1.28 in model fees.
+- Not included: the work order call, which has not been measured. The pricing page does not say how thinking tokens are billed, so the figure may differ from a real bill. Good replies are cached for an hour, and a cached reply makes no model call.
+- The Claude API is a separate paid service and is not part of the AWS Free Tier.
 
 ### Break-even check
 
