@@ -58,7 +58,7 @@ Tokens live in `public/css/prism.css` as `--prism-*`.
 
 Risk colors are reserved for machine-risk status and its data. Do not use them for logos, navigation, buttons, loading indicators, status dots or decoration. Every risk state carries a text label. System errors use the neutral notice style.
 
-Measured contrast (WCAG relative luminance): text on bg 16.1, muted on surface 8.2, accent on surface 8.2, button ink on accent 8.9 (hover 10.9, pressed 7.5), low 9.0, elevated 10.4, high 6.3 on surface. The #26355A border is 1.55 against bg. It is used for decorative separation only. Interactive controls carry a text label and a focus outline of #8AB4F8.
+Measured contrast (WCAG relative luminance, recalculated October 22, 2026 from the tokens in `public/css/prism.css`): text on bg 15.4, muted on surface 7.7, accent on surface 7.7, button ink on accent 8.9 (hover 10.9, pressed 7.5), low 8.5, elevated 9.8, high 5.9 on surface. The #33435F border is 1.8 against bg. It is used for decorative separation only. Interactive controls carry a text label and a focus outline of #8AB4F8.
 
 ## Typography
 IBM Plex Sans (400 body, 500 labels and navigation, 600 headings and wordmark, 700 emphasis) and IBM Plex Mono (400 secondary numbers, 500 readings, 600 risk score). Fonts are self-hosted in `public/fonts/` (SIL OFL, license in `OFL-IBM-Plex.txt`), so PRISM makes no third-party requests.
