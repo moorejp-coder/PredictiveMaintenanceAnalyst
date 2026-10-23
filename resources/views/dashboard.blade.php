@@ -118,7 +118,8 @@
         .chart-data th { position: sticky; top: 0; background: var(--prism-surface-raised); }
         .fold > summary { cursor: pointer; }
         footer { margin-top: var(--prism-space-12); padding-top: var(--prism-space-4); border-top: 1px solid var(--prism-border); color: var(--prism-muted); font-size: 0.875rem; display: grid; gap: var(--prism-space-2); }
-        footer p { margin: 0; max-width: 100ch; }
+        footer p { margin: 0; }
+        footer .footer-links { text-align: center; }
         footer strong { color: var(--prism-text); }
         @media (max-width: 480px) {
             .card { padding: var(--prism-space-4); }
@@ -342,7 +343,8 @@
     </main>
 
     <footer>
-        <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern. Every reading on this page is simulated. <a href="{{ url('/ai') }}">How PRISM uses AI</a> &middot; <a href="{{ url('/faq') }}">FAQ</a> &middot; <a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a></p>
+        <p><strong>Safety.</strong> PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern. Every reading on this page is simulated.</p>
+        <p class="footer-links"><a href="{{ url('/ai') }}">How PRISM uses AI</a> &middot; <a href="{{ url('/faq') }}">FAQ</a> &middot; <a href="{{ url('/terms') }}">Terms and Conditions</a> &middot; <a href="{{ url('/privacy') }}">Privacy Policy</a></p>
     </footer>
 </div>
 
