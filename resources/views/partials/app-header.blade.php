@@ -9,6 +9,9 @@
             <a href="{{ url('/') }}"@if ($active === 'dashboard') aria-current="page"@endif>Dashboard</a>
             <a href="{{ url('/ai') }}"@if ($active === 'ai') aria-current="page"@endif>AI use</a>
             <a href="{{ url('/faq') }}"@if ($active === 'faq') aria-current="page"@endif>FAQ</a>
+            @if (\App\Support\DemoMode::active(request()))
+                <a href="{{ url('/overrides') }}"@if ($active === 'overrides') aria-current="page"@endif>Override log (sample)</a>
+            @endif
         </nav>
         @if (!empty($machine))
             <div class="prism-header__machine">

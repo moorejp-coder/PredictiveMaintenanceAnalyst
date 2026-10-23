@@ -15,16 +15,20 @@
         table { min-width: 760px; font-size: 0.875rem; }
         th { white-space: nowrap; }
         td.reason { color: var(--prism-text); overflow-wrap: anywhere; max-width: 42ch; }
+        .sample-note { padding: var(--prism-space-3) var(--prism-space-4); border: 1px solid var(--prism-border); border-left: 3px solid var(--prism-accent); border-radius: 6px; }
         td.num { font-family: var(--prism-font-data); white-space: nowrap; }
     </style>
 </head>
 <body>
 @include('partials.skip-link')
-@include('partials.app-header')
+@include('partials.app-header', ['active' => 'overrides'])
 <main class="wrap" id="main" tabindex="-1">
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
-    <h1>Override Log</h1>
-    <p>Each row is a time an operator chose to keep a machine running after PRISM said "Stop the machine and inspect it now." The name is what the operator typed. The name is not tied to any sign-in, so PRISM does not verify who typed it. The score and reading were rebuilt by the server. Times are UTC. Showing the newest 200 entries.</p>
+    <h1>Override Log{{ !empty($sample) ? ' (sample)' : '' }}</h1>
+    @if (!empty($sample))
+        <p class="sample-note" role="note"><strong>Sample data, read only.</strong> The names, reasons and times below are made up for the Judge Demo. Nothing you do in the demo is saved here. The real log is private. The scores and readings are rebuilt by the same code that scores the live dashboard.</p>
+    @endif
+    <p>Each row is a time an operator chose to keep a machine running after PRISM said "Stop the machine and inspect it now." The name is what the operator typed. The name is not tied to any sign-in, so PRISM does not verify who typed it. The score and reading were rebuilt by the server. Times are UTC. {{ empty($sample) ? 'Showing the newest 200 entries.' : 'Showing 3 sample entries.' }}</p>
 
     <p><strong>AI answer ratings:</strong>
     @if ($ratings === null)
