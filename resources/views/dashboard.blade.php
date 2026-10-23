@@ -146,7 +146,7 @@
         @media (min-width: 960px) and (min-height: 700px) {
             html:has(body.dash-page) { font-size: clamp(11.9px, min(calc(0.9vh + 7.5px), calc(3.5vh - 12.6px)), 16px); }
             body.dash-page { height: 100dvh; display: flex; flex-direction: column; }
-            .dash-page .prism-brand, .dash-page .prism-nav a { min-height: 48px; }
+            .dash-page .prism-brand, .dash-page .prism-nav a, .dash-page .prism-nav button { min-height: 48px; }
             .dash-page .wrap { flex: 1; min-height: 0; width: 100%; max-width: 1360px; display: flex; flex-direction: column; padding-top: 0.75rem; padding-bottom: 0.5rem; }
             .dash-page main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.625rem; }
             .top { display: grid; gap: 0.5rem; }
