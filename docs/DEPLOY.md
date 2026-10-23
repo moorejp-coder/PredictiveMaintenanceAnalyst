@@ -1,6 +1,6 @@
 # Deploying PRISM
 
-PRISM runs on one AWS Elastic Beanstalk environment (PHP platform, single instance, AWS Free Tier) with a SQLite file and no separate database. nginx on the instance serves HTTPS with a Let's Encrypt certificate (see the README, "HTTPS"). A deploy is a zip file uploaded in the Elastic Beanstalk console. Elastic Beanstalk runs `composer install` itself.
+PRISM runs on one AWS Elastic Beanstalk environment (PHP platform, single instance, AWS Free Tier) with a SQLite file and no separate database. nginx on the instance serves HTTPS with a Let's Encrypt certificate (see HTTPS below). A deploy is a zip file uploaded in the Elastic Beanstalk console. Elastic Beanstalk runs `composer install` itself.
 
 ## 1. Merge through a pull request
 Branch protection blocks direct pushes to `main`. Every change goes through a pull request with a short what-and-why description. The PHP 8.4, PHP 8.5 and Code style (Pint) checks must pass. Then pull `main` to your computer. The zip is built from committed files, so it matches GitHub.
@@ -31,8 +31,16 @@ Set these in the Elastic Beanstalk console, never in the repository:
 - `APP_URL`, `APP_DOMAIN`, `CERTBOT_EMAIL` for the HTTPS setup.
 - `REQUIRE_LOGIN=true` turns the sign-in on. The Judge Demo needs no other property.
 - `OVERRIDE_LOG_PASSWORD` protects the `/overrides` review page.
-- Only for invited accounts: `INVITE_ADMIN_PASSWORD` and the `MAIL_*` values (see the README, "Sign in and judge invites").
+- Only for invited accounts: `INVITE_ADMIN_PASSWORD` and the `MAIL_*` values (see [ACCESS.md](ACCESS.md)).
 - Optional backup account: `JUDGE_EMAIL` and `JUDGE_PASSWORD`.
 
 ## If the server is replaced
 The SQLite file lives on the server, so a rebuilt server loses the override log and every invited account. Follow [RECOVERY.md](RECOVERY.md).
+
+## HTTPS
+
+The live site uses a free Let's Encrypt certificate on a free DuckDNS name. nginx on the Elastic Beanstalk instance ends the encrypted connection. The setup is configured to send http requests for this name to https and to renew the certificate on its own. The files are `.ebextensions/02-https.config`, `.platform/nginx/conf.d/elasticbeanstalk/acme.conf` and `.platform/hooks/postdeploy/02_https.sh`. The name and the contact email are environment properties (`APP_DOMAIN`, `CERTBOT_EMAIL`, `APP_URL`), not code.
+
+## Hosting cost
+
+The server runs on the AWS Free Tier. The entrant confirmed this in the AWS account on Oct 22, 2026. The Claude API is a separate paid service and is not part of the free tier.
