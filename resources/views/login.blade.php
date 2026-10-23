@@ -22,6 +22,16 @@
         .help { margin-top: var(--prism-space-6); padding-top: var(--prism-space-4); border-top: 1px solid var(--prism-border); color: var(--prism-muted); font-size: 0.875rem; }
         .help p { margin: 0 0 var(--prism-space-2); }
         @media (max-width: 480px) { .wrap > .card { padding: var(--prism-space-6) var(--prism-space-4); } }
+        /* Wide screens: judge entry and sign-in sit side by side so the page fits without scrolling. */
+        @media (min-width: 900px) {
+            .wrap { max-width: 880px; padding-top: var(--prism-space-6); padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+            .wrap > .card { padding: var(--prism-space-6) var(--prism-space-8); }
+            p.lead { margin-bottom: var(--prism-space-4); }
+            .login-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--prism-space-8); align-items: start; }
+            .login-grid .demo-entry { margin: 0; }
+            .actions { margin-top: var(--prism-space-4); }
+            .help { margin-top: var(--prism-space-4); padding-top: var(--prism-space-3); }
+        }
     </style>
 </head>
 <body>
@@ -32,13 +42,15 @@
         <h1>PRISM</h1>
         <p class="lead">Open the PRISM dashboard for milling machine M-01.</p>
 
+        <div class="login-grid">
         <section class="demo-entry" aria-labelledby="demo-title">
             <h2 id="demo-title">Contest judges</h2>
             <p>No account, password or email is needed. The Judge Demo opens a read-only PRISM with simulated sample data. The link works as often as you like.</p>
             <a class="btn btn--primary" href="{{ url('/demo') }}">Open the Judge Demo</a>
         </section>
 
-        <h2 class="signin-title">Sign in</h2>
+        <section aria-labelledby="signin-title">
+        <h2 class="signin-title" id="signin-title">Sign in</h2>
 
         @if (session('status'))
             <div class="notice" role="status" style="margin-bottom: var(--prism-space-4)"><strong>{{ session('status') }}</strong></div>
@@ -67,6 +79,8 @@
                 <button type="submit" class="btn btn--primary">Sign in</button>
             </div>
         </form>
+        </section>
+        </div>
 
         <div class="help">
             <p>Invited users: sign in with the email address that received your invite. If you have not chosen a password yet, open the link in that email first. PRISM has no sign-up page.</p>
