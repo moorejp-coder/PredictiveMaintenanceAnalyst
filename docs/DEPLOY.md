@@ -20,7 +20,7 @@ The zip leaves out `data/` and `docs/`. The live site does not need them. Deploy
 ## 3. Upload and check the live site
 1. Upload the zip in the Elastic Beanstalk console and wait for the environment to turn green.
 2. Hard-refresh the site. Check the dark theme, the logo and the fonts. If the page is unstyled, open the browser's Network tab, click `prism.css` and read the status code.
-3. Open `/demo`. The dashboard loads with a "Read-only demo" label. "Exit demo" returns to the sign-in page.
+3. Open `/demo`. The dashboard loads with a "Read-only Demo" label. "Exit Demo" returns to the sign-in page.
 4. Press "Explain this reading", then Helpful. The message says the demo is read-only and ratings are not saved.
 5. Signed out, open `/`. It redirects to `/login`, which shows the "Open the Judge Demo" button.
 6. Open `/health`. It returns `{"status":"ok"}`.

@@ -142,11 +142,11 @@
         .about > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--prism-accent); font-size: 0.875rem; }
         .about-body p { max-width: 72ch; }
 
-        /* One screen. Needs a window at least 960 wide and 760 tall. The root type size follows window height but never drops below 14px, and the smallest labels never drop below 12px. Shorter windows get the stacked, scrolling layout at full size. */
-        @media (min-width: 960px) and (min-height: 760px) {
-            html:has(body.dash-page) { font-size: clamp(14px, calc(0.9vh + 7.5px), 16px); }
+        /* One screen. Needs a window at least 960 wide and 700 tall. The root type size follows window height. It is about 14px at 760 tall and drops to about 12px at 700 tall. The smallest labels never drop below 12px. Shorter windows get the stacked, scrolling layout at full size. */
+        @media (min-width: 960px) and (min-height: 700px) {
+            html:has(body.dash-page) { font-size: clamp(11.9px, min(calc(0.9vh + 7.5px), calc(3.5vh - 12.6px)), 16px); }
             body.dash-page { height: 100dvh; display: flex; flex-direction: column; }
-            .dash-page .prism-brand, .dash-page .prism-nav a { min-height: 48px; }
+            .dash-page .prism-brand, .dash-page .prism-nav a, .dash-page .prism-nav button { min-height: 48px; }
             .dash-page .wrap { flex: 1; min-height: 0; width: 100%; max-width: 1360px; display: flex; flex-direction: column; padding-top: 0.75rem; padding-bottom: 0.5rem; }
             .dash-page main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.625rem; }
             .top { display: grid; gap: 0.5rem; }

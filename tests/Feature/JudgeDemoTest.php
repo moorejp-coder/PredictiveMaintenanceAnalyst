@@ -30,7 +30,7 @@ class JudgeDemoTest extends TestCase
     {
         $this->get('/')->assertRedirect('/login');
         $this->get('/demo')->assertRedirect('/');
-        $this->get('/')->assertOk()->assertSee('Read-only demo');
+        $this->get('/')->assertOk()->assertSee('Read-only Demo');
         $this->getJson('/api/readings?scenario=healthy&tick=0')->assertOk();
     }
 
@@ -101,7 +101,7 @@ class JudgeDemoTest extends TestCase
             ->assertOk()
             ->assertSee('Sample data, read only.')
             ->assertSee('Sample Operator A')
-            ->assertSee('Override log (sample)')
+            ->assertSee('Override Log (sample)')
             ->assertSee('Recent AI ratings');
     }
 
@@ -169,6 +169,6 @@ class JudgeDemoTest extends TestCase
     {
         config(['prism.require_login' => false]);
         $this->get('/demo')->assertRedirect('/');
-        $this->get('/')->assertOk()->assertDontSee('Read-only demo');
+        $this->get('/')->assertOk()->assertDontSee('Read-only Demo');
     }
 }
