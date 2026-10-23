@@ -142,9 +142,9 @@
         .about > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--prism-accent); font-size: 0.875rem; }
         .about-body p { max-width: 72ch; }
 
-        /* One screen. Needs a window at least 960 wide and 680 tall. The root type size follows window height, so every rem-sized part shrinks together on a short screen. */
-        @media (min-width: 960px) and (min-height: 680px) {
-            html:has(body.dash-page) { font-size: clamp(13px, calc(0.9vh + 7.5px), 16px); }
+        /* One screen. Needs a window at least 960 wide and 760 tall. The root type size follows window height but never drops below 14px, and the smallest labels never drop below 12px. Shorter windows get the stacked, scrolling layout at full size. */
+        @media (min-width: 960px) and (min-height: 760px) {
+            html:has(body.dash-page) { font-size: clamp(14px, calc(0.9vh + 7.5px), 16px); }
             body.dash-page { height: 100dvh; display: flex; flex-direction: column; }
             .dash-page .prism-brand, .dash-page .prism-nav a { min-height: 48px; }
             .dash-page .wrap { flex: 1; min-height: 0; width: 100%; max-width: 1360px; display: flex; flex-direction: column; padding-top: 0.75rem; padding-bottom: 0.5rem; }
@@ -154,7 +154,7 @@
             .head-actions .btn, .seg .btn { min-height: 2.25rem; padding-top: 4px; padding-bottom: 4px; }
             .toolbar { margin: 0; flex-wrap: nowrap; gap: 0.75rem 1rem; }
             .toolbar .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-            .blurb { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.875rem; }
+            .blurb { min-width: 0; font-size: 0.875rem; line-height: 1.35; }
             .notice { margin: 0; }
 
             .dash { flex: 1; min-height: 0; margin-top: 0; grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem); grid-template-rows: minmax(0, 1fr) auto; gap: 0.625rem 0.75rem; }
@@ -166,13 +166,13 @@
             .risk .card-title, .risk > h2:first-child, .why > h2:first-child { margin-bottom: 0.5rem; font-size: 0.875rem; }
             .ring { width: 8rem; height: 8rem; margin-bottom: 0.5rem; }
             .ring .num b { font-size: 2.375rem; }
-            .ring .num small { font-size: 0.75rem; }
+            .ring .num small { font-size: max(12px, 0.75rem); }
             .chip { font-size: 1.0625rem; }
             .alert-title { margin-top: 0.5rem; font-size: 0.9375rem; }
             .action { font-size: 0.9375rem; margin-top: 0.25rem; }
             .override { margin-top: 0.625rem; }
             .override .btn { min-height: 2.25rem; }
-            .override .note { font-size: 0.75rem; margin-top: 0.375rem; }
+            .override .note { font-size: max(12px, 0.75rem); margin-top: 0.375rem; }
 
             .why { padding: 0.875rem 1.25rem; min-width: 0; position: relative; display: flex; flex-direction: column; }
             .why #why { font-size: 1rem; min-height: 0; max-width: none; }
@@ -185,28 +185,28 @@
             .about-body p { margin: 0 0 0.5rem; font-size: 0.8125rem; }
             .about-body p:first-child { margin-top: 0; }
             .about-body p:last-child { margin-bottom: 0; }
-            .disclaimer { margin: 0.375rem 0 0; padding-top: 0.5rem; font-size: 0.75rem; }
+            .disclaimer { margin: 0.375rem 0 0; padding-top: 0.5rem; font-size: max(12px, 0.75rem); }
 
             .chart { padding: 0.875rem 1rem; display: flex; flex-direction: column; min-height: 0; }
             .chart h2 { margin-bottom: 0.5rem; font-size: 0.875rem; }
             .chart svg { flex: 1 1 0; height: 0; min-height: 3rem; width: 100%; }
-            .chart .cap { font-size: 0.75rem; }
+            .chart .cap { font-size: max(12px, 0.75rem); }
             .chart-data > summary { min-height: 2rem; }
             .ai { padding: 0.875rem 1rem; }
             .dash .ai-head { flex-direction: column; align-items: stretch; gap: 0.5rem; }
             .dash .ai-head h2 { font-size: 1.0625rem; }
-            .dash .ai-head p { font-size: 0.75rem; margin-top: 0.25rem; max-width: none; }
+            .dash .ai-head p { font-size: max(12px, 0.75rem); margin-top: 0.25rem; max-width: none; }
             .dash .ai-cta { width: 100%; min-height: 2.5rem; font-size: 0.9375rem; }
 
             .section-title { margin: 0; font-size: 0.875rem; }
             .tiles { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.5rem 1rem; margin-top: 0.25rem; }
             .tile { padding-top: 0.375rem; }
-            .tile .name { min-height: 2.4em; font-size: 0.75rem; flex-direction: column; justify-content: flex-start; }
+            .tile .name { min-height: 2.4em; font-size: max(12px, 0.75rem); flex-direction: column; justify-content: flex-start; }
             .tile .val { font-size: 1.25rem; line-height: 1.25; }
-            .tile .sub { font-size: 0.6875rem; min-height: 1.1em; }
+            .tile .sub { font-size: max(12px, 0.6875rem); min-height: 1.1em; }
             .tile svg { height: 1.5rem; margin-top: 2px; }
 
-            .dash-page footer { margin-top: 0; padding-top: 0.375rem; font-size: 0.75rem; gap: 0; }
+            .dash-page footer { margin-top: 0; padding-top: 0.375rem; font-size: max(12px, 0.75rem); gap: 0; }
         }
     </style>
 </head>

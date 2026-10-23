@@ -55,7 +55,7 @@
             @csrf
             <div class="field">
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="username" required autofocus
+                <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="username" required
                        @if ($errors->any()) aria-invalid="true" aria-describedby="login-error" @endif>
             </div>
             <div class="field">
