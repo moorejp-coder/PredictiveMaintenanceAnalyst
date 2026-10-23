@@ -20,6 +20,9 @@
                 <span class="demo-badge" role="status">Read-only Demo</span>
             @endif
         </nav>
+        <div class="prism-header__theme">
+            <button type="button" class="btn theme-toggle" id="theme-toggle">Light theme</button>
+        </div>
         @if (!empty($machine))
             <div class="prism-header__machine">
                 <strong>Milling Machine M-01</strong>
@@ -27,7 +30,6 @@
             </div>
         @endif
         <div class="prism-header__actions">
-            <button type="button" class="btn theme-toggle" id="theme-toggle">Light theme</button>
             @auth
                 <form method="POST" action="{{ url('/logout') }}">
                     @csrf
