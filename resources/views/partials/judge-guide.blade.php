@@ -1,7 +1,7 @@
 {{--
   "Start here" guide for first-time visitors and contest judges.
   A native modal dialog. It opens when the dashboard loads, once per browser
-  session, and the "Guide" button in the toolbar (#guide-open) opens it again.
+  session (on every load in the read-only Judge Demo), and the "Guide" button in the toolbar (#guide-open) opens it again.
   Button names below match the real buttons on the dashboard.
 --}}
 <style nonce="{{ $cspNonce ?? '' }}">
@@ -18,7 +18,7 @@
     .guide-foot { margin: var(--prism-space-4) 0; color: var(--prism-muted); font-size: 0.8125rem; }
     .guide-actions { display: flex; flex-wrap: wrap; gap: var(--prism-space-2); justify-content: flex-end; }
 </style>
-<dialog class="guide-modal" id="guide-modal" aria-labelledby="guide-title">
+<dialog class="guide-modal" id="guide-modal" aria-labelledby="guide-title"@if (\App\Support\DemoMode::active(request())) data-open-every-load="1"@endif>
     <div class="guide-inner">
         <div class="guide-head">
             <h2 id="guide-title">Start here: a four step tour of PRISM</h2>

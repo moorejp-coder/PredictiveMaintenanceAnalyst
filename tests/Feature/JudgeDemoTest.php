@@ -92,6 +92,23 @@ class JudgeDemoTest extends TestCase
         ])->assertStatus(201);
     }
 
+    public function test_the_guide_opens_on_every_load_in_the_demo(): void
+    {
+        $this->get('/demo');
+
+        $this->get('/')->assertOk()->assertSee('data-open-every-load="1"', false);
+    }
+
+    public function test_the_guide_stays_once_per_session_for_a_signed_in_user(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/')
+            ->assertOk()
+            ->assertSee('id="guide-modal"', false)
+            ->assertDontSee('data-open-every-load', false);
+    }
+
     public function test_the_demo_can_open_a_sample_override_log_without_a_password(): void
     {
         config(['prism.override_log_password' => 'secret-password']);

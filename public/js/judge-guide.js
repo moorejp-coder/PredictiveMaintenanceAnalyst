@@ -22,5 +22,7 @@
     document.getElementById('guide-close').addEventListener('click', close);
     document.getElementById('guide-close-x').addEventListener('click', close);
     if (openBtn) { openBtn.addEventListener('click', open); }
-    if (!seen()) { autoOpened = true; open(); }
+    // The Judge Demo opens the guide on every load. Other visitors see it once per session.
+    var always = dlg.getAttribute('data-open-every-load') === '1';
+    if (always || !seen()) { autoOpened = true; open(); }
 })();
