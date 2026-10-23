@@ -39,7 +39,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026. Th
 | AI Integration & Innovation | 20% | Rules score the machine. A gradient boosting model trained on the AI4I data gives a second opinion, and a straight-line projection of the five model inputs shows when its chance would reach 20% and 50%. On request, Claude investigates the reading with six read-only tools (a check, a trend, a time-to-limit estimate, a what-if on a copy of the reading, the trained model's chance of failure with that projection, and the backtest figures), then a second call drafts the work order. Code rejects an investigator cause or check that names a tool the AI did not call or quotes a number it was not given, within rounding. The work order is checked for structure only. Code sets the work order priority and the tested fix. The AI never changes the score. `php artisan prism:eval-investigator` measures the investigator. A recorded run on 38 simulated readings passed the code checks 38 times (100%), after two fixes found by earlier runs. One run is not a rate. No technician graded the answers. See AI steps. |
 | Code Quality, Documentation & GitHub Transparency | 15% | One class per failure check in `app/Services/Checks`, with every limit and its source in `config/prism.php`. Secrets live in environment properties, not in the repo. Login attempts are rate limited. Commit history starts Sep 28, 2026. See Run locally for setup steps. |
 | User Experience, Design & Polish | 10% | Plain-English "Why this score" and risk bands shown as words. Lighthouse accessibility score of 100 on the pages tested on Oct 20 and 21, 2026. Light and dark themes, keyboard and VoiceOver pass, reduced motion respected. See Ethical AI, accessibility and sources. |
-| Business/Real-World Impact & Presentation | 10% | Goals are fewer unneeded repairs and less unplanned downtime (see What PRISM aims to deliver). The README states that the dataset cannot prove dollar savings, and the Roadmap lists what is not built. Business value and scale marks each assumption and lists what growing past one machine needs. |
+| Business/Real-World Impact & Presentation | 10% | Goals are fewer unneeded repairs and less unplanned downtime (see What PRISM aims to deliver). The README states that the dataset cannot prove dollar savings, and the Roadmap lists what is not built. Business value and scale marks each assumption, gives a break-even formula with its limits and lays out four phases past one machine, each with an end check. Lessons from this build records what changed and why. |
 | Bonus (up to 5) | | Ethical AI: AI-GENERATED labels, a rating on every AI answer, a NIST AI RMF mapping on `/ai`. Accessibility: WCAG 2.2 AA goal with the known gaps listed. Cross-disciplinary: data science, mechanical engineering, occupational safety, law and privacy. |
 
 ## HTTPS
@@ -288,6 +288,15 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 - AI work is split into two small calls. Each gets a short structured input built in PHP, not a rule dump.
 - Every AI call has a timeout, a token cap, a cache and a built-in fallback, and runs on a button press, never inside the 1.2 second reading poll.
 
+## Lessons from this build
+
+What changed during this project, and what I took from each change.
+
+- HTTPS. AWS CloudFront returned "Your account must be verified before you can add new CloudFront resources". I opened a support case on Oct 18, 2026 and it was still open on Oct 22. I moved to a free DuckDNS name with a Let's Encrypt certificate, live on Oct 21. Lesson: when a service outside my control blocks the work, I need a second route I control.
+- Judge access. I first built an email invite so each judge sets a password. The faculty reviewer said on Oct 22 that judges must never create accounts or set passwords. I built the read-only Judge Demo instead (pull request #20). The invite flow stays built and unused. Lesson: ask the person who owns a rule before building around my reading of it.
+- Checking the AI. The evaluation run (docs/EVAL.md) led to two fixes: the grounding check now reads a number with a thousands separator as one number (pull request #12), and the investigator answer gets more output room (pull request #13). Lesson: run the AI over the full set of scenarios, then fix what the code checks reject.
+- Scope. On Oct 22 I stopped adding AI features, because each one adds more to explain and test. Lesson: finish and measure what exists before adding more.
+
 ## Code quality
 
 - All JavaScript is in `public/js` (no inline scripts). Each file is loaded with a version query so a deploy never serves stale code.
@@ -352,11 +361,29 @@ Assumptions are labeled. Nothing here is a measured result.
 - Pricing: no PRISM price is set and this README gives no revenue figure. For reference, maintenance work-order tools list these prices per user per month: MaintainX Essential $20 billed annually ($25 monthly) and Premium $65 ($75); UpKeep Essential $24 and Premium $55. MaintainX lists IoT sensor integrations under its Enterprise plan with custom pricing. I read these vendor pages on Oct 22, 2026. The pages show no effective date. I did not test whether these tools score failure risk from readings.
 - What exists today: one simulated milling machine (M-01), one server and one SQLite file. All readings come from `app/Services/SensorSimulator.php`, and one set of limits lives in `config/prism.php`.
 
-What growing past one machine would need (none of this is built):
-- Real readings from a technician or a sensor feed in place of the simulator (see Roadmap).
-- One score and one set of limits per machine. The vibration limits are demo values, since ISO 20816-3 does not list machine tools.
-- A shared database in place of the single SQLite file. Rebuilding the server erases that file today (see Sign in and judge invites).
-- A test of the rules on real machine data. The backtest checks the rules against AI4I labels only.
+### Break-even check
+
+A shop owner asks how many hours of unplanned downtime a tool must prevent to pay for itself.
+
+Hours needed per year = annual tool cost / cost of one downtime hour for the shop.
+
+- Annual tool cost: no PRISM price exists. For reference only, MaintainX Premium lists $65 per user per month, so $65 x 12 = $780 per year (vendor page read Oct 22, 2026).
+- Cost of one downtime hour: the shop owner supplies this number. The ABB figure of about $125,000 per hour is a median for industrial businesses of all kinds, not machine shops, so it does not apply here.
+- Illustration with made-up inputs, not sourced: at $500 per hour, $780 / $500 = 1.56 hours per year. At $2,000 per hour, $780 / $2,000 = 0.39 hours per year.
+
+Limits of this check:
+- Hours avoided are not measured. PRISM records no stops and no downtime (see What PRISM aims to deliver). The formula says how much PRISM must prevent, not that it prevents it.
+- False alarms cost time. In the AI4I backtest 45.1% of High records failed, so 100 - 45.1 = 54.9% did not. That is 54.9 / 45.1 = about 1.2 High records without a failure for each High record with one. Stop time spent on a false alarm counts against any saving.
+- The price is a competitor's price, used as a reference. It is not a PRISM price.
+
+### Path past one machine
+
+None of this is built. The order is a plan, not a commitment. Each phase ends with a check.
+
+1. Real readings. A technician enters readings from a real machine in place of the simulator (see Roadmap). Ends when this README states how many real readings PRISM scored.
+2. One set of limits per machine. Each machine gets its own score and limits. The vibration limits are demo values, since ISO 20816-3 does not list machine tools. Ends when every limit for a real machine names a source, such as the machine maker's manual.
+3. A shared database in place of the single SQLite file. Rebuilding the server erases that file today (see Sign in and judge invites). Ends when a test rebuild that follows [docs/RECOVERY.md](docs/RECOVERY.md) loses no data.
+4. A test on real data and a pilot. The backtest checks the rules against AI4I labels only. Record the two Roadmap measures: unplanned stops per machine per month, and the share of High alerts followed by a confirmed fault. Ends when this README reports both for a stated period.
 
 ## Dataset
 
