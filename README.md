@@ -293,6 +293,8 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 
 ## Run locally
 
+Requirements: PHP 8.4 or newer with the mbstring, xml, curl, zip and sqlite3 extensions (the set `scripts/run-tests-cloud.sh` installs), and Composer. No Node or npm step is needed. The pages load the CSS and JavaScript already committed in `public/css` and `public/js`.
+
 1. `composer install`
 2. `cp .env.example .env && php artisan key:generate`
 3. `touch database/database.sqlite && php artisan migrate` (creates the override log and AI feedback tables)
@@ -300,6 +302,7 @@ My last vibe coding project (a course planner) got this feedback: one large `sys
 5. Optional, to try the sign-in: set `REQUIRE_LOGIN=true` and `INVITE_ADMIN_PASSWORD` in `.env`. Keep `MAIL_MAILER=log`, then open `/admin/invites`, invite an address and copy the link from `storage/logs/laravel.log`. Or set `JUDGE_EMAIL` and `JUDGE_PASSWORD` and run `php artisan db:seed --class=JudgeSeeder`
 6. `php artisan serve`
 7. Open http://127.0.0.1:8000/
+8. Run the tests: `php artisan test`
 
 ## What PRISM aims to deliver
 
