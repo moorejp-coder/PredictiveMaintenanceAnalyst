@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Checks;
 
 /** Run hours are optional. A reading without them scores 0 here. */

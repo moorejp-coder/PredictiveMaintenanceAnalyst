@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Ml;
 
 use App\Services\Ai\ToolBox;
