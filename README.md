@@ -108,7 +108,7 @@ Checks after you sign in. The entrant ran steps 1 to 6 on the live site on Oct 2
 3. Press "Explain this reading". The answer carries the label AI-GENERATED. If the AI is slow, off or wrong in format, the label reads "RULE-BASED, NO AI USED" and a built-in explanation appears (see AI steps).
 4. Rate the answer Helpful or Wrong. A thank-you appears beside the buttons.
 5. Press "Keep running anyway". Type a made-up name and a reason of at least 10 characters. The server accepts the entry only for a High reading. For a Healthy reading it returns 422 (`tests/Feature/OverrideLogTest.php`).
-6. Open `/overrides`. It asks for its own password, which only the entrant holds. In the Judge Demo, the header link "Override log (sample)" opens the same page with made-up sample rows.
+6. Open `/overrides`. It asks for its own password, which only the entrant holds. In the Judge Demo, the header button "Sample override log" opens the same page with made-up sample rows.
 
 Edge cases the tests cover: an unknown scenario name, an override for a reading that is not High, a score sent by the browser (the server ignores it), a missing AI key, an AI timeout, an unknown AI tool, a wrong invite token, an invite link used twice, an invite link older than 7 days, a short or mismatched password, an invalid invite email, a wrong sign-in password (one generic message), the rate limit on sign-in, diagnosis, work order, override, rating, set-password and invite routes (429 after the allowed number), the styled 419 and 429 pages, and the health check. Test files: `OverrideLogTest`, `AiStepsTest`, `InvestigatorTest`, `InviteTest`, `LoginTest`, `ErrorPagesTest`, `RateLimitTest`, `HealthTest`.
 

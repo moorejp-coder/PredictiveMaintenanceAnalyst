@@ -9,9 +9,6 @@
             <a href="{{ url('/') }}"@if ($active === 'dashboard') aria-current="page"@endif>Dashboard</a>
             <a href="{{ url('/ai') }}"@if ($active === 'ai') aria-current="page"@endif>AI use</a>
             <a href="{{ url('/faq') }}"@if ($active === 'faq') aria-current="page"@endif>FAQ</a>
-            @if (\App\Support\DemoMode::active(request()))
-                <a href="{{ url('/overrides') }}"@if ($active === 'overrides') aria-current="page"@endif>Override log (sample)</a>
-            @endif
         </nav>
         @if (!empty($machine))
             <div class="prism-header__machine">
@@ -23,6 +20,7 @@
             <button type="button" class="btn theme-toggle" id="theme-toggle">Light theme</button>
             @if (\App\Support\DemoMode::active(request()))
                 <span class="demo-badge" role="status">Read-only demo</span>
+                <a class="btn" href="{{ url('/overrides') }}"@if (($active ?? null) === 'overrides') aria-current="page"@endif>Sample override log</a>
                 <form method="POST" action="{{ url('/logout') }}">
                     @csrf
                     <button type="submit" class="btn">Exit demo</button>

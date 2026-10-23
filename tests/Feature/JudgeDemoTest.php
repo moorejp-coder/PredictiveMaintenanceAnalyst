@@ -101,7 +101,7 @@ class JudgeDemoTest extends TestCase
             ->assertOk()
             ->assertSee('Sample data, read only.')
             ->assertSee('Sample Operator A')
-            ->assertSee('Override log (sample)')
+            ->assertSee('Sample override log')
             ->assertSee('Recent AI ratings');
     }
 
