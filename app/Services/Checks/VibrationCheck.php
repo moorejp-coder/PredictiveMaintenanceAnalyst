@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Checks;
 
 /** Vibration is optional. A reading without it scores 0 here. */
