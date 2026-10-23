@@ -40,7 +40,7 @@
             </li>
             <li>
                 <strong>Try the safety check</strong>
-                <span>On a High score, press "Keep running anyway" to record an override. Type a made-up name. Then read <a href="{{ url('/ai') }}">AI use</a> for the limits and the test results.</span>
+                <span>On a High score, press "Keep running anyway." The demo is read-only, so nothing is saved. Open "Override Log" in the header to see sample entries. Then read <a href="{{ url('/ai') }}">AI use</a> for the limits and the test results.</span>
             </li>
         </ol>
         <p class="guide-foot">The rules set the score. The AI only explains it. A qualified technician decides what to do. Press "Open the guide" beside the page title to open this tour again.</p>
