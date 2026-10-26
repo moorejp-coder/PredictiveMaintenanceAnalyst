@@ -52,8 +52,8 @@ class AiController extends Controller
         }
 
         $data = $request->validate([
-            'scenario' => ['required'],
-            'tick' => ['required', 'integer'],
+            'scenario' => ['required', Rule::in(array_keys(SensorSimulator::SCENARIOS))],
+            'tick' => ['required', 'integer', 'min:0', 'max:1000000'],
         ]);
         $result = $investigator->run($data['scenario'], (int) $data['tick'], $risk);
         if ($result['source'] !== 'fallback') {

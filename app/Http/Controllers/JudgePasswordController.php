@@ -25,7 +25,7 @@ class JudgePasswordController extends Controller
         return response()
             ->view('set-password', [
                 'token' => $token,
-                'email' => (string) $request->query('email', ''),
+                'email' => mb_substr((string) $request->query('email', ''), 0, 255),
             ])
             ->header('Referrer-Policy', 'no-referrer')
             ->header('Cache-Control', 'no-store');
@@ -36,7 +36,7 @@ class JudgePasswordController extends Controller
         $request->merge(['email' => Str::lower(trim((string) $request->input('email')))]);
 
         $data = $request->validate([
-            'token' => ['required', 'string'],
+            'token' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string', 'confirmed', PasswordRule::min(12)->max(128)],
         ]);
