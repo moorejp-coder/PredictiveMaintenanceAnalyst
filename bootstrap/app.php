@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Middleware\BindSessionToClient;
+use App\Http\Middleware\EnforceSessionAge;
 use App\Http\Middleware\RedirectTrailingSlash;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -22,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(RedirectTrailingSlash::class);
         // Prepended last, so it runs first and every response gets the headers.
         $middleware->prepend(SecurityHeaders::class);
+        // A changed password ends every other session of that account.
+        $middleware->web(append: [AuthenticateSession::class, EnforceSessionAge::class, BindSessionToClient::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // A JSON API route rejects input outside its bounds with HTTP 400 and

@@ -34,7 +34,7 @@ class JudgeInvite extends Notification
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),
         ], false));
-        $days = max(1, (int) round(config('auth.passwords.invites.expire') / 1440));
+        $minutes = max(1, (int) config('auth.passwords.invites.expire'));
 
         return (new MailMessage)
             ->subject('Set your password for the PRISM contest demo')
@@ -42,7 +42,7 @@ class JudgeInvite extends Notification
             ->line('You are invited to review PRISM, a failure-risk dashboard for a milling machine. It is a student entry in the CUA Busch School AI Vibe Coding Contest.')
             ->line('Use the button below to choose your password. Then sign in with this email address and your password.')
             ->action('Set your password', $url)
-            ->line("This link works once and expires in {$days} days.")
+            ->line("This link works once and expires in {$minutes} minutes.")
             ->line('If you did not expect this email, ignore it. The account cannot be used until a password is set.')
             ->salutation('PRISM contest demo');
     }

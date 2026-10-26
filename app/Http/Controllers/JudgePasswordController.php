@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Rules\NotCommonPassword;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,12 +22,22 @@ class JudgePasswordController extends Controller
 {
     public function show(Request $request, string $token): Response
     {
+        $email = Str::lower(trim(mb_substr((string) $request->query('email', ''), 0, 255)));
+
+        // Check the link before the form appears. An unknown email, a wrong
+        // token, a spent token and an expired token all show the same page,
+        // so the page never says which accounts exist.
+        $broker = Password::broker('invites');
+        $user = $email === '' ? null : $broker->getUser(['email' => $email]);
+        $valid = $user !== null && $broker->tokenExists($user, $token);
+
         // The link carries a token, so keep it out of Referer headers and caches.
         return response()
             ->view('set-password', [
-                'token' => $token,
-                'email' => mb_substr((string) $request->query('email', ''), 0, 255),
-            ])
+                'token' => $valid ? $token : '',
+                'email' => $valid ? $email : '',
+                'valid' => $valid,
+            ], $valid ? 200 : 410)
             ->header('Referrer-Policy', 'no-referrer')
             ->header('Cache-Control', 'no-store');
     }
@@ -38,7 +49,13 @@ class JudgePasswordController extends Controller
         $data = $request->validate([
             'token' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string', 'confirmed', PasswordRule::min(12)->max(128)],
+            // Length is the rule. No symbol or digit is required. A password is
+            // refused when it is in the top 10,000 common passwords or has
+            // appeared in a known data breach. The breach check asks the Have I
+            // Been Pwned range API with the first 5 characters of the SHA-1 hash
+            // only. If the API is down, the check is skipped and the password
+            // passes, so an outage never locks a judge out.
+            'password' => ['required', 'string', 'confirmed', PasswordRule::min(12)->max(128)->uncompromised(), new NotCommonPassword],
         ]);
 
         $status = Password::broker('invites')->reset(

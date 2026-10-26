@@ -4,9 +4,20 @@ namespace Tests;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Http;
 
 abstract class TestCase extends BaseTestCase
 {
+    /**
+     * No test reaches the real Have I Been Pwned API. By default it reports
+     * no breach. A test that needs a breach hit fakes its own response.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Http::fake(['api.pwnedpasswords.com/*' => Http::response('', 200)]);
+    }
+
     /**
      * Act as a signed-in user. The user is not saved, so no database is
      * needed. Used by tests of the pages and routes behind the sign-in.

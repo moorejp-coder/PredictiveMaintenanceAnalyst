@@ -23,7 +23,7 @@ class InviteController extends Controller
     {
         return view('admin.invites', [
             'users' => User::query()->orderByDesc('created_at')->get(['id', 'name', 'email', 'email_verified_at', 'created_at']),
-            'days' => max(1, (int) round(config('auth.passwords.invites.expire') / 1440)),
+            'minutes' => max(1, (int) config('auth.passwords.invites.expire')),
         ]);
     }
 

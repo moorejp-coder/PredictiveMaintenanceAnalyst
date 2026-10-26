@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\AiFeedbackController;
 use App\Http\Controllers\AuthController;
@@ -40,9 +41,15 @@ Route::get('/demo', [DemoController::class, 'start'])->name('demo');
 Route::middleware(EnsureLoginEnabled::class)->group(function () {
     Route::middleware('guest')->group(function () {
         Route::get('/set-password/{token}', [JudgePasswordController::class, 'show'])
-            ->middleware(RejectAbuse::class)->name('invite.show');
+            ->middleware(['throttle:20,1', RejectAbuse::class])->name('invite.show');
         Route::post('/set-password', [JudgePasswordController::class, 'update'])
-            ->middleware(['throttle:10,1', RejectAbuse::class])->name('invite.update');
+            ->middleware(['throttle:5,1', RejectAbuse::class])->name('invite.update');
+    });
+    // The signed-in user's own page: sign out of every other browser.
+    Route::middleware('auth')->group(function () {
+        Route::get('/account', [AccountController::class, 'show'])->name('account');
+        Route::post('/logout-everywhere', [AccountController::class, 'logoutEverywhere'])
+            ->middleware(['throttle:5,1', RejectAbuse::class]);
     });
     Route::middleware(RequireInviteAdminPassword::class)->group(function () {
         Route::get('/admin/invites', [InviteController::class, 'index']);

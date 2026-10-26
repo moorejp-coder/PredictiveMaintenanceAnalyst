@@ -31,6 +31,7 @@
         @endif
         <div class="prism-header__actions">
             @auth
+                <a class="btn" href="{{ url('/account') }}"@if ($active === 'account') aria-current="page"@endif>Account</a>
                 <form method="POST" action="{{ url('/logout') }}">
                     @csrf
                     <button type="submit" class="btn">Sign out</button>

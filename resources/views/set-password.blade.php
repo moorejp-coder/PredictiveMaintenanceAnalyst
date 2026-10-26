@@ -26,6 +26,12 @@
 <main class="wrap" id="main" tabindex="-1">
     <div class="card">
         <h1>Set your password</h1>
+        @unless ($valid)
+            <div class="error" id="set-error" role="alert">
+                <strong>This link is not valid.</strong>
+                It was already used or it expired. Ask the contest entrant for a new invite.
+            </div>
+        @else
         <p class="lead">Choose a password for your PRISM judge account. Then sign in with this email address and your password.</p>
 
         @if ($errors->any())
@@ -49,7 +55,7 @@
                 <label for="password">New password</label>
                 <input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required autofocus
                        aria-describedby="password-hint"@if ($errors->has('password')) aria-invalid="true"@endif>
-                <p class="hint" id="password-hint">At least 12 characters. Use a password you use nowhere else.</p>
+                <p class="hint" id="password-hint">At least 12 characters. A long phrase works well. No symbols or digits are required. A password from a known data breach or a common-password list is refused.</p>
             </div>
             <div class="field">
                 <label for="password_confirmation">Type the new password again</label>
@@ -59,6 +65,7 @@
                 <button type="submit" class="btn btn--primary">Set password</button>
             </div>
         </form>
+        @endunless
 
         <div class="help">
             <p>This link works once. After you set a password, sign in at the login page.</p>

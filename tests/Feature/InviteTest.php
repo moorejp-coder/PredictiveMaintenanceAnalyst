@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Notifications\JudgeInvite;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
@@ -102,7 +104,7 @@ class InviteTest extends TestCase
 
         $this->assertSame('Set your password for the PRISM contest demo', $mail->subject);
         $this->assertStringContainsString('/set-password/tok123?email=j%40example.test', $mail->actionUrl);
-        $this->assertStringContainsString('works once and expires in 7 days', implode(' ', $mail->outroLines));
+        $this->assertStringContainsString('works once and expires in 30 minutes', implode(' ', $mail->outroLines));
     }
 
     public function test_the_whole_flow_from_invite_to_sign_in(): void
@@ -174,7 +176,7 @@ class InviteTest extends TestCase
         $this->assertNull($user->fresh()->email_verified_at);
     }
 
-    public function test_a_link_expires_after_seven_days(): void
+    public function test_a_link_expires_after_30_minutes(): void
     {
         $user = User::factory()->unverified()->create(['email' => 'judge@example.test']);
         $token = $this->newToken($user);
@@ -185,11 +187,11 @@ class InviteTest extends TestCase
             'password_confirmation' => $this->fixturePassword('judge'),
         ];
 
-        $this->travel(8)->days();
+        $this->travel(31)->minutes();
         $this->post('/set-password', $form)->assertSessionHasErrors('email');
 
         $this->travelBack();
-        $this->travel(6)->days();
+        $this->travel(29)->minutes();
         $this->post('/set-password', $form)->assertRedirect('/login');
     }
 
@@ -248,5 +250,97 @@ class InviteTest extends TestCase
     public function test_the_signed_in_judge_is_sent_past_the_set_password_page(): void
     {
         $this->signIn()->get('/set-password/anything?email=judge@example.test')->assertRedirect('/');
+    }
+
+    public function test_the_token_is_long_random_and_stored_only_as_a_hash(): void
+    {
+        $user = User::factory()->unverified()->create(['email' => 'judge@example.test']);
+        $first = $this->newToken($user);
+        $second = $this->newToken($user);
+
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $first);
+        $this->assertNotSame($first, $second);
+
+        $stored = DB::table('password_reset_tokens')->where('email', 'judge@example.test')->get();
+        $this->assertCount(1, $stored);
+        $this->assertNotSame($second, $stored->first()->token);
+        $this->assertTrue(Hash::check($second, $stored->first()->token));
+    }
+
+    public function test_the_page_checks_the_link_before_it_shows_the_form(): void
+    {
+        $user = User::factory()->unverified()->create(['email' => 'judge@example.test']);
+        $token = $this->newToken($user);
+
+        $this->get('/set-password/'.$token.'?email=judge@example.test')
+            ->assertOk()
+            ->assertSee('name="password"', false);
+
+        // A wrong token, an unknown email and a missing email look the same.
+        $same = null;
+        foreach ([
+            '/set-password/wrong-token?email=judge@example.test',
+            '/set-password/'.$token.'?email=nobody@example.test',
+            '/set-password/'.$token,
+        ] as $url) {
+            $response = $this->get($url)
+                ->assertStatus(410)
+                ->assertDontSee('name="password"', false)
+                ->assertSee('This link is not valid.');
+            $same ??= $response->getContent();
+            $this->assertSame(
+                preg_replace('/(value|nonce|content)="[^"]*"/', '', $same),
+                preg_replace('/(value|nonce|content)="[^"]*"/', '', $response->getContent()),
+            );
+        }
+    }
+
+    public function test_a_spent_or_expired_link_shows_no_form(): void
+    {
+        $user = User::factory()->unverified()->create(['email' => 'judge@example.test']);
+        $token = $this->newToken($user);
+        $url = '/set-password/'.$token.'?email=judge@example.test';
+
+        $this->travel(31)->minutes();
+        $this->get($url)->assertStatus(410)->assertDontSee('name="password"', false);
+        $this->travelBack();
+
+        $this->post('/set-password', [
+            'token' => $token,
+            'email' => 'judge@example.test',
+            'password' => $this->fixturePassword('judge'),
+            'password_confirmation' => $this->fixturePassword('judge'),
+        ])->assertRedirect('/login');
+
+        $this->get($url)->assertStatus(410)->assertDontSee('name="password"', false);
+    }
+
+    public function test_a_successful_reset_ends_every_other_session_of_the_account(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'judge@example.test',
+            'password' => $this->fixturePassword('old'),
+        ]);
+
+        // A session the judge opened earlier.
+        $this->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('old')])->assertRedirect('/');
+        $this->get('/')->assertOk();
+        $oldSession = session()->all();
+        $this->post('/logout');
+        $this->flushSession();
+        $this->app['auth']->forgetGuards();
+
+        // The judge sets a new password from a fresh link.
+        $this->post('/set-password', [
+            'token' => $this->newToken($user),
+            'email' => 'judge@example.test',
+            'password' => $this->fixturePassword('new-phrase'),
+            'password_confirmation' => $this->fixturePassword('new-phrase'),
+        ])->assertRedirect('/login');
+
+        // The old password no longer works, and a session carrying the old
+        // password hash is refused.
+        $this->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('old')])->assertSessionHasErrors('email');
+        $this->withSession($oldSession + ['password_hash_web' => 'old-hash'])->actingAs($user->fresh())->get('/')->assertRedirect('/login');
     }
 }
