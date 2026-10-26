@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +21,7 @@ class AccountController extends Controller
 {
     public function show(Request $request): View
     {
-        return view('account', ['email' => $request->user()->email]);
+        return view('account', ['email' => $this->currentUser($request)->email]);
     }
 
     public function logoutEverywhere(Request $request): RedirectResponse
@@ -28,7 +30,7 @@ class AccountController extends Controller
             'password' => ['required', 'string', 'max:255'],
         ]);
 
-        $user = $request->user();
+        $user = $this->currentUser($request);
 
         if (! Hash::check($data['password'], $user->getAuthPassword())) {
             return back()->withErrors(['password' => 'The password is wrong.']);
@@ -40,5 +42,11 @@ class AccountController extends Controller
         Auth::logoutOtherDevices($data['password']);
 
         return redirect('/account')->with('status', 'Every other browser is signed out. This one stays signed in.');
+    }
+
+    /** The routes sit behind the auth middleware, so a missing user is an error, not a normal case. */
+    private function currentUser(Request $request): User
+    {
+        return $request->user() ?? throw new AuthenticationException;
     }
 }
