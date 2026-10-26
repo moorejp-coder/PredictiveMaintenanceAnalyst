@@ -100,7 +100,7 @@ class OverrideLogTest extends TestCase
 
     public function test_the_review_page_asks_for_the_password(): void
     {
-        config(['prism.override_log_password' => 'open-sesame']);
+        config(['prism.override_log_password' => $this->fixturePassword('override')]);
 
         $this->get('/overrides')->assertStatus(401);
         $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:wrong')])->assertStatus(401);
@@ -108,10 +108,10 @@ class OverrideLogTest extends TestCase
 
     public function test_the_review_page_lists_entries_with_the_right_password(): void
     {
-        config(['prism.override_log_password' => 'open-sesame']);
+        config(['prism.override_log_password' => $this->fixturePassword('override')]);
         $this->postJson('/api/overrides', $this->payload())->assertCreated();
 
-        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:open-sesame')])
+        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:'.$this->fixturePassword('override'))])
             ->assertOk()
             ->assertSee('Override Log')
             ->assertSee('Pat Rivera')
@@ -121,11 +121,11 @@ class OverrideLogTest extends TestCase
 
     public function test_names_and_reasons_are_escaped_on_the_review_page(): void
     {
-        config(['prism.override_log_password' => 'open-sesame']);
+        config(['prism.override_log_password' => $this->fixturePassword('override')]);
         $this->postJson('/api/overrides', $this->payload(['operator_name' => '<b>Pat</b> & "Co"']))
             ->assertCreated();
 
-        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:open-sesame')])
+        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:'.$this->fixturePassword('override'))])
             ->assertOk()
             ->assertDontSee('<b>Pat</b>', false)
             ->assertSee('&lt;b&gt;Pat&lt;/b&gt;', false);
@@ -153,14 +153,14 @@ class OverrideLogTest extends TestCase
 
     public function test_the_review_page_lists_ai_ratings_and_their_count(): void
     {
-        config(['prism.override_log_password' => 'open-sesame']);
+        config(['prism.override_log_password' => $this->fixturePassword('override')]);
         foreach (['diagnosis', 'work_order'] as $step) {
             $this->postJson('/api/ai-feedback', [
                 'step' => $step, 'rating' => 'helpful', 'source' => 'ai', 'scenario' => 'overload', 'tick' => 59,
             ])->assertCreated();
         }
 
-        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:open-sesame')])
+        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:'.$this->fixturePassword('override'))])
             ->assertOk()
             ->assertSee('2 Helpful, 0 Wrong')
             ->assertSee('Recent AI ratings')
@@ -170,10 +170,10 @@ class OverrideLogTest extends TestCase
 
     public function test_the_review_page_says_so_when_the_ratings_table_is_missing(): void
     {
-        config(['prism.override_log_password' => 'open-sesame']);
+        config(['prism.override_log_password' => $this->fixturePassword('override')]);
         Schema::drop('ai_feedback');
 
-        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:open-sesame')])
+        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:'.$this->fixturePassword('override'))])
             ->assertOk()
             ->assertSee('The ratings could not be read')
             ->assertDontSee('0 Helpful');

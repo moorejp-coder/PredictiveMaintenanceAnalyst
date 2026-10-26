@@ -111,7 +111,7 @@ class JudgeDemoTest extends TestCase
 
     public function test_the_demo_can_open_a_sample_override_log_without_a_password(): void
     {
-        config(['prism.override_log_password' => 'secret-password']);
+        config(['prism.override_log_password' => $this->fixturePassword('secret')]);
         $this->get('/demo');
 
         $this->get('/overrides')
@@ -164,7 +164,7 @@ class JudgeDemoTest extends TestCase
 
     public function test_the_override_log_still_needs_its_password_without_the_demo(): void
     {
-        config(['prism.override_log_password' => 'secret-password']);
+        config(['prism.override_log_password' => $this->fixturePassword('secret')]);
 
         $this->get('/overrides')->assertStatus(401);
         $this->get('/demo');
@@ -175,7 +175,7 @@ class JudgeDemoTest extends TestCase
 
     public function test_a_signed_in_user_without_the_password_does_not_get_the_sample(): void
     {
-        config(['prism.override_log_password' => 'secret-password']);
+        config(['prism.override_log_password' => $this->fixturePassword('secret')]);
         $user = User::factory()->create();
         $this->actingAs($user)->get('/demo');
 

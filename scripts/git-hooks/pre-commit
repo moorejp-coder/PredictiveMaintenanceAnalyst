@@ -1,0 +1,47 @@
+#!/bin/sh
+# Block commits that add secrets. Prints file, line and rule only, never the value.
+# Bypass for a false positive: git commit --no-verify
+
+fail=0
+
+# 1. Real env files must never be staged (.env.example is fine).
+for f in $(git diff --cached --name-only --diff-filter=ACMR); do
+  case "$f" in
+    .env.example|*/.env.example) ;;
+    .env|.env.*|*/.env|*/.env.*|.git-credentials|*/.git-credentials|*.pem|*.key)
+      echo "BLOCKED: $f is a secret file and must not be committed."; fail=1 ;;
+  esac
+done
+
+# 2. Scan added lines for known secret formats and secret-looking assignments.
+tmp="$(mktemp)" || exit 0
+git diff --cached -U0 --no-color --diff-filter=ACMR | awk '
+  /^\+\+\+ b\// { file=substr($0,7); next }
+  /^@@/ { split($3,a,","); line=substr(a[1],2)-1; next }
+  /^\+/ && !/^\+\+\+/ { line++; print file "\t" line "\t" substr($0,2) }
+' > "$tmp"
+
+scan() { # name, regex, skip_tests(0/1)
+  awk -F'\t' -v name="$1" -v re="$2" -v skip="$3" '
+    skip==1 && $1 ~ /^tests\// { next }
+    $1 ~ /\.(lock|png|jpg|svg|csv)$/ || $1=="package-lock.json" { next }
+    $3 ~ re { printf "BLOCKED: %s:%s looks like %s (value hidden)\n", $1, $2, name; found=1 }
+    END { exit found ? 1 : 0 }' "$tmp" || fail=1
+}
+
+scan "an Anthropic or OpenAI key"   'sk-[A-Za-z0-9_-]{20,}' 0
+scan "an AWS access key"            'AKIA[0-9A-Z]{16}' 0
+scan "a GitHub token"               'gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}' 0
+scan "a Slack token or webhook"     'xox[baprs]-[A-Za-z0-9-]{10,}|hooks[.]slack[.]com/services/' 0
+scan "a Stripe key or webhook secret" '[sp]k_(live|test)_[A-Za-z0-9]{10,}|whsec_[A-Za-z0-9]{10,}' 0
+scan "a Google API key"             'AIza[0-9A-Za-z_-]{35}' 0
+scan "a private key"                '-----BEGIN [A-Z ]*PRIVATE KEY-----' 0
+scan "a database URL with a password" '(mysql|pgsql|postgres(ql)?|mongodb([+]srv)?|redis|amqp)://[^ :/@]+:[^ @]+@' 0
+scan "a hardcoded secret assignment" '(api[_-]?key|secret|passw(or)?d|token|webhook|client[_-]?secret|private[_-]?key)["'"'"']?[ ]*(=>|=|:)[ ]*["'"'"'][A-Za-z0-9_+/=.!@#%^&*-]{12,}["'"'"']' 1
+
+rm -f "$tmp"
+if [ "$fail" -ne 0 ]; then
+  echo "Commit stopped. Move the value to .env (local) or the Elastic Beanstalk console, then restage."
+  exit 1
+fi
+exit 0

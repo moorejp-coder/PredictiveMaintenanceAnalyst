@@ -20,11 +20,11 @@ class LoginTest extends TestCase
         config(['prism.require_login' => true]);
     }
 
-    private function judge(string $password = 'correct-horse-battery'): User
+    private function judge(?string $password = null): User
     {
         return User::factory()->create([
             'email' => 'judge@example.test',
-            'password' => $password,
+            'password' => $password ?? $this->fixturePassword('correct'),
         ]);
     }
 
@@ -69,7 +69,7 @@ class LoginTest extends TestCase
     {
         $user = $this->judge();
 
-        $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery'])
+        $this->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('correct')])
             ->assertRedirect('/');
 
         $this->assertAuthenticatedAs($user);
@@ -101,7 +101,7 @@ class LoginTest extends TestCase
             $this->post('/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(302);
         }
 
-        $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery'])
+        $this->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('correct')])
             ->assertStatus(429);
         $this->assertGuest();
     }
@@ -124,11 +124,11 @@ class LoginTest extends TestCase
 
     public function test_the_override_review_page_keeps_its_own_password(): void
     {
-        config(['prism.override_log_password' => 'open-sesame']);
+        config(['prism.override_log_password' => $this->fixturePassword('override')]);
 
         // A signed-in judge still needs the log password.
         $this->signIn()->get('/overrides')->assertStatus(401);
-        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:open-sesame')])->assertOk();
+        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:'.$this->fixturePassword('override'))])->assertOk();
     }
 
     public function test_the_judge_seeder_makes_one_account_from_the_environment_values(): void
@@ -136,7 +136,7 @@ class LoginTest extends TestCase
         config([
             'prism.judge.name' => 'Contest Judge',
             'prism.judge.email' => 'judge@example.test',
-            'prism.judge.password' => 'a-long-unique-password',
+            'prism.judge.password' => $this->fixturePassword('unique'),
         ]);
 
         $this->seed(JudgeSeeder::class);
@@ -144,23 +144,23 @@ class LoginTest extends TestCase
         $this->assertDatabaseCount('users', 1);
         $user = User::first();
         $this->assertSame('judge@example.test', $user->email);
-        $this->assertNotSame('a-long-unique-password', $user->password);
-        $this->post('/login', ['email' => 'judge@example.test', 'password' => 'a-long-unique-password'])
+        $this->assertNotSame($this->fixturePassword('unique'), $user->password);
+        $this->post('/login', ['email' => 'judge@example.test', 'password' => $this->fixturePassword('unique')])
             ->assertRedirect('/');
     }
 
     public function test_running_the_judge_seeder_again_updates_the_password_without_a_second_account(): void
     {
-        config(['prism.judge.email' => 'judge@example.test', 'prism.judge.password' => 'first-password-value']);
+        config(['prism.judge.email' => 'judge@example.test', 'prism.judge.password' => $this->fixturePassword('first')]);
         $this->seed(JudgeSeeder::class);
 
-        config(['prism.judge.password' => 'second-password-value']);
+        config(['prism.judge.password' => $this->fixturePassword('second')]);
         $this->seed(JudgeSeeder::class);
 
         $this->assertDatabaseCount('users', 1);
-        $this->post('/login', ['email' => 'judge@example.test', 'password' => 'first-password-value'])
+        $this->post('/login', ['email' => 'judge@example.test', 'password' => $this->fixturePassword('first')])
             ->assertSessionHasErrors('email');
-        $this->post('/login', ['email' => 'judge@example.test', 'password' => 'second-password-value'])
+        $this->post('/login', ['email' => 'judge@example.test', 'password' => $this->fixturePassword('second')])
             ->assertRedirect('/');
     }
 

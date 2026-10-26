@@ -118,6 +118,8 @@ Requirements: PHP 8.4 or newer with the mbstring, xml, curl, zip and sqlite3 ext
 
 Style and static checks: `vendor/bin/pint --test`, then `vendor/bin/phpstan analyse --memory-limit=1G`.
 
+Secret scan before each commit: `cp scripts/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit`. The hook blocks staged `.env` files, API keys, tokens and passwords, and prints only the file and line.
+
 ## Documentation
 
 | File | Contents |

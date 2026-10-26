@@ -17,18 +17,21 @@ class InviteTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const ADMIN = 'admin-pass-for-tests';
+    private function adminPassword(): string
+    {
+        return $this->fixturePassword('admin');
+    }
 
     protected function setUp(): void
     {
         parent::setUp();
-        config(['prism.require_login' => true, 'prism.invite_admin_password' => self::ADMIN]);
+        config(['prism.require_login' => true, 'prism.invite_admin_password' => $this->adminPassword()]);
     }
 
     /** @return array<string, string> */
     private function admin(): array
     {
-        return ['Authorization' => 'Basic '.base64_encode('entrant:'.self::ADMIN)];
+        return ['Authorization' => 'Basic '.base64_encode('entrant:'.$this->adminPassword())];
     }
 
     private function newToken(User $user): string
@@ -51,7 +54,7 @@ class InviteTest extends TestCase
         config(['prism.invite_admin_password' => null]);
         $this->withHeaders($this->admin())->get('/admin/invites')->assertNotFound();
 
-        config(['prism.invite_admin_password' => self::ADMIN]);
+        config(['prism.invite_admin_password' => $this->adminPassword()]);
         // withHeaders() above stays on every later request in this test, so
         // clear it before checking that a request with no password gets 401.
         $this->flushHeaders();
@@ -124,13 +127,13 @@ class InviteTest extends TestCase
         $this->post('/set-password', [
             'token' => $token,
             'email' => 'judge@example.test',
-            'password' => 'a-long-judge-password',
-            'password_confirmation' => 'a-long-judge-password',
+            'password' => $this->fixturePassword('judge'),
+            'password_confirmation' => $this->fixturePassword('judge'),
         ])->assertRedirect('/login');
 
         $this->assertNotNull($user->fresh()->email_verified_at);
 
-        $this->post('/login', ['email' => 'Judge@Example.test', 'password' => 'a-long-judge-password'])
+        $this->post('/login', ['email' => 'Judge@Example.test', 'password' => $this->fixturePassword('judge')])
             ->assertRedirect('/');
         $this->assertAuthenticatedAs($user->fresh());
     }
@@ -142,18 +145,18 @@ class InviteTest extends TestCase
         $form = [
             'token' => $token,
             'email' => 'judge@example.test',
-            'password' => 'first-judge-password',
-            'password_confirmation' => 'first-judge-password',
+            'password' => $this->fixturePassword('judge-first'),
+            'password_confirmation' => $this->fixturePassword('judge-first'),
         ];
 
         $this->post('/set-password', $form)->assertRedirect('/login');
 
         $this->post('/set-password', array_merge($form, [
-            'password' => 'second-judge-password',
-            'password_confirmation' => 'second-judge-password',
+            'password' => $this->fixturePassword('judge-second'),
+            'password_confirmation' => $this->fixturePassword('judge-second'),
         ]))->assertSessionHasErrors('email');
 
-        $this->post('/login', ['email' => 'judge@example.test', 'password' => 'first-judge-password'])->assertRedirect('/');
+        $this->post('/login', ['email' => 'judge@example.test', 'password' => $this->fixturePassword('judge-first')])->assertRedirect('/');
     }
 
     public function test_a_wrong_token_is_refused(): void
@@ -164,8 +167,8 @@ class InviteTest extends TestCase
         $this->post('/set-password', [
             'token' => 'not-the-token',
             'email' => 'judge@example.test',
-            'password' => 'a-long-judge-password',
-            'password_confirmation' => 'a-long-judge-password',
+            'password' => $this->fixturePassword('judge'),
+            'password_confirmation' => $this->fixturePassword('judge'),
         ])->assertSessionHasErrors('email');
 
         $this->assertNull($user->fresh()->email_verified_at);
@@ -178,8 +181,8 @@ class InviteTest extends TestCase
         $form = [
             'token' => $token,
             'email' => 'judge@example.test',
-            'password' => 'a-long-judge-password',
-            'password_confirmation' => 'a-long-judge-password',
+            'password' => $this->fixturePassword('judge'),
+            'password_confirmation' => $this->fixturePassword('judge'),
         ];
 
         $this->travel(8)->days();
@@ -205,7 +208,7 @@ class InviteTest extends TestCase
         $this->post('/set-password', [
             'token' => $token,
             'email' => 'judge@example.test',
-            'password' => 'a-long-judge-password',
+            'password' => $this->fixturePassword('judge'),
             'password_confirmation' => 'a-different-password',
         ])->assertSessionHasErrors('password');
 
@@ -213,8 +216,8 @@ class InviteTest extends TestCase
         $this->post('/set-password', [
             'token' => $token,
             'email' => 'judge@example.test',
-            'password' => 'a-long-judge-password',
-            'password_confirmation' => 'a-long-judge-password',
+            'password' => $this->fixturePassword('judge'),
+            'password_confirmation' => $this->fixturePassword('judge'),
         ])->assertRedirect('/login');
     }
 
