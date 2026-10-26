@@ -97,7 +97,7 @@
     <ul>
         <li>PRISM scores machines. It scores no person and builds no profile of any person.</li>
         <li>The readings are simulated, so PRISM holds no real operational data.</li>
-        <li>@if (config('prism.require_login'))The personal data is the name an operator types in the override log (PRISM does not verify it), the name, email address and password hash of each invited judge, and the IP address in server logs.@else The only personal data is the name an operator types in the override log (PRISM does not verify it) and the IP address in server logs.@endif</li>
+        <li>@if (config('prism.require_login'))The personal data is the name an operator types in the override log (PRISM does not verify it), the name, email address and password hash of each invited user, and the IP address in server logs.@else The only personal data is the name an operator types in the override log (PRISM does not verify it) and the IP address in server logs.@endif</li>
         <li>PRISM uses no analytics, advertising or tracking scripts.</li>
         <li>Rate limits protect the AI routes from automated use.</li>
     </ul>
@@ -118,7 +118,7 @@
     <table>
         <tr><th scope="col">Field</th><th scope="col">How PRISM uses it</th><th scope="col">Source</th></tr>
         <tr><td>Data science</td><td>Limits and the backtest come from the AI4I 2020 dataset.</td><td><a href="https://doi.org/10.24432/C5HS5C">Matzka, S. (2020). AI4I 2020 Predictive Maintenance Dataset. UCI Machine Learning Repository.</a></td></tr>
-        <tr><td>Mechanical and reliability engineering</td><td>Vibration limits (1.4, 2.8 and 4.5 mm/s RMS) match the Group 2 rigid-foundation zone boundaries listed for ISO 20816-3, which replaced ISO 10816-3. The standard does not list machine tools, so PRISM treats them as demo values.</td><td>ISO 20816-3:2022, cited in <code>config/prism.php</code></td></tr>
+        <tr><td>Mechanical and reliability engineering</td><td>Vibration limits (1.4 and 4.5 mm/s RMS) match two of the Group 2 rigid-foundation zone boundaries listed for ISO 20816-3, which replaced ISO 10816-3. The standard does not list machine tools, so PRISM treats them as demo values.</td><td>ISO 20816-3:2022, cited in <code>config/prism.php</code></td></tr>
         <tr><td>Occupational safety</td><td>The "Stop the machine" instruction sits beside lockout/tagout practice. PRISM does not lock out or tag out anything. A qualified person follows the plant's procedure.</td><td><a href="https://osha.gov/control-hazardous-energy/standards">OSHA 29 CFR 1910.147, Control of Hazardous Energy</a></td></tr>
         <tr><td>Human factors and ethics</td><td>The score is one number with a plain reason. A person makes the call, and a keep-running choice leaves a record.</td><td>Design choices in this app</td></tr>
         <tr><td>Law and privacy</td><td>Terms, Privacy Policy and an AI disclosure.</td><td><a href="{{ url('/terms') }}">Terms</a>, <a href="{{ url('/privacy') }}">Privacy</a></td></tr>

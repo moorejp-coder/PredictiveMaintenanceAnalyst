@@ -16,7 +16,7 @@ Source: `.ebextensions/01-laravel.config` and `.platform/hooks/postdeploy/01_ove
 ## Before judging
 
 1. Do not rebuild or replace the environment. Upload zips only.
-2. Keep the list of judge email addresses in a private note outside the repo.
+2. Keep the list of email addresses you invited in a private note outside the repo.
 3. Keep a private copy of the environment property names and values. Never put the values in the repo or in a chat.
 4. Prove a normal deploy keeps data: invite your own address, upload a new zip, sign in with that account.
 5. After any AWS change, run the checks in "Verify" below.
@@ -43,11 +43,13 @@ Source: `.ebextensions/01-laravel.config` and `.platform/hooks/postdeploy/01_ove
 3. On the dashboard, press "Explain this reading" in an Elevated or High scenario. The label reads AI-GENERATED, or RULE-BASED, NO AI USED if the key is missing.
 4. Open `/admin/invites`, sign in with `INVITE_ADMIN_PASSWORD`, and invite your own address. Open the email, set a password, sign in.
 
-## Bring the judges back
+## Bring invited users back
 
-1. Open `/admin/invites` and type each judge's address again. Each judge gets a fresh link. Links work once and expire after 7 days.
+Judges use the Judge Demo at `/demo`. It needs no account, so a rebuild does not affect it. Only people who asked the entrant for a link need the steps below.
+
+1. Open `/admin/invites` and type each address you invited again. Each person gets a fresh link. Links work once and expire after 7 days.
 2. A second invite to the same address inside one minute is held back. Wait and send again.
-3. Tell each judge to sign in with the new link. Old passwords no longer work.
+3. Tell each person to sign in with the new link. Old passwords no longer work.
 
 ## Known limits
 

@@ -27,7 +27,7 @@
             <li>PRISM supports a qualified technician. It does not replace an inspection.</li>
             <li>Do not use PRISM to make safety, repair or production decisions about real equipment.</li>
             <li>PRISM is provided as is, with no warranty.</li>
-            <li>@if (config('prism.require_login'))PRISM has no sign-up. Only invited contest judges sign in.@else PRISM has no accounts.@endif By using the site you accept these terms.</li>
+            <li>@if (config('prism.require_login'))PRISM has no sign-up. Only people the entrant invites sign in. Contest judges use the read-only Judge Demo.@else PRISM has no accounts.@endif By using the site you accept these terms.</li>
         </ul>
     </div>
 
@@ -67,7 +67,7 @@
 @endif
     </ul>
 @if (config('prism.require_login'))
-    <p><strong>Judge accounts.</strong> Only contest judges whom the entrant invites by email have an account. You choose your own password with a one-time link. Keep it private and use a password you use nowhere else. Tell James Moore at the address in section 13 if you think someone else used your account. PRISM may disable an account at any time. The accounts live in a file on the server, so a rebuilt or shut-down server erases them.</p>
+    <p><strong>Invited accounts.</strong> Only people whom the entrant invites by email have an account. The entrant sends an invite only when a person asks for a link. You choose your own password with a one-time link. Keep it private and use a password you use nowhere else. Tell James Moore at the address in section 13 if you think someone else used your account. PRISM may disable an account at any time. The accounts live in a file on the server, so a rebuilt or shut-down server erases them.</p>
 @endif
     <p>PRISM may block access to anyone who breaks these rules.</p>
 
