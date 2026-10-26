@@ -13,6 +13,7 @@ use App\Http\Middleware\BlockInDemo;
 use App\Http\Middleware\EnsureLoginEnabled;
 use App\Http\Middleware\RequireInviteAdminPassword;
 use App\Http\Middleware\RequireLogin;
+use App\Http\Middleware\RejectAbuse;
 use App\Http\Middleware\RequireOverrideLogPassword;
 use App\Support\CanonicalUrl;
 use Illuminate\Support\Facades\Route;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 // page below. JudgeSeeder can add one fixed account as a backup.
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'show'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:5,1', RejectAbuse::class]);
 });
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -38,13 +39,14 @@ Route::get('/demo', [DemoController::class, 'start'])->name('demo');
 // REQUIRE_LOGIN is off.
 Route::middleware(EnsureLoginEnabled::class)->group(function () {
     Route::middleware('guest')->group(function () {
-        Route::get('/set-password/{token}', [JudgePasswordController::class, 'show'])->name('invite.show');
+        Route::get('/set-password/{token}', [JudgePasswordController::class, 'show'])
+            ->middleware(RejectAbuse::class)->name('invite.show');
         Route::post('/set-password', [JudgePasswordController::class, 'update'])
-            ->middleware('throttle:10,1')->name('invite.update');
+            ->middleware(['throttle:10,1', RejectAbuse::class])->name('invite.update');
     });
     Route::middleware(RequireInviteAdminPassword::class)->group(function () {
         Route::get('/admin/invites', [InviteController::class, 'index']);
-        Route::post('/admin/invites', [InviteController::class, 'store'])->middleware('throttle:10,1');
+        Route::post('/admin/invites', [InviteController::class, 'store'])->middleware(['throttle:10,1', RejectAbuse::class]);
     });
 });
 
@@ -54,22 +56,22 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
 // either way, because the gate reads it.
 Route::middleware(RequireLogin::class)->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
-    Route::get('/api/readings', [DashboardController::class, 'readings']);
+    Route::get('/api/readings', [DashboardController::class, 'readings'])->middleware(RejectAbuse::class);
     // Two small AI calls, run only when a visitor presses "Explain this reading".
     // Rate limited so a script cannot run up the AI bill.
     // The diagnosis route can run up to four model rounds, so its limit is lower.
     Route::get('/api/diagnosis', [AiController::class, 'diagnosis'])
-        ->middleware('throttle:10,1');
+        ->middleware(['throttle:10,1', RejectAbuse::class]);
     Route::get('/api/work-order', [AiController::class, 'workOrder'])
-        ->middleware('throttle:30,1');
+        ->middleware(['throttle:30,1', RejectAbuse::class]);
     // Override log. An operator who keeps a machine running after the High
     // "Stop the machine" warning records who, why and which reading. The write
     // uses the session and CSRF check. The review page needs its own password.
     Route::post('/api/overrides', [OverrideController::class, 'store'])
-        ->middleware([BlockInDemo::class, 'throttle:10,1']);
+        ->middleware([BlockInDemo::class, 'throttle:10,1', RejectAbuse::class]);
     // A user rates an AI answer "helpful" or "wrong". Fixed choices only, no free text.
     Route::post('/api/ai-feedback', [AiFeedbackController::class, 'store'])
-        ->middleware([BlockInDemo::class, 'throttle:20,1']);
+        ->middleware([BlockInDemo::class, 'throttle:20,1', RejectAbuse::class]);
 });
 Route::get('/overrides', [OverrideController::class, 'index'])
     ->middleware(RequireOverrideLogPassword::class);

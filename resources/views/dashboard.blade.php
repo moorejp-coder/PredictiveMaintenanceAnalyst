@@ -312,6 +312,7 @@
             <h2 id="override-title">Keep the machine running?</h2>
             <p id="override-summary"></p>
             <form id="override-form" novalidate>
+                @include('partials.honeypot', ['hpId' => 'override'])
                 <div class="ov-field">
                     <label for="override-name">Your name</label>
                     <input type="text" id="override-name" name="operator_name" autocomplete="name" maxlength="100" required>

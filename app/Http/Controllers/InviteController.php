@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\PlainText;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -28,7 +29,10 @@ class InviteController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $request->merge(['email' => Str::lower(trim((string) $request->input('email')))]);
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+            'name' => PlainText::line($request->input('name')),
+        ]);
 
         $data = $request->validate([
             'email' => ['required', 'string', 'email:rfc', 'max:255'],

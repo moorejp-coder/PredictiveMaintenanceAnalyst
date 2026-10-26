@@ -63,7 +63,7 @@ class AiTransparencyTest extends TestCase
             'source' => 'ai',
             'scenario' => 'overload',
             'tick' => 1,
-        ])->assertUnprocessable();
+        ])->assertStatus(400);
 
         $this->assertSame(0, AiFeedback::count());
     }

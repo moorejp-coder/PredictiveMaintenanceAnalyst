@@ -39,6 +39,7 @@
 
         <form method="POST" action="{{ url('/set-password') }}">
             @csrf
+            @include('partials.honeypot', ['hpId' => 'setpw'])
             <input type="hidden" name="token" value="{{ $token }}">
             <div class="field">
                 <label for="email">Email</label>

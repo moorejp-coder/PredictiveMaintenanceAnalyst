@@ -10,6 +10,7 @@ use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
 use App\Support\DemoMode;
 use App\Support\DemoSamples;
+use App\Support\PlainText;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -30,11 +31,16 @@ class OverrideController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $request->merge([
+            'operator_name' => PlainText::line($request->input('operator_name')),
+            'reason' => PlainText::text($request->input('reason')),
+        ]);
+
         $data = $request->validate([
             'operator_name' => ['required', 'string', 'min:2', 'max:100'],
             'reason' => ['required', 'string', 'min:10', 'max:500'],
             'scenario' => ['required', Rule::in(array_keys(SensorSimulator::SCENARIOS))],
-            'tick' => ['required', 'integer', 'min:0', 'max:1000000'],
+            'tick' => ['required', 'integer:strict', 'min:0', 'max:1000000'],
         ]);
 
         $reading = (new SensorSimulator)->reading($data['scenario'], (int) $data['tick']);
