@@ -47,7 +47,7 @@ Source: `.ebextensions/01-laravel.config` and `.platform/hooks/postdeploy/01_ove
 
 Judges use the Judge Demo at `/demo`. It needs no account, so a rebuild does not affect it. Only people who asked the entrant for a link need the steps below.
 
-1. Open `/admin/invites` and type each address you invited again. Each person gets a fresh link. Links work once and expire after 7 days.
+1. Open `/admin/invites` and type each address you invited again. Each person gets a fresh link. Links work once and expire after 30 minutes.
 2. A second invite to the same address inside one minute is held back. Wait and send again.
 3. Tell each person to sign in with the new link. Old passwords no longer work.
 

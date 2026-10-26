@@ -20,7 +20,7 @@
 @include('partials.app-header', ['active' => null])
 <main class="wrap" id="main" tabindex="-1">
     <h1>Invite a judge</h1>
-    <p class="lead">Type a judge's email address. PRISM creates the account and emails a link to choose a password. The link works once and expires in {{ $days }} days. Type the same address again to send a new link.</p>
+    <p class="lead">Type a judge's email address. PRISM creates the account and emails a link to choose a password. The link works once and expires in {{ $minutes }} minutes. Type the same address again to send a new link.</p>
 
     @if (session('status'))
         <div class="notice" role="status"><strong>{{ session('status') }}</strong></div>

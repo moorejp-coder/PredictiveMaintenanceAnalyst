@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Middleware\Concerns\LimitsPasswordGuesses;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,6 +17,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class RequireInviteAdminPassword
 {
+    use LimitsPasswordGuesses;
+
     public function handle(Request $request, Closure $next): Response
     {
         $password = (string) config('prism.invite_admin_password');
@@ -24,11 +27,19 @@ class RequireInviteAdminPassword
             abort(404);
         }
 
+        if ($locked = $this->lockedOut($request, 'invites')) {
+            return $locked;
+        }
+
         if (! hash_equals($password, (string) $request->getPassword())) {
+            $this->recordGuess($request, 'invites');
+
             return response('Password required.', 401, [
                 'WWW-Authenticate' => 'Basic realm="PRISM judge invites", charset="UTF-8"',
             ]);
         }
+
+        $this->clearGuesses($request, 'invites');
 
         return $next($request);
     }

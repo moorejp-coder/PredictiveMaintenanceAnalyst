@@ -32,7 +32,7 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    'lifetime' => (int) env('SESSION_LIFETIME', 30),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
@@ -169,7 +169,11 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', str_starts_with((string) env('APP_URL', ''), 'https://')),
+    'secure' => env(
+        'SESSION_SECURE_COOKIE',
+        str_starts_with((string) env('APP_URL', ''), 'https://')
+            || ! in_array(env('APP_ENV', 'production'), ['local', 'testing'], true),
+    ),
 
     /*
     |--------------------------------------------------------------------------

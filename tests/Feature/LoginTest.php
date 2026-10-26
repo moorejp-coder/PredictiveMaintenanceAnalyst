@@ -106,6 +106,103 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_guesses_spread_over_many_addresses_still_lock_the_account(): void
+    {
+        $user = $this->judge();
+
+        for ($i = 1; $i <= 15; $i++) {
+            $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.'.$i])
+                ->post('/login', ['email' => $user->email, 'password' => 'wrong'])
+                ->assertStatus(302);
+        }
+
+        // A sixteenth address with the right password is refused too.
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.99'])
+            ->from('/login')
+            ->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('correct')])
+            ->assertSessionHasErrors(['email' => 'Too many sign-in attempts. Wait 15 minutes, then try again.']);
+        $this->assertGuest();
+
+        // The lock ends after 15 minutes.
+        $this->travel(16)->minutes();
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.99'])
+            ->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('correct')])
+            ->assertRedirect('/');
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_a_password_change_ends_the_other_sessions_of_that_account(): void
+    {
+        $user = $this->judge();
+
+        $this->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('correct')])
+            ->assertRedirect('/');
+        $this->get('/')->assertOk();
+
+        $user->forceFill(['password' => $this->fixturePassword('changed')])->save();
+        $this->app['auth']->forgetGuards();
+
+        $this->get('/')->assertRedirect('/login');
+    }
+
+    public function test_a_session_ends_seven_days_after_sign_in_however_active(): void
+    {
+        $user = $this->judge();
+
+        $this->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('correct')])
+            ->assertRedirect('/');
+
+        $this->travel(6)->days();
+        $this->get('/')->assertOk();
+
+        $this->travel(2)->days();
+        $this->app['auth']->forgetGuards();
+        $this->get('/')->assertRedirect('/login');
+        $this->assertGuest();
+    }
+
+    public function test_the_session_cookie_is_http_only_same_site_and_secure_in_production(): void
+    {
+        $this->assertTrue(config('session.http_only'));
+        $this->assertSame('lax', config('session.same_site'));
+        $this->assertSame(30, config('session.lifetime'));
+        $this->assertSame(7, config('prism.session_max_days'));
+    }
+
+    public function test_the_invite_admin_page_locks_out_an_address_after_ten_wrong_passwords(): void
+    {
+        config(['prism.invite_admin_password' => $this->fixturePassword('admin')]);
+        $wrong = ['Authorization' => 'Basic '.base64_encode('entrant:wrong')];
+        $right = ['Authorization' => 'Basic '.base64_encode('entrant:'.$this->fixturePassword('admin'))];
+
+        for ($i = 0; $i < 10; $i++) {
+            $this->get('/admin/invites', $wrong)->assertStatus(401);
+        }
+
+        $this->get('/admin/invites', $wrong)->assertStatus(429);
+        $this->get('/admin/invites', $right)->assertStatus(429);
+
+        $this->travel(16)->minutes();
+        $this->get('/admin/invites', $right)->assertOk();
+    }
+
+    public function test_the_override_log_page_locks_out_an_address_after_ten_wrong_passwords(): void
+    {
+        config(['prism.override_log_password' => $this->fixturePassword('override')]);
+        $wrong = ['Authorization' => 'Basic '.base64_encode('judge:wrong')];
+
+        // A visit with no password at all is the browser's first request, not a guess.
+        for ($i = 0; $i < 12; $i++) {
+            $this->get('/overrides')->assertStatus(401);
+        }
+
+        for ($i = 0; $i < 10; $i++) {
+            $this->get('/overrides', $wrong)->assertStatus(401);
+        }
+
+        $this->get('/overrides', $wrong)->assertStatus(429);
+    }
+
     public function test_sign_out_ends_the_session(): void
     {
         $user = $this->judge();

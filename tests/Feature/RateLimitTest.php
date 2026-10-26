@@ -78,7 +78,7 @@ class RateLimitTest extends TestCase
         $this->assertDatabaseCount('ai_feedback', 20);
     }
 
-    public function test_the_set_password_form_allows_ten_tries_a_minute(): void
+    public function test_the_set_password_form_allows_five_tries_a_minute(): void
     {
         config(['prism.require_login' => true]);
         $form = [
@@ -88,7 +88,7 @@ class RateLimitTest extends TestCase
             'password_confirmation' => $this->fixturePassword('judge'),
         ];
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $this->post('/set-password', $form)->assertSessionHasErrors('email');
         }
 
