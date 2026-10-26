@@ -84,8 +84,8 @@ class RateLimitTest extends TestCase
         $form = [
             'token' => 'not-a-token',
             'email' => 'judge@example.test',
-            'password' => 'a-long-judge-password',
-            'password_confirmation' => 'a-long-judge-password',
+            'password' => $this->fixturePassword('judge'),
+            'password_confirmation' => $this->fixturePassword('judge'),
         ];
 
         for ($i = 0; $i < 10; $i++) {
@@ -98,8 +98,8 @@ class RateLimitTest extends TestCase
     public function test_the_invite_form_allows_ten_tries_a_minute(): void
     {
         Notification::fake();
-        config(['prism.require_login' => true, 'prism.invite_admin_password' => 'admin-pass-for-tests']);
-        $headers = ['Authorization' => 'Basic '.base64_encode('entrant:admin-pass-for-tests')];
+        config(['prism.require_login' => true, 'prism.invite_admin_password' => $this->fixturePassword('admin')]);
+        $headers = ['Authorization' => 'Basic '.base64_encode('entrant:'.$this->fixturePassword('admin'))];
 
         for ($i = 0; $i < 10; $i++) {
             $this->post('/admin/invites', ['email' => 'judge'.$i.'@example.test'], $headers)->assertSessionHasNoErrors();

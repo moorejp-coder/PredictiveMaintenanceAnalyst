@@ -11,6 +11,16 @@ abstract class TestCase extends BaseTestCase
      * Act as a signed-in user. The user is not saved, so no database is
      * needed. Used by tests of the pages and routes behind the sign-in.
      */
+    /**
+     * A throwaway password for a test fixture. The base comes from phpunit.xml
+     * (TEST_PASSWORD_BASE), so no password literal lives in the test files.
+     * Always at least 12 characters, the app minimum.
+     */
+    protected function fixturePassword(string $label): string
+    {
+        return (string) env('TEST_PASSWORD_BASE', 'phpunit-fixture').'-'.$label;
+    }
+
     protected function signIn(): static
     {
         return $this->actingAs(new User(['name' => 'Test Judge', 'email' => 'judge@example.test']));
