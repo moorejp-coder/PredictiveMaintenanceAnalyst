@@ -36,6 +36,7 @@
 
     <form method="POST" action="{{ url('/admin/invites') }}" style="margin-top: var(--prism-space-4)">
         @csrf
+        @include('partials.honeypot', ['hpId' => 'invite'])
         <div class="field">
             <label for="email">Judge email</label>
             <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="off" required autofocus

@@ -117,8 +117,8 @@ return [
     // message prints the new hash. When you update a hash, set that page's date
     // to the day you changed the text.
     'policy_dates' => [
-        'faq' => ['date' => 'October 26, 2026', 'hash' => 'b6c0c680049277a569faf80a6ced1d9f87ddc5f61ef775b86871c6f4ddefcd70'],
-        'privacy' => ['date' => 'October 26, 2026', 'hash' => 'd7a98f798f024f5dabe726fda46597bcfca5ea682b9e6f315728fd2cd19890c8'],
+        'faq' => ['date' => 'October 26, 2026', 'hash' => 'e479ca90c864d35038db1c5dbd831c7717e532a565416d3f8090b22d80f7e2f9'],
+        'privacy' => ['date' => 'October 26, 2026', 'hash' => 'bb100ead2da0d18ca18e7ab36d928a2e2dcaa3808ea78580666cec98466a42a5'],
         'terms' => ['date' => 'October 26, 2026', 'hash' => '4c4064afa204cc5d5b0440e6d8c33c62371284721fd364ba3be8fd171033c036'],
         'ai' => ['date' => 'October 26, 2026', 'hash' => '777ae1d2089b23fb9e5dca69cfac53f732e462274deadf1ed4b0aff24c5d0fe5'],
     ],

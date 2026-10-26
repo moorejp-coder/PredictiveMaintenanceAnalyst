@@ -252,8 +252,8 @@ class AiStepsTest extends TestCase
     {
         Http::fake();
 
-        $this->getJson('/api/diagnosis?scenario=nope&tick=1')->assertStatus(422);
-        $this->getJson('/api/work-order?scenario=worn_tool&tick=-5')->assertStatus(422);
+        $this->getJson('/api/diagnosis?scenario=nope&tick=1')->assertStatus(400);
+        $this->getJson('/api/work-order?scenario=worn_tool&tick=-5')->assertStatus(400);
 
         Http::assertNothingSent();
     }

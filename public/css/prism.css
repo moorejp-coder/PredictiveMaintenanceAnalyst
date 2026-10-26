@@ -115,6 +115,7 @@ a { color: var(--prism-accent); text-underline-offset: 0.2em; text-decoration-th
 a:hover { color: var(--prism-accent-hover); text-decoration-thickness: 2px; }
 :focus-visible { outline: 2px solid var(--prism-accent); outline-offset: 2px; }
 ::selection { background: var(--prism-accent); color: var(--prism-accent-ink); }
+.hp-field { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .mono { font-family: var(--prism-font-data); font-variant-numeric: tabular-nums; }
 code { font-family: var(--prism-font-data); font-size: 0.875em; padding: 0.1em 0.35em; background: var(--prism-surface-raised); border-radius: var(--prism-radius-sm); overflow-wrap: anywhere; }

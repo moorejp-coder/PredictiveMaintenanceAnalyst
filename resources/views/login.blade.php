@@ -65,6 +65,7 @@
 
         <form method="POST" action="{{ url('/login') }}">
             @csrf
+            @include('partials.honeypot', ['hpId' => 'login'])
             <div class="field">
                 <label for="email">Email</label>
                 <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="username" required

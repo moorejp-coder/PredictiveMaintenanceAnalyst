@@ -328,13 +328,13 @@
             const res = await fetch(body.dataset.overrides, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
-                body: JSON.stringify({ operator_name: operator, reason: reason, scenario: ovTarget.scenario, tick: ovTarget.tick }),
+                body: JSON.stringify({ operator_name: operator, reason: reason, scenario: ovTarget.scenario, tick: ovTarget.tick, homepage: (ov.form.querySelector('[name=homepage]') || {}).value || '' }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 let message = 'The override was not saved. Try again, or stop the machine.';
-                if (res.status === 422 && data.errors) { message = Object.values(data.errors)[0][0]; }
-                else if (res.status === 422 && data.message) { message = data.message; }
+                if ((res.status === 400 || res.status === 422) && data.errors) { message = Object.values(data.errors)[0][0]; }
+                else if ((res.status === 400 || res.status === 422) && data.message) { message = data.message; }
                 else if (res.status === 403 && data.message) { message = data.message; }
                 else if (res.status === 429) { message = 'Too many entries. Wait a minute and try again.'; }
                 else if (res.status === 419) { message = 'This page expired. Reload it and try again.'; }

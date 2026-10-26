@@ -77,7 +77,7 @@ class DashboardTest extends TestCase
 
     public function test_readings_endpoint_rejects_an_unknown_scenario(): void
     {
-        $this->getJson('/api/readings?scenario=nope&tick=0')->assertStatus(422);
+        $this->getJson('/api/readings?scenario=nope&tick=0')->assertStatus(400);
     }
 
     public function test_terms_page_loads(): void

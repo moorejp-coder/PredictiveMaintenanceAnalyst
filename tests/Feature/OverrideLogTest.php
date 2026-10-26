@@ -65,11 +65,11 @@ class OverrideLogTest extends TestCase
     public function test_name_and_reason_are_required(): void
     {
         $this->postJson('/api/overrides', $this->payload(['operator_name' => '']))
-            ->assertStatus(422)
+            ->assertStatus(400)
             ->assertJsonValidationErrors('operator_name');
 
         $this->postJson('/api/overrides', $this->payload(['reason' => 'too short']))
-            ->assertStatus(422)
+            ->assertStatus(400)
             ->assertJsonValidationErrors('reason');
 
         $this->assertSame(0, OverrideLog::count());
@@ -78,7 +78,7 @@ class OverrideLogTest extends TestCase
     public function test_an_unknown_scenario_is_rejected(): void
     {
         $this->postJson('/api/overrides', $this->payload(['scenario' => 'nope']))
-            ->assertStatus(422)
+            ->assertStatus(400)
             ->assertJsonValidationErrors('scenario');
     }
 
@@ -122,13 +122,33 @@ class OverrideLogTest extends TestCase
     public function test_names_and_reasons_are_escaped_on_the_review_page(): void
     {
         config(['prism.override_log_password' => 'open-sesame']);
-        $this->postJson('/api/overrides', $this->payload(['operator_name' => '<script>alert(1)</script>']))
+        $this->postJson('/api/overrides', $this->payload(['operator_name' => '<b>Pat</b> & "Co"']))
             ->assertCreated();
 
         $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:open-sesame')])
             ->assertOk()
-            ->assertDontSee('<script>alert(1)</script>', false)
-            ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false);
+            ->assertDontSee('<b>Pat</b>', false)
+            ->assertSee('&lt;b&gt;Pat&lt;/b&gt;', false);
+    }
+
+    public function test_control_characters_are_removed_before_a_name_and_reason_are_stored(): void
+    {
+        $this->postJson('/api/overrides', $this->payload([
+            'operator_name' => "Pat\0 \nRivera",
+            'reason' => "Finishing the shift\0 with a\r\nsupervisor watching.",
+        ]))->assertCreated();
+
+        $log = OverrideLog::sole();
+        $this->assertSame('Pat Rivera', $log->operator_name);
+        $this->assertSame("Finishing the shift with a\nsupervisor watching.", $log->reason);
+    }
+
+    public function test_text_that_is_not_valid_utf8_or_not_a_string_is_refused(): void
+    {
+        $this->postJson('/api/overrides', $this->payload(['operator_name' => ['Pat']]))->assertStatus(400);
+        $this->post('/api/overrides', $this->payload(['reason' => "bad \xC3\x28 bytes in the reason"]), ['Accept' => 'application/json'])
+            ->assertStatus(400);
+        $this->assertSame(0, OverrideLog::count());
     }
 
     public function test_the_review_page_lists_ai_ratings_and_their_count(): void

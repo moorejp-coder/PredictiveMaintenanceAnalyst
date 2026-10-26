@@ -23,7 +23,7 @@ class AiFeedbackController extends Controller
             'rating' => ['required', Rule::in(['helpful', 'wrong'])],
             'source' => ['required', Rule::in(['ai', 'cache', 'rules'])],
             'scenario' => ['required', Rule::in(array_keys(SensorSimulator::SCENARIOS))],
-            'tick' => ['required', 'integer', 'min:0', 'max:1000000'],
+            'tick' => ['required', 'integer:strict', 'min:0', 'max:1000000'],
         ]);
 
         $row = AiFeedback::create($data);

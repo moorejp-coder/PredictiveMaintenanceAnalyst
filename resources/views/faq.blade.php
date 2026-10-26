@@ -150,7 +150,7 @@
                 <li><code>scenario</code> must be one of four names: <code>worn_tool</code>, <code>overheating</code>, <code>overload</code> or <code>healthy</code>.</li>
                 <li><code>tick</code> must be a whole number from 0 to 1,000,000.</li>
             </ul>
-            <p>The AI routes take the same two values. Anything else is rejected, and a JSON request gets an HTTP 422 error. PRISM does not guess at bad input. An automated test covers the unknown-scenario case.</p>
+            <p>The AI routes take the same two values. Anything else is rejected, and a JSON request gets an HTTP 400 error. PRISM does not guess at bad input. An automated test covers the unknown-scenario case.</p>
             <p class="src">Sources: <code>DashboardController.php</code>, <code>tests/Feature/DashboardTest.php</code>.</p>
         </div>
     </details>
