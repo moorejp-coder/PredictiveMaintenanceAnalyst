@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Privacy Policy | {{ config('app.name', 'PRISM') }}</title>
-    <meta name="description" content="How PRISM handles data. PRISM has {{ config('prism.require_login') ? 'an invite-only contest judge sign-in' : 'no accounts' }} and no analytics. One form records a name and a reason when an operator overrides a stop warning.">
+    <meta name="description" content="How PRISM handles data. PRISM has {{ config('prism.require_login') ? 'an invite-only sign-in' : 'no accounts' }} and no analytics. One form records a name and a reason when an operator overrides a stop warning.">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     @include('partials.brand-head')
     <style nonce="{{ $cspNonce ?? '' }}">
@@ -23,7 +23,7 @@
     <div class="summary">
         <h2 style="border:0;margin-top:12px">Summary</h2>
         <ul>
-            <li>@if (config('prism.require_login'))PRISM has no sign-up. Contest judges get an invited account, and the dashboard needs that sign-in.@else PRISM has no accounts or sign-in.@endif One form, the override log, asks for a name and a reason.</li>
+            <li>@if (config('prism.require_login'))PRISM has no sign-up. The dashboard needs a sign-in. Contest judges use the read-only Judge Demo. Other people get an invited account when they ask the entrant for a link.@else PRISM has no accounts or sign-in.@endif One form, the override log, asks for a name and a reason.</li>
             <li>Every sensor reading on the dashboard is simulated. The override form asks for your name. Enter nothing else personal.</li>
             <li>PRISM uses no analytics, advertising, tracking pixels or third-party scripts.</li>
             <li>If you press Explain this reading, PRISM's server sends the simulated score result (numbers and labels, no personal data) to Anthropic's API and shows the reply.</li>
@@ -45,7 +45,7 @@
         <tr><td>Rate-limit counters</td><td>A counter tied to your IP address that counts requests to the sign-in, invite, override, rating and Explain this reading routes. The server keeps it in its cache for about a minute.</td><td>To stop abuse and keep the AI bill down.</td></tr>
         <tr><td>Security cookie</td><td>A cookie named <code>XSRF-TOKEN</code>. The framework sets it to guard against forged requests.</td><td>Security.</td></tr>
     </table>
-    <p>@if (config('prism.require_login'))PRISM stores three kinds of record. The first is the judge accounts. Each holds a name, an email address and a password stored as a hash. The entrant adds each one by typing the judge's email address on a private page, and nobody can sign up alone. Each invite also stores a one-time link token (stored as a hash) next to the email address until the judge uses it or it expires after 7 days. The second is the override log.@else PRISM stores two kinds of record. The first is the override log.@endif It holds the name and reason you type. A password protects the page that lists the log. @if (config('prism.require_login'))The third @else The second @endif is a rating of an AI answer, if you press Helpful or Wrong. It holds the rating, the step, the source, the scenario, the reading number and the time. It holds no name, no free text and no IP address.</p>
+    <p>@if (config('prism.require_login'))PRISM stores three kinds of record. The first is invited accounts. Each holds a name, an email address and a password stored as a hash. The entrant adds each one by typing the person's email address on a private page, and nobody can sign up alone. Each invite also stores a one-time link token (stored as a hash) next to the email address until the person uses it or it expires after 7 days. The second is the override log.@else PRISM stores two kinds of record. The first is the override log.@endif It holds the name and reason you type. A password protects the page that lists the log. @if (config('prism.require_login'))The third @else The second @endif is a rating of an AI answer, if you press Helpful or Wrong. It holds the rating, the step, the source, the scenario, the reading number and the time. It holds no name, no free text and no IP address.</p>
     <p>Both cookies are strictly necessary for the site to work, so PRISM does not ask for cookie consent. A short notice tells you about them. Your choice to dismiss the notice is stored in your browser (local storage), not in a cookie, and is never sent to PRISM. The same is true of your light or dark theme choice (local storage, key <code>prism-theme</code>)@if (config('prism.require_login')) and a note that you closed the judge guide (session storage, key <code>prism-guide-seen</code>, cleared when you close the tab)@endif. <button type="button" onclick="window.prismCookieNotice &amp;&amp; window.prismCookieNotice.open()" style="background:none;border:0;padding:0;color:var(--prism-accent);text-decoration:underline;cursor:pointer;font:inherit">Show the cookie notice again</button>.</p>
 
     <h2>3. How PRISM uses information</h2>
@@ -58,7 +58,7 @@
 
     <h2>4. Who receives information</h2>
     <p>PRISM runs on Amazon Web Services (AWS Elastic Beanstalk, region us-east-2). AWS hosts the server and its logs. See the <a href="https://aws.amazon.com/privacy/">AWS Privacy Notice</a> for how AWS handles data.</p>
-    <p>PRISM does not sell your information. PRISM does not share it with anyone else, except where the law requires disclosure. @if (config('prism.require_login'))PRISM also gives a judge's email address to Amazon Simple Email Service (Amazon SES), part of AWS, which delivers the invite. @endif</p>
+    <p>PRISM does not sell your information. PRISM does not share it with anyone else, except where the law requires disclosure. @if (config('prism.require_login'))PRISM also gives an invited person's email address to Amazon Simple Email Service (Amazon SES), part of AWS, which delivers the invite. @endif</p>
 
     <h2>5. Retention</h2>
     <p>PRISM sets no custom retention period for server logs. Logs stay on the hosting server until the platform rotates them or the server is replaced or shut down. Session cookies expire after 120 minutes of inactivity. You can delete cookies in your browser settings at any time. Override log entries have no deletion schedule. They stay until James Moore removes them or the server is replaced or shut down.</p>
@@ -78,7 +78,7 @@
 
     <h2>9. Third-party links</h2>
     <p>The dashboard cites outside sources, including the UCI Machine Learning Repository. Those sites have their own privacy policies.</p>
-    <p>When you press Explain this reading, PRISM's server sends the simulated score result to Anthropic's API. PRISM sends no text typed by a visitor. Anthropic has its own privacy policy.@if (config('prism.require_login')) When the entrant invites a judge, PRISM's server sends the judge's email address to Amazon SES, which delivers the invite. The AWS Privacy Notice linked above covers that service.@endif</p>
+    <p>When you press Explain this reading, PRISM's server sends the simulated score result to Anthropic's API. PRISM sends no text typed by a visitor. Anthropic has its own privacy policy.@if (config('prism.require_login')) When the entrant invites a person, PRISM's server sends the invited person's email address to Amazon SES, which delivers the invite. The AWS Privacy Notice linked above covers that service.@endif</p>
 
     <h2>10. Changes</h2>
     <p>The roadmap includes live sensor feeds and alerts. Those features would collect new data. PRISM will update this policy before it collects anything new. The effective date at the top shows the latest version.</p>
