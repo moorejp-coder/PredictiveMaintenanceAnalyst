@@ -89,7 +89,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026.
 
 ## Sign in and the Judge Demo
 
-- With `REQUIRE_LOGIN=false` (the default for a local copy), the dashboard is public and `/login` goes back to `/`. The live site runs with `REQUIRE_LOGIN=true`, so the dashboard and the `/api/` routes need a sign-in. `/ai`, `/faq`, `/privacy`, `/terms` and `/login` stay public.
+- With `REQUIRE_LOGIN=false` (the default for a local copy), the dashboard is public and `/login` goes back to `/`. The live site runs with `REQUIRE_LOGIN=true`, so the dashboard and the `/api/` routes need a sign-in. A production copy with the property unset requires sign-in too. `/ai`, `/faq`, `/privacy`, `/terms` and `/login` stay public.
 - Judge Demo: open `/demo`. No account, password or email is involved. The demo is read-only. The override log and AI ratings return HTTP 403 and save nothing. For a demo session `/overrides` shows three made-up entries. "Exit Demo" ends the session.
 - Judges receive no link. A person who asks for one gets an invite from the entrant, who types the address on `/admin/invites` (its own password). The link works once, expires after 30 minutes and lets the person choose a password of at least 12 characters.
 - Logins are limited to 5 tries a minute. Details: [docs/ACCESS.md](docs/ACCESS.md).
