@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\OverrideLog;
+use App\Models\User;
 use App\Support\PlainText;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -21,7 +23,7 @@ class MyOverrideController extends Controller
     public function index(Request $request): JsonResponse
     {
         $rows = OverrideLog::query()
-            ->where('user_id', $request->user()->getAuthIdentifier())
+            ->where('user_id', $this->currentUser($request)->getAuthIdentifier())
             ->latest('id')
             ->limit(200)
             ->get();
@@ -71,6 +73,12 @@ class MyOverrideController extends Controller
         $overrideLog->delete();
 
         return response()->json(null, 204);
+    }
+
+    /** The routes sit behind the auth middleware, so a missing user is an error, not a normal case. */
+    private function currentUser(Request $request): User
+    {
+        return $request->user() ?? throw new AuthenticationException;
     }
 
     /** @return array<string, mixed> */

@@ -10,12 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * A visitor's rating of one AI answer: "helpful" or "wrong". It holds no
  * personal data, no free text and no IP address.
+ *
+ * @property string $uuid The public id used in API responses.
  */
 class AiFeedback extends Model
 {
     use HasUuids;
 
-    /** The uuid column is the public id. The integer id stays internal. */
+    /**
+     * The uuid column is the public id. The integer id stays internal.
+     *
+     * @return list<string>
+     */
     public function uniqueIds(): array
     {
         return ['uuid'];
