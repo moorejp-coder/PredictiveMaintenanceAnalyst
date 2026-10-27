@@ -55,17 +55,17 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
         // A user's own override entries. Each route that names an entry checks
         // the owner in OverrideLogPolicy and answers 403 for anyone else. The
         // auth middleware keeps out guests and demo sessions.
-        Route::get('/api/overrides', [MyOverrideController::class, 'index'])->middleware('throttle:60,1');
+        Route::get('/api/overrides', [MyOverrideController::class, 'index'])->middleware('throttle:60,1,my-overrides');
         Route::get('/api/overrides/{overrideLog}', [MyOverrideController::class, 'show'])
-            ->whereUuid('overrideLog')->middleware('throttle:60,1');
+            ->whereUuid('overrideLog')->middleware('throttle:60,1,my-overrides');
         Route::put('/api/overrides/{overrideLog}', [MyOverrideController::class, 'update'])
-            ->whereUuid('overrideLog')->middleware(['throttle:20,1', RejectAbuse::class]);
+            ->whereUuid('overrideLog')->middleware(['throttle:20,1,my-overrides-write', RejectAbuse::class]);
         // Example of the reusable gate (AuthorizeResource): it asks OverrideLogPolicy
         // for the 'delete' ability on the entry in the URL, answers 401 or 403, and logs a
         // refused request. The controller keeps its own check as a second layer.
         Route::delete('/api/overrides/{overrideLog}', [MyOverrideController::class, 'destroy'])
             ->whereUuid('overrideLog')
-            ->middleware(['throttle:20,1', 'authorize.resource:delete,overrideLog']);
+            ->middleware(['throttle:20,1,my-overrides-write', 'authorize.resource:delete,overrideLog']);
     });
     Route::middleware(RequireInviteAdminPassword::class)->group(function () {
         Route::get('/admin/invites', [InviteController::class, 'index']);
@@ -79,7 +79,14 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
 // either way, because the gate reads it.
 Route::middleware(RequireLogin::class)->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
-    Route::get('/api/readings', [DashboardController::class, 'readings'])->middleware(['throttle:120,1', RejectAbuse::class]);
+    Route::get('/api/readings', [DashboardController::class, 'readings'])->middleware([
+        // The prefix gives this route its own counter. Without one, every
+        // throttle route shares a single counter per signed-in user, and the
+        // dashboard's polling (one request every 1.2 seconds) would use up the
+        // limits of the override and AI routes.
+        'throttle:120,1,readings',
+        RejectAbuse::class,
+    ]);
     // Two small AI calls, run only when a visitor presses "Explain this reading".
     // Rate limited so a script cannot run up the AI bill.
     // The diagnosis route can run up to four model rounds, so its limit is lower.
