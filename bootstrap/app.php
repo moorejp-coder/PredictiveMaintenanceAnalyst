@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthorizeResource;
 use App\Http\Middleware\BindSessionToClient;
 use App\Http\Middleware\EnforceSessionAge;
 use App\Http\Middleware\RedirectTrailingSlash;
@@ -22,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // request on over HTTP. Trust its forwarded headers so Laravel builds
         // https links.
         $middleware->trustProxies(at: '*');
+        // authorize.resource:<check>,<routeParam> (see AuthorizeResource).
+        $middleware->alias(['authorize.resource' => AuthorizeResource::class]);
         $middleware->prepend(RedirectTrailingSlash::class);
         // Prepended last, so it runs first and every response gets the headers.
         $middleware->prepend(SecurityHeaders::class);

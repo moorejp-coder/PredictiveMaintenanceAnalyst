@@ -53,6 +53,9 @@ class OverrideController extends Controller
         }
 
         $log = OverrideLog::create([
+            // The signed-in account that sent the request, so the log shows who
+            // acted even when the typed name is wrong. Null with the sign-in off.
+            'user_id' => $request->user()?->getAuthIdentifier(),
             'operator_name' => $data['operator_name'],
             'reason' => $data['reason'],
             'machine' => self::MACHINE,
@@ -64,7 +67,7 @@ class OverrideController extends Controller
         ]);
 
         return response()->json([
-            'id' => $log->id,
+            'id' => $log->uuid,
             'recorded_at' => $log->created_at?->toIso8601String(),
         ], 201);
     }
@@ -92,7 +95,7 @@ class OverrideController extends Controller
         }
 
         return view('overrides', [
-            'logs' => OverrideLog::query()->latest('id')->limit(200)->get(),
+            'logs' => OverrideLog::withTrashed()->latest('id')->limit(200)->get(),
             'cycle' => SensorSimulator::CYCLE,
             'ratings' => $ratings,
             'helpful' => $helpful,

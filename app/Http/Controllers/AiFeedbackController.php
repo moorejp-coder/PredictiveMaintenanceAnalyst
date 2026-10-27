@@ -28,6 +28,6 @@ class AiFeedbackController extends Controller
 
         $row = AiFeedback::create($data);
 
-        return response()->json(['id' => $row->id], 201);
+        return response()->json(['id' => $row->uuid], 201);
     }
 }

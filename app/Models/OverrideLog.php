@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * One operator decision to keep a machine running after PRISM said
@@ -13,7 +15,21 @@ use Illuminate\Database\Eloquent\Model;
  */
 class OverrideLog extends Model
 {
+    use HasUuids, SoftDeletes;
+
+    /** The uuid column is the public id. The integer id stays internal. */
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
     protected $fillable = [
+        'user_id',
         'operator_name',
         'reason',
         'machine',
@@ -22,12 +38,16 @@ class OverrideLog extends Model
         'risk_score',
         'action_shown',
         'reading',
+        'edited_at',
+        'original_operator_name',
+        'original_reason',
     ];
 
     protected function casts(): array
     {
         return [
             'reading' => 'array',
+            'edited_at' => 'datetime',
         ];
     }
 }

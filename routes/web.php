@@ -9,8 +9,10 @@ use App\Http\Controllers\DemoController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InviteController;
 use App\Http\Controllers\JudgePasswordController;
+use App\Http\Controllers\MyOverrideController;
 use App\Http\Controllers\OverrideController;
 use App\Http\Middleware\BlockInDemo;
+use App\Http\Middleware\CapAiCalls;
 use App\Http\Middleware\EnsureLoginEnabled;
 use App\Http\Middleware\RejectAbuse;
 use App\Http\Middleware\RequireInviteAdminPassword;
@@ -50,6 +52,20 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
         Route::get('/account', [AccountController::class, 'show'])->name('account');
         Route::post('/logout-everywhere', [AccountController::class, 'logoutEverywhere'])
             ->middleware(['throttle:5,1', RejectAbuse::class]);
+        // A user's own override entries. Each route that names an entry checks
+        // the owner in OverrideLogPolicy and answers 403 for anyone else. The
+        // auth middleware keeps out guests and demo sessions.
+        Route::get('/api/overrides', [MyOverrideController::class, 'index'])->middleware('throttle:60,1');
+        Route::get('/api/overrides/{overrideLog}', [MyOverrideController::class, 'show'])
+            ->whereUuid('overrideLog')->middleware('throttle:60,1');
+        Route::put('/api/overrides/{overrideLog}', [MyOverrideController::class, 'update'])
+            ->whereUuid('overrideLog')->middleware(['throttle:20,1', RejectAbuse::class]);
+        // Example of the reusable gate (AuthorizeResource): it asks OverrideLogPolicy
+        // for the 'delete' ability on the entry in the URL, answers 401 or 403, and logs a
+        // refused request. The controller keeps its own check as a second layer.
+        Route::delete('/api/overrides/{overrideLog}', [MyOverrideController::class, 'destroy'])
+            ->whereUuid('overrideLog')
+            ->middleware(['throttle:20,1', 'authorize.resource:delete,overrideLog']);
     });
     Route::middleware(RequireInviteAdminPassword::class)->group(function () {
         Route::get('/admin/invites', [InviteController::class, 'index']);
@@ -63,14 +79,14 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
 // either way, because the gate reads it.
 Route::middleware(RequireLogin::class)->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
-    Route::get('/api/readings', [DashboardController::class, 'readings'])->middleware(RejectAbuse::class);
+    Route::get('/api/readings', [DashboardController::class, 'readings'])->middleware(['throttle:120,1', RejectAbuse::class]);
     // Two small AI calls, run only when a visitor presses "Explain this reading".
     // Rate limited so a script cannot run up the AI bill.
     // The diagnosis route can run up to four model rounds, so its limit is lower.
     Route::get('/api/diagnosis', [AiController::class, 'diagnosis'])
-        ->middleware(['throttle:10,1', RejectAbuse::class]);
+        ->middleware(['throttle:10,1', CapAiCalls::class, RejectAbuse::class]);
     Route::get('/api/work-order', [AiController::class, 'workOrder'])
-        ->middleware(['throttle:30,1', RejectAbuse::class]);
+        ->middleware(['throttle:30,1', CapAiCalls::class, RejectAbuse::class]);
     // Override log. An operator who keeps a machine running after the High
     // "Stop the machine" warning records who, why and which reading. The write
     // uses the session and CSRF check. The review page needs its own password.

@@ -81,7 +81,13 @@ return [
     // because a password sent over HTTP is readable on the network.
     // Days a signed-in session lasts at most, however active (EnforceSessionAge).
     'session_max_days' => (int) env('SESSION_MAX_DAYS', 7),
-    'require_login' => (bool) env('REQUIRE_LOGIN', false),
+    // Fails closed: with no REQUIRE_LOGIN property set, production requires
+    // sign-in. Any other environment keeps it off unless the property is set.
+    'require_login' => (bool) env('REQUIRE_LOGIN', env('APP_ENV') === 'production'),
+
+    // Most AI answers the whole site serves per rolling day, counting every
+    // visitor and the Judge Demo together. Caps the AI bill. See CapAiCalls.
+    'ai_daily_cap' => (int) env('PRISM_AI_DAILY_CAP', 1000),
 
     // Password for the /admin/invites page, where the entrant invites judges
     // by email. Leave unset and the page returns 404. Use a value that no
