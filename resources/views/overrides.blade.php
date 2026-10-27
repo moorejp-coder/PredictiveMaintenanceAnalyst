@@ -61,7 +61,14 @@
                         <td class="num">{{ $log->id }}</td>
                         <td class="num"><time datetime="{{ $log->created_at->toIso8601String() }}">{{ $log->created_at->utc()->format('Y-m-d H:i:s') }}</time></td>
                         <td>{{ $log->operator_name }}</td>
-                        <td class="reason">{{ $log->reason }}</td>
+                        <td class="reason">{{ $log->reason }}
+                            @if (isset($log->edited_at))
+                                <br><small>Edited {{ $log->edited_at->utc()->format('Y-m-d H:i') }} UTC. Original name: {{ $log->original_operator_name }}. Original reason: {{ $log->original_reason }}</small>
+                            @endif
+                            @if (isset($log->deleted_at))
+                                <br><small><strong>Deleted by its owner</strong> {{ $log->deleted_at->utc()->format('Y-m-d H:i') }} UTC.</small>
+                            @endif
+                        </td>
                         <td>{{ $log->machine }}</td>
                         <td class="num">{{ $log->risk_score }} / 100</td>
                         <td>{{ \App\Services\SensorSimulator::SCENARIOS[$log->scenario]['label'] ?? $log->scenario }}, reading {{ ($log->tick % $cycle) + 1 }} of {{ $cycle }}</td>
