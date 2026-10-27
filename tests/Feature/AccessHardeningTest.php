@@ -49,4 +49,26 @@ class AccessHardeningTest extends TestCase
 
         $this->getJson('/api/readings?scenario=healthy&tick=999')->assertStatus(429);
     }
+
+    public function test_dashboard_polling_does_not_use_up_the_override_and_ai_limits(): void
+    {
+        config(['prism.require_login' => true]);
+        $this->actingAs(User::factory()->create());
+
+        // The dashboard asks for a reading every 1.2 seconds, about 50 a minute.
+        for ($i = 0; $i < 100; $i++) {
+            $this->getJson('/api/readings?scenario=overload&tick='.($i % 60))->assertOk();
+        }
+
+        $this->postJson('/api/overrides', [
+            'operator_name' => 'Pat Rivera',
+            'reason' => 'Finishing the last part of the shift with a supervisor watching.',
+            'scenario' => 'overload',
+            'tick' => 59,
+        ])->assertCreated();
+        $this->getJson('/api/diagnosis?scenario=overload&tick=59')->assertSuccessful();
+        $this->postJson('/api/ai-feedback', [
+            'step' => 'diagnosis', 'rating' => 'helpful', 'source' => 'ai', 'scenario' => 'overload', 'tick' => 59,
+        ])->assertCreated();
+    }
 }
