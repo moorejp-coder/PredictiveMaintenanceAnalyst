@@ -65,7 +65,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026.
 - When PRISM says "Stop the machine and inspect it now," the dashboard shows a "Keep running anyway" button.
 - The form asks for a name (2 to 100 characters) and a reason (10 to 500 characters).
 - The server rebuilds the reading and the score from the scenario and reading number. It accepts an entry only for a High-risk reading and ignores any score the browser sends.
-- `/overrides` lists the newest 200 entries behind its own password (`OVERRIDE_LOG_PASSWORD`). With no password set, the page returns 404.
+- `/overrides` lists the newest 200 entries for admin accounts only (`ADMIN_EMAIL`). With `REQUIRE_LOGIN` off, the page returns 404.
 - The write route is limited to 10 requests a minute. The log is a SQLite file on the host, so a replaced server erases it.
 
 ## AI steps
@@ -110,8 +110,8 @@ Requirements: PHP 8.4 or newer with the mbstring, xml, curl, zip and sqlite3 ext
 1. `composer install`
 2. `cp .env.example .env && php artisan key:generate`
 3. `touch database/database.sqlite && php artisan migrate` (creates the override log and AI feedback tables)
-4. Optional: set `OVERRIDE_LOG_PASSWORD` and `ANTHROPIC_API_KEY` in `.env`
-5. Optional, to try the sign-in: set `REQUIRE_LOGIN=true` and `INVITE_ADMIN_PASSWORD` in `.env`. Keep `MAIL_MAILER=log`, then open `/admin/invites`, invite an address and copy the link from `storage/logs/laravel.log`. Or set `JUDGE_EMAIL` and `JUDGE_PASSWORD` and run `php artisan db:seed --class=JudgeSeeder`
+4. Optional: set `ANTHROPIC_API_KEY` in `.env`
+5. Optional, to try the sign-in: set `REQUIRE_LOGIN=true`, `ADMIN_EMAIL` and `ADMIN_PASSWORD` (12+ characters) in `.env`, then run `php artisan db:seed --class=AdminSeeder` and sign in. Keep `MAIL_MAILER=log`, then open `/admin/invites`, invite an address and copy the link from `storage/logs/laravel.log`. Or set `JUDGE_EMAIL` and `JUDGE_PASSWORD` and run `php artisan db:seed --class=JudgeSeeder`
 6. `php artisan serve`
 7. Open http://127.0.0.1:8000/
 8. Run the tests: `php artisan test`

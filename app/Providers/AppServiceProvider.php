@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Http\Middleware\AuthorizeResource;
+use App\Models\User;
 use App\Services\Ai\AiClient;
 use App\Support\CanonicalUrl;
 use Illuminate\Support\Facades\URL;
@@ -25,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // authorize.resource:is-admin guards the admin pages (see routes/web.php).
+        AuthorizeResource::define('is-admin', fn (User $user): bool => $user->isAdmin());
+
         // When APP_URL is https, build every generated link as https so the
         // browser does not block the dashboard's /api/readings call as mixed
         // content. nginx on the Elastic Beanstalk instance ends HTTPS.

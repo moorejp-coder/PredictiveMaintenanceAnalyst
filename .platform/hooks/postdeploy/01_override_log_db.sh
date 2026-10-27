@@ -24,6 +24,11 @@ php artisan migrate --force || echo "PRISM: migrate failed. The override log is 
 # This backup account is the one that comes back on its own.
 php artisan db:seed --class=JudgeSeeder --force || echo "PRISM: the backup judge account was not created."
 
+# The entrant's admin account for /admin/invites and /overrides, from
+# ADMIN_EMAIL and ADMIN_PASSWORD. Without it nobody is an admin and both pages
+# answer 403.
+php artisan db:seed --class=AdminSeeder --force || echo "PRISM: the admin account was not created."
+
 # The web server user must be able to write the file and its folder.
 chown -R webapp:webapp "$DATA_DIR" || true
 chmod 750 "$DATA_DIR" || true
