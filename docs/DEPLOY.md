@@ -29,7 +29,8 @@ The zip leaves out `data/` and `docs/`. The live site does not need them. Deploy
 Set these in the Elastic Beanstalk console, never in the repository:
 - `ANTHROPIC_API_KEY`. Without it PRISM makes no AI call. `ANTHROPIC_MODEL`, `ANTHROPIC_TIMEOUT` and `PRISM_INVESTIGATOR` are optional.
 - `APP_URL`, `APP_DOMAIN`, `CERTBOT_EMAIL` for the HTTPS setup.
-- `REQUIRE_LOGIN=true` turns the sign-in on. The Judge Demo needs no other property.
+- `REQUIRE_LOGIN=true` turns the sign-in on. The Judge Demo needs no other property. With the property missing, production requires sign-in anyway.
+- `PRISM_AI_DAILY_CAP` is optional. It sets the most AI answers the whole site serves per day (default 1000).
 - `OVERRIDE_LOG_PASSWORD` protects the `/overrides` review page.
 - Only for invited accounts: `INVITE_ADMIN_PASSWORD` and the `MAIL_*` values (see [ACCESS.md](ACCESS.md)).
 - Optional backup account: `JUDGE_EMAIL` and `JUDGE_PASSWORD`.
