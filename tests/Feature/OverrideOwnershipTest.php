@@ -58,7 +58,6 @@ class OverrideOwnershipTest extends TestCase
 
     public function test_an_edit_keeps_the_original_and_a_delete_keeps_the_row_for_the_review_page(): void
     {
-        config(['prism.override_log_password' => 'review-pass-123']);
         $log = $this->entry($this->owner);
         $this->actingAs($this->owner);
 
@@ -73,7 +72,7 @@ class OverrideOwnershipTest extends TestCase
         $this->deleteJson("/api/overrides/{$log->uuid}")->assertNoContent();
         $this->getJson('/api/overrides')->assertJsonCount(0, 'data');
 
-        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:review-pass-123')])
+        $this->actingAs($this->adminUser())->get('/overrides')
             ->assertOk()
             ->assertSee('Third Name')
             ->assertSee('Original name: Pat Rivera')

@@ -72,9 +72,6 @@ return [
         'cap' => 0.5,
     ],
 
-    // Password for the /overrides review page. Leave unset and the page returns 404.
-    'override_log_password' => env('OVERRIDE_LOG_PASSWORD'),
-
     // Sign-in gate. Off by default: the dashboard is public and /login goes
     // back to /. Set REQUIRE_LOGIN=true (an Elastic Beanstalk property) with
     // JUDGE_EMAIL and JUDGE_PASSWORD to turn it on. Planned for after HTTPS,
@@ -89,11 +86,20 @@ return [
     // visitor and the Judge Demo together. Caps the AI bill. See CapAiCalls.
     'ai_daily_cap' => (int) env('PRISM_AI_DAILY_CAP', 1000),
 
-    // Password for the /admin/invites page, where the entrant invites judges
-    // by email. Leave unset and the page returns 404. Use a value that no
-    // other PRISM password uses. Needs REQUIRE_LOGIN=true and working MAIL_*
-    // settings.
-    'invite_admin_password' => env('INVITE_ADMIN_PASSWORD'),
+    // Admin accounts. The entrant's own accounts open /admin/invites and the
+    // /overrides review page. There is no shared password. An account is an
+    // admin when its email is verified and equals ADMIN_EMAIL or appears in
+    // ADMIN_EMAILS (comma separated). AdminSeeder creates the ADMIN_EMAIL
+    // account from ADMIN_PASSWORD on every deploy, like JudgeSeeder. Set all
+    // of these as Elastic Beanstalk environment properties, never in the
+    // code. With none set, nobody is an admin and both pages return 403.
+    // Needs REQUIRE_LOGIN=true. Invites also need working MAIL_* settings.
+    'admin' => [
+        'name' => env('ADMIN_NAME', 'PRISM Admin'),
+        'email' => env('ADMIN_EMAIL'),
+        'password' => env('ADMIN_PASSWORD'),
+        'emails' => env('ADMIN_EMAILS', ''),
+    ],
 
     // Optional: one fixed judge account made by JudgeSeeder. The invite page
     // is the main way to make judge accounts. JudgeSeeder reads these. Set them as Elastic

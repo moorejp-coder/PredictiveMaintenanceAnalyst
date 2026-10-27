@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -19,21 +20,28 @@ class InviteTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function adminPassword(): string
-    {
-        return $this->fixturePassword('admin');
-    }
-
     protected function setUp(): void
     {
         parent::setUp();
-        config(['prism.require_login' => true, 'prism.invite_admin_password' => $this->adminPassword()]);
+        config(['prism.require_login' => true]);
     }
 
-    /** @return array<string, string> */
-    private function admin(): array
+    /** Sends the request as the signed-in admin, then signs out so later requests are guest requests. */
+    private function adminGet(string $uri): TestResponse
     {
-        return ['Authorization' => 'Basic '.base64_encode('entrant:'.$this->adminPassword())];
+        $response = $this->actingAs($this->adminUser())->get($uri);
+        $this->app['auth']->forgetGuards();
+
+        return $response;
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function adminPost(string $uri, array $data): TestResponse
+    {
+        $response = $this->actingAs($this->adminUser())->post($uri, $data);
+        $this->app['auth']->forgetGuards();
+
+        return $response;
     }
 
     private function newToken(User $user): string
@@ -45,24 +53,25 @@ class InviteTest extends TestCase
     {
         config(['prism.require_login' => false]);
 
-        $this->withHeaders($this->admin())->get('/admin/invites')->assertNotFound();
-        $this->withHeaders($this->admin())->post('/admin/invites', ['email' => 'judge@example.test'])->assertNotFound();
+        $this->adminGet('/admin/invites')->assertNotFound();
+        $this->adminPost('/admin/invites', ['email' => 'judge@example.test'])->assertNotFound();
         $this->get('/set-password/anything?email=judge@example.test')->assertNotFound();
         $this->post('/set-password', [])->assertNotFound();
     }
 
-    public function test_the_invite_page_is_404_without_a_password_setting_and_401_without_the_password(): void
+    public function test_the_invite_page_is_for_admin_accounts_only(): void
     {
-        config(['prism.invite_admin_password' => null]);
-        $this->withHeaders($this->admin())->get('/admin/invites')->assertNotFound();
+        // A guest is sent to sign in, or gets 401 JSON.
+        $this->get('/admin/invites')->assertRedirect('/login');
+        $this->getJson('/admin/invites')->assertUnauthorized();
 
-        config(['prism.invite_admin_password' => $this->adminPassword()]);
-        // withHeaders() above stays on every later request in this test, so
-        // clear it before checking that a request with no password gets 401.
-        $this->flushHeaders();
-        $this->get('/admin/invites')->assertStatus(401);
-        $this->get('/admin/invites', ['Authorization' => 'Basic '.base64_encode('entrant:wrong')])->assertStatus(401);
-        $this->withHeaders($this->admin())->get('/admin/invites')->assertOk()->assertSee('Invite a judge');
+        // A signed-in judge who is not an admin gets 403 and nothing is created.
+        $this->signIn()->get('/admin/invites')->assertForbidden();
+        $this->post('/admin/invites', ['email' => 'judge@example.test'])->assertForbidden();
+        $this->assertDatabaseCount('users', 0);
+        $this->app['auth']->forgetGuards();
+
+        $this->adminGet('/admin/invites')->assertOk()->assertSee('Invite a judge');
     }
 
     public function test_the_invite_page_lists_accounts_with_their_status(): void
@@ -70,7 +79,7 @@ class InviteTest extends TestCase
         User::factory()->create(['email' => 'active@example.test']);
         User::factory()->unverified()->create(['email' => 'waiting@example.test']);
 
-        $this->withHeaders($this->admin())->get('/admin/invites')
+        $this->adminGet('/admin/invites')
             ->assertSee('active@example.test')
             ->assertSee('waiting@example.test')
             ->assertSee('<span class="tag">Active</span>', false)
@@ -81,8 +90,7 @@ class InviteTest extends TestCase
     {
         Notification::fake();
 
-        $this->withHeaders($this->admin())
-            ->post('/admin/invites', ['email' => '  Judge@Example.TEST ', 'name' => 'Pat Judge'])
+        $this->adminPost('/admin/invites', ['email' => '  Judge@Example.TEST ', 'name' => 'Pat Judge'])
             ->assertSessionHas('status', 'Invite sent to judge@example.test.');
 
         $user = User::where('email', 'judge@example.test')->firstOrFail();
@@ -110,7 +118,7 @@ class InviteTest extends TestCase
     public function test_the_whole_flow_from_invite_to_sign_in(): void
     {
         Notification::fake();
-        $this->withHeaders($this->admin())->post('/admin/invites', ['email' => 'judge@example.test']);
+        $this->adminPost('/admin/invites', ['email' => 'judge@example.test']);
         $user = User::where('email', 'judge@example.test')->firstOrFail();
 
         $token = null;
@@ -227,9 +235,9 @@ class InviteTest extends TestCase
     {
         Notification::fake();
 
-        $this->withHeaders($this->admin())->post('/admin/invites', ['email' => 'judge@example.test']);
+        $this->adminPost('/admin/invites', ['email' => 'judge@example.test']);
         // A second invite inside a minute is held back.
-        $this->withHeaders($this->admin())->post('/admin/invites', ['email' => 'JUDGE@example.test'])
+        $this->adminPost('/admin/invites', ['email' => 'JUDGE@example.test'])
             ->assertSessionHasErrors('email');
 
         $this->assertDatabaseCount('users', 1);
@@ -240,7 +248,7 @@ class InviteTest extends TestCase
     {
         Notification::fake();
 
-        $this->withHeaders($this->admin())->post('/admin/invites', ['email' => 'not-an-email'])
+        $this->adminPost('/admin/invites', ['email' => 'not-an-email'])
             ->assertSessionHasErrors('email');
 
         $this->assertDatabaseCount('users', 0);

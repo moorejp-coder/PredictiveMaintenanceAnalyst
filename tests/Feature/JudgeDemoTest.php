@@ -109,9 +109,8 @@ class JudgeDemoTest extends TestCase
             ->assertDontSee('data-open-every-load', false);
     }
 
-    public function test_the_demo_can_open_a_sample_override_log_without_a_password(): void
+    public function test_the_demo_can_open_a_sample_override_log_without_signing_in(): void
     {
-        config(['prism.override_log_password' => $this->fixturePassword('secret')]);
         $this->get('/demo');
 
         $this->get('/overrides')
@@ -122,9 +121,9 @@ class JudgeDemoTest extends TestCase
             ->assertSee('Recent AI ratings');
     }
 
-    public function test_the_sample_override_log_works_with_no_password_set(): void
+    public function test_the_sample_override_log_works_with_no_admin_configured(): void
     {
-        config(['prism.override_log_password' => '']);
+        config(['prism.admin.email' => null, 'prism.admin.emails' => '']);
         $this->get('/demo');
         $this->get('/overrides')->assertOk()->assertSee('Sample data, read only.');
     }
@@ -162,24 +161,21 @@ class JudgeDemoTest extends TestCase
         }
     }
 
-    public function test_the_override_log_still_needs_its_password_without_the_demo(): void
+    public function test_the_override_log_still_needs_an_admin_without_the_demo(): void
     {
-        config(['prism.override_log_password' => $this->fixturePassword('secret')]);
-
-        $this->get('/overrides')->assertStatus(401);
+        $this->get('/overrides')->assertRedirect('/login');
         $this->get('/demo');
         $this->get('/overrides')->assertOk();
         $this->post('/logout');
-        $this->get('/overrides')->assertStatus(401);
+        $this->get('/overrides')->assertRedirect('/login');
     }
 
-    public function test_a_signed_in_user_without_the_password_does_not_get_the_sample(): void
+    public function test_a_signed_in_user_who_is_not_an_admin_does_not_get_the_sample(): void
     {
-        config(['prism.override_log_password' => $this->fixturePassword('secret')]);
         $user = User::factory()->create();
         $this->actingAs($user)->get('/demo');
 
-        $this->actingAs($user)->get('/overrides')->assertStatus(401);
+        $this->actingAs($user)->get('/overrides')->assertForbidden();
     }
 
     public function test_the_demo_link_does_nothing_when_the_sign_in_is_off(): void

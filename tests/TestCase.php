@@ -32,6 +32,18 @@ abstract class TestCase extends BaseTestCase
         return (string) env('TEST_PASSWORD_BASE', 'phpunit-fixture').'-'.$label;
     }
 
+    /**
+     * A signed-in admin (verified email equal to ADMIN_EMAIL). Not saved, so no
+     * database is needed. Sets the admin email in config.
+     */
+    protected function adminUser(): User
+    {
+        config(['prism.admin.email' => 'admin@example.test']);
+
+        return (new User(['name' => 'Test Admin', 'email' => 'admin@example.test']))
+            ->forceFill(['email_verified_at' => now()]);
+    }
+
     protected function signIn(): static
     {
         return $this->actingAs(new User(['name' => 'Test Judge', 'email' => 'judge@example.test']));

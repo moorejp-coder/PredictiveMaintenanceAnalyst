@@ -15,9 +15,7 @@ use App\Http\Middleware\BlockInDemo;
 use App\Http\Middleware\CapAiCalls;
 use App\Http\Middleware\EnsureLoginEnabled;
 use App\Http\Middleware\RejectAbuse;
-use App\Http\Middleware\RequireInviteAdminPassword;
 use App\Http\Middleware\RequireLogin;
-use App\Http\Middleware\RequireOverrideLogPassword;
 use App\Support\CanonicalUrl;
 use Illuminate\Support\Facades\Route;
 
@@ -67,10 +65,15 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
             ->whereUuid('overrideLog')
             ->middleware(['throttle:20,1,my-overrides-write', 'authorize.resource:delete,overrideLog']);
     });
-    Route::middleware(RequireInviteAdminPassword::class)->group(function () {
+    // Admin accounts only. A guest gets 401 (or a redirect to /login), a signed-in
+    // user who is not an admin gets 403, and the refusal is logged.
+    Route::middleware('authorize.resource:is-admin')->group(function () {
         Route::get('/admin/invites', [InviteController::class, 'index']);
         Route::post('/admin/invites', [InviteController::class, 'store'])->middleware(['throttle:10,1', RejectAbuse::class]);
     });
+    // The override review page. Admins see the real log. A Judge Demo session sees
+    // fixed sample rows and reads nothing from the log.
+    Route::get('/overrides', [OverrideController::class, 'index'])->middleware('admin.or.demo');
 });
 
 // With REQUIRE_LOGIN on, the dashboard and every route it calls need a
@@ -103,8 +106,6 @@ Route::middleware(RequireLogin::class)->group(function () {
     Route::post('/api/ai-feedback', [AiFeedbackController::class, 'store'])
         ->middleware([BlockInDemo::class, 'throttle:20,1', RejectAbuse::class]);
 });
-Route::get('/overrides', [OverrideController::class, 'index'])
-    ->middleware(RequireOverrideLogPassword::class);
 // Public. Reports only ok or unavailable, so a monitor can poll it.
 Route::get('/health', HealthController::class);
 Route::view('/ai', 'ai');

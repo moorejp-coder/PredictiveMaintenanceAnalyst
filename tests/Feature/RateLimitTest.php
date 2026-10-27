@@ -98,13 +98,13 @@ class RateLimitTest extends TestCase
     public function test_the_invite_form_allows_ten_tries_a_minute(): void
     {
         Notification::fake();
-        config(['prism.require_login' => true, 'prism.invite_admin_password' => $this->fixturePassword('admin')]);
-        $headers = ['Authorization' => 'Basic '.base64_encode('entrant:'.$this->fixturePassword('admin'))];
+        config(['prism.require_login' => true]);
+        $this->actingAs($this->adminUser());
 
         for ($i = 0; $i < 10; $i++) {
-            $this->post('/admin/invites', ['email' => 'judge'.$i.'@example.test'], $headers)->assertSessionHasNoErrors();
+            $this->post('/admin/invites', ['email' => 'judge'.$i.'@example.test'])->assertSessionHasNoErrors();
         }
 
-        $this->post('/admin/invites', ['email' => 'judge10@example.test'], $headers)->assertStatus(429);
+        $this->post('/admin/invites', ['email' => 'judge10@example.test'])->assertStatus(429);
     }
 }

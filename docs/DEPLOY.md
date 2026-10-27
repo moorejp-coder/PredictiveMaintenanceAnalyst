@@ -31,8 +31,8 @@ Set these in the Elastic Beanstalk console, never in the repository:
 - `APP_URL`, `APP_DOMAIN`, `CERTBOT_EMAIL` for the HTTPS setup.
 - `REQUIRE_LOGIN=true` turns the sign-in on. The Judge Demo needs no other property. With the property missing, production requires sign-in anyway.
 - `PRISM_AI_DAILY_CAP` is optional. It sets the most AI answers the whole site serves per day (default 1000).
-- `OVERRIDE_LOG_PASSWORD` protects the `/overrides` review page.
-- Only for invited accounts: `INVITE_ADMIN_PASSWORD` and the `MAIL_*` values (see [ACCESS.md](ACCESS.md)).
+- `ADMIN_EMAIL` and `ADMIN_PASSWORD` (12 or more characters) create the admin account on each deploy. Only an admin opens `/overrides` and `/admin/invites`. Optional: `ADMIN_NAME`, and `ADMIN_EMAILS` (comma-separated addresses that also count as admins).
+- Only for invited accounts: the `MAIL_*` values (see [ACCESS.md](ACCESS.md)).
 - Optional backup account: `JUDGE_EMAIL` and `JUDGE_PASSWORD`.
 
 ## If the server is replaced

@@ -27,6 +27,6 @@ When PRISM says "Stop the machine and inspect it now," the dashboard shows a "Ke
 - The button opens a form for the operator's name (2 to 100 characters) and a reason (10 to 500 characters).
 - The server rebuilds the reading and the score from the scenario and reading number. It accepts an entry only for a High-risk reading, and it ignores any score the browser sends.
 - Each entry stores the name, the reason, the time, the machine, the risk score, the action shown and the reading.
-- The review page `/overrides` lists the newest 200 entries. It asks for a password: sign in with any user name and the value of the `OVERRIDE_LOG_PASSWORD` environment property. With no password set, the page returns 404.
+- The review page `/overrides` lists the newest 200 entries. Only a signed-in admin account opens it. Guests are sent to the sign-in page and other accounts get 403. With `REQUIRE_LOGIN` off, the page returns 404.
 - The write route is limited to 10 requests a minute.
 - Limits: the name is whatever the operator types and is not tied to any sign-in, so it is not verified. The log sends no notification to anyone. The log is a SQLite file on the host, so a replaced or rebuilt server erases it.

@@ -169,40 +169,6 @@ class LoginTest extends TestCase
         $this->assertSame(7, config('prism.session_max_days'));
     }
 
-    public function test_the_invite_admin_page_locks_out_an_address_after_ten_wrong_passwords(): void
-    {
-        config(['prism.invite_admin_password' => $this->fixturePassword('admin')]);
-        $wrong = ['Authorization' => 'Basic '.base64_encode('entrant:wrong')];
-        $right = ['Authorization' => 'Basic '.base64_encode('entrant:'.$this->fixturePassword('admin'))];
-
-        for ($i = 0; $i < 10; $i++) {
-            $this->get('/admin/invites', $wrong)->assertStatus(401);
-        }
-
-        $this->get('/admin/invites', $wrong)->assertStatus(429);
-        $this->get('/admin/invites', $right)->assertStatus(429);
-
-        $this->travel(16)->minutes();
-        $this->get('/admin/invites', $right)->assertOk();
-    }
-
-    public function test_the_override_log_page_locks_out_an_address_after_ten_wrong_passwords(): void
-    {
-        config(['prism.override_log_password' => $this->fixturePassword('override')]);
-        $wrong = ['Authorization' => 'Basic '.base64_encode('judge:wrong')];
-
-        // A visit with no password at all is the browser's first request, not a guess.
-        for ($i = 0; $i < 12; $i++) {
-            $this->get('/overrides')->assertStatus(401);
-        }
-
-        for ($i = 0; $i < 10; $i++) {
-            $this->get('/overrides', $wrong)->assertStatus(401);
-        }
-
-        $this->get('/overrides', $wrong)->assertStatus(429);
-    }
-
     public function test_sign_out_ends_the_session(): void
     {
         $user = $this->judge();
@@ -219,13 +185,11 @@ class LoginTest extends TestCase
         $this->signIn()->get('/ai')->assertSee('Sign out');
     }
 
-    public function test_the_override_review_page_keeps_its_own_password(): void
+    public function test_the_override_review_page_is_for_admins_only(): void
     {
-        config(['prism.override_log_password' => $this->fixturePassword('override')]);
-
-        // A signed-in judge still needs the log password.
-        $this->signIn()->get('/overrides')->assertStatus(401);
-        $this->get('/overrides', ['Authorization' => 'Basic '.base64_encode('judge:'.$this->fixturePassword('override'))])->assertOk();
+        $this->get('/overrides')->assertRedirect('/login');
+        $this->signIn()->get('/overrides')->assertForbidden();
+        $this->actingAs($this->adminUser())->get('/overrides')->assertOk();
     }
 
     public function test_the_judge_seeder_makes_one_account_from_the_environment_values(): void
