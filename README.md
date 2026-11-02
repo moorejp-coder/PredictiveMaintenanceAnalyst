@@ -66,7 +66,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026.
 - The form asks for a name (2 to 100 characters) and a reason (10 to 500 characters).
 - The server rebuilds the reading and the score from the scenario and reading number. It accepts an entry only for a High-risk reading and ignores any score the browser sends.
 - `/overrides` lists the newest 200 entries for admin accounts only (`ADMIN_EMAIL`). With `REQUIRE_LOGIN` off, the page returns 404.
-- The write route is limited to 10 requests a minute. The log is a SQLite file on the host, so a replaced server erases it.
+- The write route is limited to 20 requests a minute per user. The log is a SQLite file on the host, so a replaced server erases it.
 
 ## AI steps
 
@@ -76,7 +76,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026.
 - Tested fix: when a `what_if` lowers the score, code writes one sentence from that result. The AI picks the value. The rules do the scoring.
 - Call 2, Work order: Claude returns a title and steps. Code sets the priority from the band.
 - If the key is missing, the API is slow or errors, or the reply fails a check, the page shows a built-in explanation labeled "RULE-BASED, NO AI USED". Good replies are cached for an hour and fallbacks for a minute.
-- The investigation stops after four rounds or 12 seconds. The diagnosis route is limited to 10 requests a minute and the work order route to 30.
+- The investigation stops after four rounds or 12 seconds. The diagnosis and work order routes are each limited to 10 requests a minute and 60 an hour per user. AI spending is also capped in dollars: $0.05 per user per hour and $1.00 for the site per day by default.
 - Set `ANTHROPIC_API_KEY` in `.env` (local) or as an environment property (live). `ANTHROPIC_MODEL`, `ANTHROPIC_TIMEOUT` and `PRISM_INVESTIGATOR` are optional. With no key, PRISM makes no AI call.
 - `php artisan prism:eval-investigator` runs the investigator over simulated readings and counts how many answers pass the code checks. The recorded run is in [docs/EVAL.md](docs/EVAL.md). The command does not grade the advice, and no technician graded the answers.
 

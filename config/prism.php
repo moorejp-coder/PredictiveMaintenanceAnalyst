@@ -86,6 +86,28 @@ return [
     // visitor and the Judge Demo together. Caps the AI bill. See CapAiCalls.
     'ai_daily_cap' => (int) env('PRISM_AI_DAILY_CAP', 1000),
 
+    // AI spending in US dollars, worked out from the token counts the API
+    // reports (app/Support/AiBudget.php). Default prices are the Claude Haiku
+    // 5.5 list prices for prompts up to 100,000 tokens, from
+    // https://platform.claude.com/docs/en/about-claude/pricing (checked
+    // November 2, 2026). PRISM's prompts are about 6,000 tokens. Change the
+    // prices if ANTHROPIC_MODEL changes. One fresh "Explain this reading"
+    // costs about $0.0013 for the investigation (5,911 input and 1,377 output
+    // tokens, docs/EVAL.md) plus the short work order call. Answers already
+    // in the cache cost nothing.
+    'ai_budget' => [
+        'input_usd_per_mtok' => (float) env('PRISM_AI_INPUT_USD_PER_MTOK', 0.10),
+        'output_usd_per_mtok' => (float) env('PRISM_AI_OUTPUT_USD_PER_MTOK', 0.50),
+        // The whole site, per rolling day.
+        'daily_usd' => (float) env('PRISM_AI_DAILY_BUDGET_USD', 1.00),
+        // One account, or one IP address without an account, per rolling hour.
+        'user_hourly_usd' => (float) env('PRISM_AI_USER_HOURLY_BUDGET_USD', 0.05),
+    ],
+
+    // Most emails the whole site sends per rolling day: judge invites and
+    // account lock emails together (app/Support/EmailBudget.php).
+    'email_daily_cap' => (int) env('PRISM_EMAIL_DAILY_CAP', 100),
+
     // Admin accounts. The entrant's own accounts open /admin/invites and the
     // /overrides review page. There is no shared password. An account is an
     // admin when its email is verified and equals ADMIN_EMAIL or appears in
@@ -132,7 +154,7 @@ return [
     // to the day you changed the text.
     'policy_dates' => [
         'faq' => ['date' => 'October 26, 2026', 'hash' => 'e479ca90c864d35038db1c5dbd831c7717e532a565416d3f8090b22d80f7e2f9'],
-        'privacy' => ['date' => 'October 26, 2026', 'hash' => 'd3d95e507011afb9852451c5abcce31f2b2ec3f02011ea082dc5318205236b58'],
+        'privacy' => ['date' => 'November 2, 2026', 'hash' => '9469f6a5ab3280dac5d6df7638b13e427ca35283a198d6fda0cdb313bfb6068b'],
         'terms' => ['date' => 'October 26, 2026', 'hash' => '4c4064afa204cc5d5b0440e6d8c33c62371284721fd364ba3be8fd171033c036'],
         'ai' => ['date' => 'October 26, 2026', 'hash' => '777ae1d2089b23fb9e5dca69cfac53f732e462274deadf1ed4b0aff24c5d0fe5'],
     ],

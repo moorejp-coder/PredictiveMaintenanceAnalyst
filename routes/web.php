@@ -11,6 +11,7 @@ use App\Http\Controllers\InviteController;
 use App\Http\Controllers\JudgePasswordController;
 use App\Http\Controllers\MyOverrideController;
 use App\Http\Controllers\OverrideController;
+use App\Http\Controllers\UnlockAccountController;
 use App\Http\Middleware\BlockInDemo;
 use App\Http\Middleware\CapAiCalls;
 use App\Http\Middleware\EnsureLoginEnabled;
@@ -25,9 +26,9 @@ use Illuminate\Support\Facades\Route;
 // page below. JudgeSeeder can add one fixed account as a backup.
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'show'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:5,1', RejectAbuse::class]);
+    Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:auth', RejectAbuse::class]);
 });
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:auth-link')->name('logout');
 
 // Judge Demo. A link that opens the dashboard read-only, with no account and
 // no password. It works more than once. The override log and AI ratings are
@@ -41,39 +42,48 @@ Route::get('/demo', [DemoController::class, 'start'])->name('demo');
 Route::middleware(EnsureLoginEnabled::class)->group(function () {
     Route::middleware('guest')->group(function () {
         Route::get('/set-password/{token}', [JudgePasswordController::class, 'show'])
-            ->middleware(['throttle:20,1', RejectAbuse::class])->name('invite.show');
+            ->middleware(['throttle:auth-link', RejectAbuse::class])->name('invite.show');
         Route::post('/set-password', [JudgePasswordController::class, 'update'])
-            ->middleware(['throttle:5,1', RejectAbuse::class])->name('invite.update');
+            ->middleware(['throttle:password-set', RejectAbuse::class])->name('invite.update');
+
+        // The link in the account-locked email (AuthController). The GET shows
+        // a change-password form and an Unlock button. Each POST unlocks.
+        Route::get('/unlock-account/{token}', [UnlockAccountController::class, 'show'])
+            ->middleware(['throttle:auth-link', RejectAbuse::class])->name('unlock.show');
+        Route::post('/unlock-account', [UnlockAccountController::class, 'update'])
+            ->middleware(['throttle:auth', RejectAbuse::class]);
+        Route::post('/unlock-account/password', [UnlockAccountController::class, 'changePassword'])
+            ->middleware(['throttle:password-set', RejectAbuse::class]);
     });
     // The signed-in user's own page: sign out of every other browser.
     Route::middleware('auth')->group(function () {
         Route::get('/account', [AccountController::class, 'show'])->name('account');
         Route::post('/logout-everywhere', [AccountController::class, 'logoutEverywhere'])
-            ->middleware(['throttle:5,1', RejectAbuse::class]);
+            ->middleware(['throttle:auth', RejectAbuse::class]);
         // A user's own override entries. Each route that names an entry checks
         // the owner in OverrideLogPolicy and answers 403 for anyone else. The
         // auth middleware keeps out guests and demo sessions.
-        Route::get('/api/overrides', [MyOverrideController::class, 'index'])->middleware('throttle:60,1,my-overrides');
+        Route::get('/api/overrides', [MyOverrideController::class, 'index'])->middleware('throttle:api-read');
         Route::get('/api/overrides/{overrideLog}', [MyOverrideController::class, 'show'])
-            ->whereUuid('overrideLog')->middleware('throttle:60,1,my-overrides');
+            ->whereUuid('overrideLog')->middleware('throttle:api-read');
         Route::put('/api/overrides/{overrideLog}', [MyOverrideController::class, 'update'])
-            ->whereUuid('overrideLog')->middleware(['throttle:20,1,my-overrides-write', RejectAbuse::class]);
+            ->whereUuid('overrideLog')->middleware(['throttle:api-write', RejectAbuse::class]);
         // Example of the reusable gate (AuthorizeResource): it asks OverrideLogPolicy
         // for the 'delete' ability on the entry in the URL, answers 401 or 403, and logs a
         // refused request. The controller keeps its own check as a second layer.
         Route::delete('/api/overrides/{overrideLog}', [MyOverrideController::class, 'destroy'])
             ->whereUuid('overrideLog')
-            ->middleware(['throttle:20,1,my-overrides-write', 'authorize.resource:delete,overrideLog']);
+            ->middleware(['throttle:api-write', 'authorize.resource:delete,overrideLog']);
     });
     // Admin accounts only. A guest gets 401 (or a redirect to /login), a signed-in
     // user who is not an admin gets 403, and the refusal is logged.
     Route::middleware('authorize.resource:is-admin')->group(function () {
-        Route::get('/admin/invites', [InviteController::class, 'index']);
-        Route::post('/admin/invites', [InviteController::class, 'store'])->middleware(['throttle:10,1', RejectAbuse::class]);
+        Route::get('/admin/invites', [InviteController::class, 'index'])->middleware('throttle:heavy-read');
+        Route::post('/admin/invites', [InviteController::class, 'store'])->middleware(['throttle:invites', RejectAbuse::class]);
     });
     // The override review page. Admins see the real log. A Judge Demo session sees
     // fixed sample rows and reads nothing from the log.
-    Route::get('/overrides', [OverrideController::class, 'index'])->middleware('admin.or.demo');
+    Route::get('/overrides', [OverrideController::class, 'index'])->middleware(['admin.or.demo', 'throttle:heavy-read']);
 });
 
 // With REQUIRE_LOGIN on, the dashboard and every route it calls need a
@@ -83,28 +93,27 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
 Route::middleware(RequireLogin::class)->group(function () {
     Route::get('/', [DashboardController::class, 'index']);
     Route::get('/api/readings', [DashboardController::class, 'readings'])->middleware([
-        // The prefix gives this route its own counter. Without one, every
-        // throttle route shares a single counter per signed-in user, and the
-        // dashboard's polling (one request every 1.2 seconds) would use up the
-        // limits of the override and AI routes.
-        'throttle:120,1,readings',
+        // Each route has its own counter (app/Support/RateLimits.php), so the
+        // dashboard's polling (one request every 1.2 seconds) never uses up
+        // the limits of the override and AI routes.
+        'throttle:api-read',
         RejectAbuse::class,
     ]);
     // Two small AI calls, run only when a visitor presses "Explain this reading".
     // Rate limited so a script cannot run up the AI bill.
     // The diagnosis route can run up to four model rounds, so its limit is lower.
     Route::get('/api/diagnosis', [AiController::class, 'diagnosis'])
-        ->middleware(['throttle:10,1', CapAiCalls::class, RejectAbuse::class]);
+        ->middleware(['throttle:ai-diagnosis', CapAiCalls::class, RejectAbuse::class]);
     Route::get('/api/work-order', [AiController::class, 'workOrder'])
-        ->middleware(['throttle:30,1', CapAiCalls::class, RejectAbuse::class]);
+        ->middleware(['throttle:ai-work-order', CapAiCalls::class, RejectAbuse::class]);
     // Override log. An operator who keeps a machine running after the High
     // "Stop the machine" warning records who, why and which reading. The write
     // uses the session and CSRF check. The review page needs its own password.
     Route::post('/api/overrides', [OverrideController::class, 'store'])
-        ->middleware([BlockInDemo::class, 'throttle:10,1', RejectAbuse::class]);
+        ->middleware([BlockInDemo::class, 'throttle:api-write', RejectAbuse::class]);
     // A user rates an AI answer "helpful" or "wrong". Fixed choices only, no free text.
     Route::post('/api/ai-feedback', [AiFeedbackController::class, 'store'])
-        ->middleware([BlockInDemo::class, 'throttle:20,1', RejectAbuse::class]);
+        ->middleware([BlockInDemo::class, 'throttle:api-write', RejectAbuse::class]);
 });
 // Public. Reports only ok or unavailable, so a monitor can poll it.
 Route::get('/health', HealthController::class);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Ai;
 
+use App\Support\AiBudget;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +14,8 @@ use Illuminate\Support\Facades\Log;
  *
  * It never throws. A missing key, a timeout, a bad status or an empty reply
  * all return null, so the caller shows its built-in text instead. After a
- * failed call, failure() names the reason: no_key, timeout, api_error or bad_reply.
+ * failed call, failure() names the reason: no_key, budget, timeout, api_error
+ * or bad_reply. Every reply's token counts go into AiBudget.
  */
 final class AiClient
 {
@@ -193,6 +195,14 @@ final class AiClient
             return null;
         }
 
+        // A spent budget stops the call before it costs anything.
+        if (AiBudget::siteSpent() || AiBudget::userSpent()) {
+            $this->failure = 'budget';
+            Log::warning('ai_call_skipped', ['reason' => 'budget']);
+
+            return null;
+        }
+
         try {
             $response = Http::withHeaders([
                 'x-api-key' => $this->key,
@@ -225,6 +235,9 @@ final class AiClient
         }
 
         $json = $response->json();
+        if (is_array($json)) {
+            AiBudget::record((int) data_get($json, 'usage.input_tokens', 0), (int) data_get($json, 'usage.output_tokens', 0));
+        }
 
         return is_array($json) ? $json : null;
     }
