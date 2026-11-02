@@ -79,14 +79,14 @@ class OverrideOwnershipTest extends TestCase
             ->assertSee('Deleted by its owner');
     }
 
-    public function test_another_user_gets_403_on_view_edit_and_delete_and_nothing_changes(): void
+    public function test_another_user_gets_404_on_view_edit_and_delete_and_nothing_changes(): void
     {
         $log = $this->entry($this->owner);
         $this->actingAs($this->other);
 
-        $this->getJson("/api/overrides/{$log->uuid}")->assertForbidden();
-        $this->putJson("/api/overrides/{$log->uuid}", $this->edit())->assertForbidden();
-        $this->deleteJson("/api/overrides/{$log->uuid}")->assertForbidden();
+        $this->getJson("/api/overrides/{$log->uuid}")->assertNotFound();
+        $this->putJson("/api/overrides/{$log->uuid}", $this->edit())->assertNotFound();
+        $this->deleteJson("/api/overrides/{$log->uuid}")->assertNotFound();
 
         $this->assertSame('Pat Rivera', $log->fresh()->operator_name);
     }
@@ -96,9 +96,9 @@ class OverrideOwnershipTest extends TestCase
         $log = $this->entry(null);
         $this->actingAs($this->owner);
 
-        $this->getJson("/api/overrides/{$log->uuid}")->assertForbidden();
-        $this->putJson("/api/overrides/{$log->uuid}", $this->edit())->assertForbidden();
-        $this->deleteJson("/api/overrides/{$log->uuid}")->assertForbidden();
+        $this->getJson("/api/overrides/{$log->uuid}")->assertNotFound();
+        $this->putJson("/api/overrides/{$log->uuid}", $this->edit())->assertNotFound();
+        $this->deleteJson("/api/overrides/{$log->uuid}")->assertNotFound();
         $this->assertModelExists($log);
     }
 

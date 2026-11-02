@@ -35,6 +35,6 @@ class OverrideLogPolicy
     {
         return $log->user_id !== null && (int) $log->user_id === (int) $user->getAuthIdentifier()
             ? Response::allow()
-            : Response::deny('You do not own this record.');
+            : Response::denyAsNotFound();
     }
 }

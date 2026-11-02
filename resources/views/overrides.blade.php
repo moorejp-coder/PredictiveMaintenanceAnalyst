@@ -58,7 +58,7 @@
                 <tbody>
                 @foreach ($logs as $log)
                     <tr>
-                        <td class="num">{{ $log->id }}</td>
+                        <td class="num">{{ $log->entry }}</td>
                         <td class="num"><time datetime="{{ $log->created_at->toIso8601String() }}">{{ $log->created_at->utc()->format('Y-m-d H:i:s') }}</time></td>
                         <td>{{ $log->operator_name }}</td>
                         <td class="reason">{{ $log->reason }}
@@ -100,7 +100,7 @@
                     <tbody>
                     @foreach ($ratings as $rating)
                         <tr>
-                            <td class="num">{{ $rating->id }}</td>
+                            <td class="num">{{ $rating->entry }}</td>
                             <td class="num"><time datetime="{{ $rating->created_at->toIso8601String() }}">{{ $rating->created_at->utc()->format('Y-m-d H:i:s') }}</time></td>
                             <td>{{ $rating->step }}</td>
                             <td>{{ $rating->rating }}</td>

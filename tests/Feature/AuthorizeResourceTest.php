@@ -95,7 +95,7 @@ class AuthorizeResourceTest extends TestCase
         Log::spy();
         $log = $this->entry();
 
-        $this->actingAs($this->other)->deleteJson("/api/overrides/{$log->uuid}")->assertForbidden();
+        $this->actingAs($this->other)->deleteJson("/api/overrides/{$log->uuid}")->assertNotFound();
         $this->assertModelExists($log);
         Log::shouldHaveReceived('log')->once()->withArgs(fn ($level, $message, $context) => $level === 'warning' && $context['method'] === 'DELETE');
 

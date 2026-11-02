@@ -9,6 +9,7 @@ use App\Services\Ai\Investigator;
 use App\Services\Ai\WorkOrderStep;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
+use App\Support\ApiFields;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -22,7 +23,7 @@ class AiController extends Controller
 {
     public function diagnosis(Request $request, Diagnoser $diagnoser, Investigator $investigator): JsonResponse
     {
-        return $this->respond($this->diagnose($request, $diagnoser, $investigator));
+        return $this->respond($this->diagnose($request, $diagnoser, $investigator), ApiFields::DIAGNOSIS);
     }
 
     public function workOrder(Request $request, Diagnoser $diagnoser, Investigator $investigator, WorkOrderStep $workOrder): JsonResponse
@@ -30,7 +31,7 @@ class AiController extends Controller
         $risk = $this->risk($request);
         $diagnosis = $this->diagnose($request, $diagnoser, $investigator);
 
-        return $this->respond($workOrder->run(WorkOrderStep::input($risk, $diagnosis['data'])));
+        return $this->respond($workOrder->run(WorkOrderStep::input($risk, $diagnosis['data'])), ApiFields::WORK_ORDER);
     }
 
     /**
@@ -79,10 +80,13 @@ class AiController extends Controller
         return (new RiskScorer('L'))->score($reading);
     }
 
-    /** @param  array<string, mixed>  $result */
-    private function respond(array $result): JsonResponse
+    /**
+     * @param  array<string, mixed>  $result
+     * @param  array<mixed>  $shape  The fields to send. See ApiFields.
+     */
+    private function respond(array $result, array $shape): JsonResponse
     {
-        return response()->json($result)
+        return response()->json(ApiFields::pick($result, $shape))
             ->header('X-Robots-Tag', 'noindex')
             ->header('Cache-Control', 'no-store');
     }
