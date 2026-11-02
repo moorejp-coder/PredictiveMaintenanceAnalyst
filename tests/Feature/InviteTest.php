@@ -132,6 +132,22 @@ class InviteTest extends TestCase
         $this->assertStringContainsString('works once and expires in 30 minutes', implode(' ', $mail->outroLines));
     }
 
+    public function test_the_invite_link_uses_app_url_even_with_a_forged_host(): void
+    {
+        config(['app.url' => 'https://prismcua.duckdns.org']);
+        Notification::fake();
+
+        $this->withHeaders(['Host' => 'evil.example', 'X-Forwarded-Host' => 'evil.example'])
+            ->adminPost('/admin/invites', ['email' => 'judge@example.test']);
+
+        $user = User::where('email', 'judge@example.test')->firstOrFail();
+        Notification::assertSentTo($user, JudgeInvite::class, function (JudgeInvite $n) use ($user) {
+            $url = $n->toMail($user)->actionUrl;
+
+            return str_starts_with($url, 'https://prismcua.duckdns.org/set-password/') && ! str_contains($url, 'evil.example');
+        });
+    }
+
     public function test_the_whole_flow_from_invite_to_sign_in(): void
     {
         Notification::fake();

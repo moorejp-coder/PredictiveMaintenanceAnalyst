@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Support\CanonicalUrl;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -30,7 +31,9 @@ class JudgeInvite extends Notification
             throw new InvalidArgumentException('The invite goes to a user that can reset a password.');
         }
 
-        $url = url(route('invite.show', [
+        // The host comes from APP_URL, never from the request. A forged Host or
+        // X-Forwarded-Host header must not put another site in the link.
+        $url = CanonicalUrl::for(route('invite.show', [
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),
         ], false));
