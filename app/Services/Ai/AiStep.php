@@ -149,6 +149,7 @@ abstract class AiStep
             return Cache::get($key);
         } catch (\Throwable $e) {
             Log::warning('ai_cache_failed', ['class' => $e::class, 'message' => $e->getMessage()]);
+
             return null;
         }
     }

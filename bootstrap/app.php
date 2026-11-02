@@ -57,7 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
         // Production never shows a stack trace, file path or query on a page,
         // even if APP_DEBUG is switched on by mistake.
-        $exceptions->render(function (\Throwable $e, Request $request) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             if (app()->isProduction() && config('app.debug')) {
                 config(['app.debug' => false]);
             }
@@ -68,7 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // One reference per failed request. It goes into the log line that holds
         // the full error and into the response, so a reported reference finds
         // the matching entry in the server log.
-        $exceptions->context(function (\Throwable $e) {
+        $exceptions->context(function (Throwable $e) {
             return ['error_reference' => ErrorReference::for(request())];
         });
 
@@ -78,7 +78,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // has already written the full error and trace to the server log
         // before this runs (HTTP errors such as a plain 404 are not logged).
         // Validation and sign-in answers keep Laravel's own safe handling.
-        $exceptions->render(function (\Throwable $e, Request $request) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             if (! ($request->is('api/*') || $request->expectsJson())) {
                 return null;
             }

@@ -397,6 +397,7 @@ final class ToolBox
             ];
         } catch (\Throwable $e) {
             Log::warning('ai_tool_estimate_failed', ['class' => $e::class, 'message' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -420,6 +421,7 @@ final class ToolBox
             $chances = (new Forecaster)->chances($rows, $maxAhead, $this->quality);
         } catch (\Throwable $e) {
             Log::warning('ai_tool_estimate_failed', ['class' => $e::class, 'message' => $e->getMessage()]);
+
             return null;
         }
         $ahead = min(10, $maxAhead);
