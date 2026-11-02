@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Off: PRISM serves and accepts no files. With this on, Laravel adds
+            // GET and PUT /storage/{path} routes, the PUT one an upload route.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
