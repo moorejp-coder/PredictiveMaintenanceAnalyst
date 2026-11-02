@@ -22,15 +22,17 @@ class InviteController extends Controller
     public function index(): View
     {
         return view('admin.invites', [
-            'users' => User::query()->orderByDesc('created_at')->get(['id', 'name', 'email', 'email_verified_at', 'created_at']),
+            'users' => User::query()->orderByDesc('created_at')->get(['name', 'email', 'email_verified_at', 'created_at']),
             'minutes' => max(1, (int) config('auth.passwords.invites.expire')),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        // A non-text value (email[]=a) becomes empty, so validation answers 422.
+        $email = $request->input('email');
         $request->merge([
-            'email' => Str::lower(trim((string) $request->input('email'))),
+            'email' => is_string($email) ? Str::lower(trim($email)) : '',
             'name' => PlainText::line($request->input('name')),
         ]);
 
@@ -48,11 +50,12 @@ class InviteController extends Controller
             $status = Password::broker('invites')->sendResetLink(['email' => $user->email]);
         } catch (\Throwable $e) {
             // Mail settings missing or the mail service refused. Keep the
-            // account, so a second try after the fix sends the link.
+            // account, so a second try after the fix sends the link. The
+            // full error, with its trace, goes to the server log only.
             report($e);
 
             return back()->withInput($request->only('email', 'name'))->withErrors([
-                'email' => 'The email could not be sent. Check the MAIL settings, then try again. Reason: '.$this->mailFailureReason($e),
+                'email' => 'The invite could not be sent right now. Try again in a few minutes.',
             ]);
         }
 
@@ -69,27 +72,5 @@ class InviteController extends Controller
         }
 
         return back()->with('status', 'Invite sent to '.$user->email.'.');
-    }
-
-    /**
-     * One line that names why the mail service refused, for the entrant only.
-     * This page sits behind the invite admin password. The SMTP user name and
-     * password are masked in case the mail library repeats them.
-     */
-    private function mailFailureReason(\Throwable $e): string
-    {
-        $text = (string) $e->getMessage();
-
-        foreach (['username', 'password'] as $key) {
-            $secret = (string) config('mail.mailers.smtp.'.$key);
-
-            if ($secret !== '') {
-                $text = str_replace($secret, '[hidden]', $text);
-            }
-        }
-
-        $text = trim(preg_replace('/\s+/', ' ', $text) ?? '');
-
-        return class_basename($e).': '.Str::limit($text, 300);
     }
 }

@@ -7,3 +7,4 @@
 <link rel="preload" href="{{ asset('fonts/ibm-plex-sans-latin-600-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ asset('css/prism.css') }}?v={{ @filemtime(public_path('css/prism.css')) }}">
 <script src="{{ asset('js/theme-init.js') }}?v={{ filemtime(public_path('js/theme-init.js')) }}"></script>
+<script src="{{ asset('js/error-boundary.js') }}?v={{ filemtime(public_path('js/error-boundary.js')) }}"></script>

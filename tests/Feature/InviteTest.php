@@ -7,6 +7,7 @@ use App\Notifications\JudgeInvite;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Testing\TestResponse;
@@ -102,6 +103,22 @@ class InviteTest extends TestCase
         $this->post('/login', ['email' => 'judge@example.test', 'password' => 'password'])
             ->assertSessionHasErrors('email');
         $this->assertGuest();
+    }
+
+    public function test_a_mail_failure_shows_a_generic_message_and_logs_the_detail(): void
+    {
+        Log::spy();
+        $broker = \Mockery::mock();
+        $broker->shouldReceive('sendResetLink')->andThrow(new \RuntimeException('smtp.internal.test refused user mailer-secret'));
+        Password::shouldReceive('broker')->with('invites')->andReturn($broker);
+
+        $response = $this->adminPost('/admin/invites', ['email' => 'judge@example.test']);
+
+        $response->assertSessionHasErrors(['email' => 'The invite could not be sent right now. Try again in a few minutes.']);
+        $shown = json_encode(session('errors')->getBag('default')->all());
+        $this->assertStringNotContainsString('smtp.internal.test', (string) $shown);
+        $this->assertStringNotContainsString('RuntimeException', (string) $shown);
+        Log::shouldHaveReceived('error')->withArgs(fn ($message) => str_contains((string) $message, 'smtp.internal.test'))->atLeast()->once();
     }
 
     public function test_the_invite_email_holds_a_link_and_no_password(): void

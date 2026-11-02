@@ -9,6 +9,7 @@ use App\Services\Ml\Forecaster;
 use App\Services\Ml\LearnedEstimate;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The six read-only tools Claude calls in the Investigator.
@@ -394,7 +395,8 @@ final class ToolBox
                 'now' => round(100 * $learned->estimate(self::shaped($this->reading), $this->quality)['probability'], 1),
                 'if_changed' => round(100 * $learned->estimate(self::shaped($copy), $this->quality)['probability'], 1),
             ];
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            Log::warning('ai_tool_estimate_failed', ['class' => $e::class, 'message' => $e->getMessage()]);
             return null;
         }
     }
@@ -416,7 +418,8 @@ final class ToolBox
 
         try {
             $chances = (new Forecaster)->chances($rows, $maxAhead, $this->quality);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            Log::warning('ai_tool_estimate_failed', ['class' => $e::class, 'message' => $e->getMessage()]);
             return null;
         }
         $ahead = min(10, $maxAhead);
@@ -437,7 +440,8 @@ final class ToolBox
     {
         try {
             $e = (new LearnedEstimate)->estimate(self::shaped($this->reading), $this->quality);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            Log::warning('ai_tool_estimate_failed', ['class' => $e::class, 'message' => $e->getMessage()]);
             throw new \InvalidArgumentException('The learned estimate is not available.');
         }
 
