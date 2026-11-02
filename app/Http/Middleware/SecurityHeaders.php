@@ -18,7 +18,9 @@ use Symfony\Component\HttpFoundation\Response;
  * tag through the shared $cspNonce value.
  * Inline style attributes stay allowed (style-src-attr), because several
  * pages use them. Files nginx serves directly (CSS, fonts, images) do not
- * pass through Laravel and so carry no PRISM headers.
+ * pass through Laravel. nginx adds the same headers to those files, with a
+ * stricter policy for content (.platform/nginx/conf.d/elasticbeanstalk/
+ * laravel.conf). Keep both lists in step; SecurityHeadersTest checks them.
  */
 class SecurityHeaders
 {
@@ -61,7 +63,7 @@ class SecurityHeaders
             'Cross-Origin-Opener-Policy' => 'same-origin',
         ];
         if ($https) {
-            $headers['Strict-Transport-Security'] = 'max-age=31536000';
+            $headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
         }
 
         // A controller that set its own value (the set-password page sends
