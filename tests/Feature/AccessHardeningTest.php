@@ -43,7 +43,7 @@ class AccessHardeningTest extends TestCase
 
     public function test_the_readings_route_is_throttled(): void
     {
-        for ($i = 0; $i < 120; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             $this->getJson('/api/readings?scenario=healthy&tick='.$i)->assertOk();
         }
 

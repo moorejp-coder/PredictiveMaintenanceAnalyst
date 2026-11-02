@@ -162,7 +162,7 @@ class AbuseGuardTest extends TestCase
         Log::spy();
 
         $this->post('/login', ['email' => 'judge@example.test', 'password' => "x'; DROP TABLE users;--"])
-            ->assertSessionHasErrors(['email' => 'The email or password is wrong.']);
+            ->assertSessionHasErrors(['email' => 'Invalid email or password']);
 
         Log::shouldNotHaveReceived('warning');
     }
@@ -171,7 +171,7 @@ class AbuseGuardTest extends TestCase
     {
         $this->signIn();
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 20; $i++) {
             $this->postJson('/api/overrides', $this->override(['reason' => '<script>alert(1)</script> padding']))->assertStatus(400);
         }
 

@@ -95,6 +95,7 @@
         if (result.source === 'cache') { return 'AI answer (saved)'; }
         const why = {
             no_key: 'AI is not connected',
+            budget: 'the AI budget is used up',
             low_risk: 'reading is low risk, so no AI call was made',
             timeout: 'the AI did not answer in time',
             api_error: 'the AI service returned an error',

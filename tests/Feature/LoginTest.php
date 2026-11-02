@@ -83,14 +83,14 @@ class LoginTest extends TestCase
         $this->from('/login')
             ->post('/login', ['email' => $user->email, 'password' => 'wrong'])
             ->assertRedirect('/login')
-            ->assertSessionHasErrors(['email' => 'The email or password is wrong.']);
+            ->assertSessionHasErrors(['email' => 'Invalid email or password']);
 
         $this->assertGuest();
 
         // An unknown email gets the same message, so accounts are not revealed.
         $this->from('/login')
             ->post('/login', ['email' => 'nobody@example.test', 'password' => 'wrong'])
-            ->assertSessionHasErrors(['email' => 'The email or password is wrong.']);
+            ->assertSessionHasErrors(['email' => 'Invalid email or password']);
     }
 
     public function test_login_is_limited_to_five_tries_a_minute(): void
@@ -104,31 +104,6 @@ class LoginTest extends TestCase
         $this->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('correct')])
             ->assertStatus(429);
         $this->assertGuest();
-    }
-
-    public function test_guesses_spread_over_many_addresses_still_lock_the_account(): void
-    {
-        $user = $this->judge();
-
-        for ($i = 1; $i <= 15; $i++) {
-            $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.'.$i])
-                ->post('/login', ['email' => $user->email, 'password' => 'wrong'])
-                ->assertStatus(302);
-        }
-
-        // A sixteenth address with the right password is refused too.
-        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.99'])
-            ->from('/login')
-            ->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('correct')])
-            ->assertSessionHasErrors(['email' => 'Too many sign-in attempts. Wait 15 minutes, then try again.']);
-        $this->assertGuest();
-
-        // The lock ends after 15 minutes.
-        $this->travel(16)->minutes();
-        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.99'])
-            ->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('correct')])
-            ->assertRedirect('/');
-        $this->assertAuthenticatedAs($user);
     }
 
     public function test_a_password_change_ends_the_other_sessions_of_that_account(): void

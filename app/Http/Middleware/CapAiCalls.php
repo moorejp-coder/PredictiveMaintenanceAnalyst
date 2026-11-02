@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\AiBudget;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -22,6 +23,18 @@ class CapAiCalls
 
     public function handle(Request $request, Closure $next): Response
     {
+        // Spending first: the site's dollars per day, then this user's per hour.
+        if (AiBudget::siteSpent()) {
+            return response()->json([
+                'message' => 'The AI budget for today is used up. Try again later.',
+            ], 429, ['Retry-After' => (string) AiBudget::siteRetryAfter()]);
+        }
+        if (AiBudget::userSpent()) {
+            return response()->json([
+                'message' => 'You have used your AI budget for this hour. Try again later.',
+            ], 429, ['Retry-After' => (string) AiBudget::userRetryAfter()]);
+        }
+
         $cap = max(1, (int) config('prism.ai_daily_cap'));
 
         if (RateLimiter::tooManyAttempts(self::KEY, $cap)) {

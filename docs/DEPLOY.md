@@ -31,6 +31,8 @@ Set these in the Elastic Beanstalk console, never in the repository:
 - `APP_URL`, `APP_DOMAIN`, `CERTBOT_EMAIL` for the HTTPS setup.
 - `REQUIRE_LOGIN=true` turns the sign-in on. The Judge Demo needs no other property. With the property missing, production requires sign-in anyway.
 - `PRISM_AI_DAILY_CAP` is optional. It sets the most AI answers the whole site serves per day (default 1000).
+- `PRISM_AI_DAILY_BUDGET_USD` (default 1.00) and `PRISM_AI_USER_HOURLY_BUDGET_USD` (default 0.05) are optional. They cap AI spending in dollars for the whole site per day and per user per hour. `PRISM_AI_INPUT_USD_PER_MTOK` (default 0.10) and `PRISM_AI_OUTPUT_USD_PER_MTOK` (default 0.50) are the model prices used to count it. Change them if `ANTHROPIC_MODEL` changes.
+- `PRISM_EMAIL_DAILY_CAP` is optional. It sets the most emails the site sends per day, invites and account lock emails together (default 100).
 - `ADMIN_EMAIL` and `ADMIN_PASSWORD` (12 or more characters) create the admin account on each deploy. Only an admin opens `/overrides` and `/admin/invites`. Optional: `ADMIN_NAME`, and `ADMIN_EMAILS` (comma-separated addresses that also count as admins).
 - Only for invited accounts: the `MAIL_*` values (see [ACCESS.md](ACCESS.md)).
 - Optional backup account: `JUDGE_EMAIL` and `JUDGE_PASSWORD`.

@@ -8,6 +8,7 @@ use App\Http\Middleware\AuthorizeResource;
 use App\Models\User;
 use App\Services\Ai\AiClient;
 use App\Support\CanonicalUrl;
+use App\Support\RateLimits;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -29,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // authorize.resource:is-admin guards the admin pages (see routes/web.php).
         AuthorizeResource::define('is-admin', fn (User $user): bool => $user->isAdmin());
+
+        // Request limits for every route group (app/Support/RateLimits.php).
+        RateLimits::register();
 
         // When APP_URL is https, build every generated link as https so the
         // browser does not block the dashboard's /api/readings call as mixed
