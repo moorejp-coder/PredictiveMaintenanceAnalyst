@@ -6,6 +6,7 @@ use App\Http\Middleware\BindSessionToClient;
 use App\Http\Middleware\EnforceSessionAge;
 use App\Http\Middleware\RedirectTrailingSlash;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\VerifyRequestOrigin;
 use App\Support\ErrorReference;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -40,6 +41,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(SecurityHeaders::class);
         // A changed password ends every other session of that account.
         $middleware->web(append: [AuthenticateSession::class, EnforceSessionAge::class, BindSessionToClient::class]);
+        // A second CSRF check: a write request whose Origin, Referer or
+        // Sec-Fetch-Site names another site gets 403. The token check stays on.
+        $middleware->web(append: [VerifyRequestOrigin::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // A JSON API route rejects input outside its bounds with HTTP 400 and
