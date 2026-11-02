@@ -69,7 +69,7 @@ class DashboardTest extends TestCase
         $response = $this->getJson('/api/readings?scenario=healthy&tick=3')->assertOk();
 
         // Since the sign-in was added, this route starts the session like every
-        // other page, so it sets the two cookies the privacy page already lists.
+        // other page, so it sets the session cookie the privacy page already lists.
         // The cache header is the part that still matters.
         $this->assertStringContainsString('max-age=3600', (string) $response->headers->get('Cache-Control'));
         $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));

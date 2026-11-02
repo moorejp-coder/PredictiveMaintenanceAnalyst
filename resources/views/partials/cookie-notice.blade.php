@@ -13,7 +13,7 @@
         #cookie-notice button:hover { background: var(--prism-accent-hover); }
         #cookie-notice button:focus-visible { outline: 2px solid var(--prism-text); outline-offset: 2px; }
     </style>
-    <p>PRISM sets two cookies, a session cookie and a security cookie. Both are required for the site to work. PRISM sets no analytics, advertising or tracking cookies. <a href="{{ url('/privacy') }}">Read the privacy policy</a>.</p>
+    <p>PRISM sets one cookie, a session cookie. The site needs it to work. PRISM sets no analytics, advertising or tracking cookies. <a href="{{ url('/privacy') }}">Read the privacy policy</a>.</p>
     <button type="button" id="cookie-notice-ok">Got it</button>
 </div>
 <script src="{{ asset('js/cookie-notice.js') }}?v={{ filemtime(public_path('js/cookie-notice.js')) }}"></script>
