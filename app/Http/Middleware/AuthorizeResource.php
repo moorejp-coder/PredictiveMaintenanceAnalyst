@@ -61,14 +61,22 @@ final class AuthorizeResource
             throw new AuthenticationException;
         }
 
-        $allowed = isset(self::$checks[$check])
-            ? (bool) (self::$checks[$check])($user, $resource, $request)
-            : Gate::forUser($user)->allows($check, $resource);
+        $notFound = false;
+        if (isset(self::$checks[$check])) {
+            $allowed = (bool) (self::$checks[$check])($user, $resource, $request);
+        } else {
+            $answer = Gate::forUser($user)->inspect($check, $resource);
+            $allowed = $answer->allowed();
+            // A policy that answers "not found" (denyAsNotFound) keeps a
+            // visitor from telling a record they may not use from one that
+            // does not exist.
+            $notFound = ! $allowed && $answer->status() === 404;
+        }
 
         if (! $allowed) {
             $this->log('warning', 'Unauthorized access to a protected resource', $request, $user, $param, $resource);
 
-            abort(403, 'You do not have access to this record.');
+            abort($notFound ? 404 : 403, $notFound ? '' : 'You do not have access to this record.');
         }
 
         return $next($request);

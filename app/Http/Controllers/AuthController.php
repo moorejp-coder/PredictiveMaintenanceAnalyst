@@ -42,7 +42,9 @@ class AuthController extends Controller
     {
         abort_unless(config('prism.require_login'), 404);
 
-        $request->merge(['email' => Str::lower(trim((string) $request->input('email')))]);
+        // A non-text value (email[]=a) becomes empty, so validation answers 422.
+        $email = $request->input('email');
+        $request->merge(['email' => is_string($email) ? Str::lower(trim($email)) : '']);
 
         $credentials = $request->validate([
             'email' => ['required', 'string', 'email', 'max:255'],

@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Services\Ml\LearnedEstimate;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
+use App\Support\ApiFields;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -31,13 +32,13 @@ class DashboardController extends Controller
 
         $reading = (new SensorSimulator)->reading($data['scenario'], (int) $data['tick']);
 
-        return response()->json([
+        return response()->json(ApiFields::pick([
             'scenario' => $data['scenario'],
             'tick' => (int) $data['tick'],
             'reading' => $reading,
             'risk' => (new RiskScorer('L'))->score($reading),
             'estimate' => (new LearnedEstimate)->estimate($reading, 'L'),
-        ])
+        ], ApiFields::READINGS))
             ->header('X-Robots-Tag', 'noindex')
             // The same scenario and tick always give the same reading, so the
             // browser can reuse a response for an hour. The route needs a

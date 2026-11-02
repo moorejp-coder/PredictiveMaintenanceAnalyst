@@ -87,7 +87,17 @@ class OverrideController extends Controller
         $helpful = 0;
         $wrong = 0;
         try {
-            $ratings = AiFeedback::query()->latest('id')->limit(50)->get();
+            $ratings = AiFeedback::query()->latest('id')->limit(50)
+                ->get(['uuid', 'created_at', 'step', 'rating', 'source', 'scenario', 'tick'])
+                ->map(fn (AiFeedback $row): object => (object) [
+                    'entry' => self::shortId($row->uuid),
+                    'created_at' => $row->created_at,
+                    'step' => $row->step,
+                    'rating' => $row->rating,
+                    'source' => $row->source,
+                    'scenario' => $row->scenario,
+                    'tick' => $row->tick,
+                ]);
             $helpful = AiFeedback::query()->where('rating', 'helpful')->count();
             $wrong = AiFeedback::query()->where('rating', 'wrong')->count();
         } catch (\Throwable $e) {
@@ -95,7 +105,25 @@ class OverrideController extends Controller
         }
 
         return view('overrides', [
-            'logs' => OverrideLog::withTrashed()->latest('id')->limit(200)->get(),
+            // Named columns only. user_id, the stored sensor reading and the
+            // action text stay in the database and out of the page.
+            'logs' => OverrideLog::withTrashed()->latest('id')->limit(200)
+                ->get(['uuid', 'created_at', 'operator_name', 'reason', 'machine', 'risk_score', 'scenario', 'tick',
+                    'edited_at', 'original_operator_name', 'original_reason', 'deleted_at'])
+                ->map(fn (OverrideLog $log): object => (object) [
+                    'entry' => self::shortId($log->uuid),
+                    'created_at' => $log->created_at,
+                    'operator_name' => $log->operator_name,
+                    'reason' => $log->reason,
+                    'machine' => $log->machine,
+                    'risk_score' => $log->risk_score,
+                    'scenario' => $log->scenario,
+                    'tick' => $log->tick,
+                    'edited_at' => $log->edited_at,
+                    'original_operator_name' => $log->original_operator_name,
+                    'original_reason' => $log->original_reason,
+                    'deleted_at' => $log->deleted_at,
+                ]),
             'cycle' => SensorSimulator::CYCLE,
             'ratings' => $ratings,
             'helpful' => $helpful,
@@ -107,7 +135,7 @@ class OverrideController extends Controller
     private function sample(): View
     {
         $logs = collect(DemoSamples::overrides())->map(fn (array $row): object => (object) [
-            'id' => $row['id'],
+            'entry' => (string) $row['id'],
             'created_at' => Carbon::parse($row['at'], 'UTC'),
             'operator_name' => $row['operator'],
             'reason' => $row['reason'],
@@ -118,7 +146,7 @@ class OverrideController extends Controller
         ]);
 
         $ratings = collect(DemoSamples::ratings())->map(fn (array $row): object => (object) [
-            'id' => $row['id'],
+            'entry' => (string) $row['id'],
             'created_at' => Carbon::parse($row['at'], 'UTC'),
             'step' => $row['step'],
             'rating' => $row['rating'],
@@ -135,5 +163,15 @@ class OverrideController extends Controller
             'helpful' => $ratings->where('rating', 'helpful')->count(),
             'wrong' => $ratings->where('rating', 'wrong')->count(),
         ]);
+    }
+
+    /**
+     * The last 8 characters of a public id. The review page shows this instead
+     * of the database row number. The first characters of a UUIDv7 are the
+     * time, so the end is the part that tells entries apart.
+     */
+    private static function shortId(?string $uuid): string
+    {
+        return $uuid === null ? '' : substr($uuid, -8);
     }
 }

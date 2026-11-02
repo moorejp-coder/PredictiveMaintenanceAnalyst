@@ -22,7 +22,8 @@ class JudgePasswordController extends Controller
 {
     public function show(Request $request, string $token): Response
     {
-        $email = Str::lower(trim(mb_substr((string) $request->query('email', ''), 0, 255)));
+        $queryEmail = $request->query('email', '');
+        $email = Str::lower(trim(mb_substr(is_string($queryEmail) ? $queryEmail : '', 0, 255)));
 
         // Check the link before the form appears. An unknown email, a wrong
         // token, a spent token and an expired token all show the same page,
@@ -44,7 +45,9 @@ class JudgePasswordController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $request->merge(['email' => Str::lower(trim((string) $request->input('email')))]);
+        // A non-text value (email[]=a) becomes empty, so validation answers 422.
+        $email = $request->input('email');
+        $request->merge(['email' => is_string($email) ? Str::lower(trim($email)) : '']);
 
         $data = $request->validate([
             'token' => ['required', 'string', 'max:255'],
