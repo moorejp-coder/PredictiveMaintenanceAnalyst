@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Middleware\BindSessionToClient;
 use App\Http\Middleware\EnforceSessionAge;
+use App\Support\SafeRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -90,7 +91,8 @@ class AuthController extends Controller
         $request->session()->put(EnforceSessionAge::SESSION_KEY, now()->getTimestamp());
         BindSessionToClient::stamp($request);
 
-        return redirect()->intended('/');
+        // The page the guest asked for before sign-in, if it is on PRISM.
+        return redirect(SafeRedirect::path($request->session()->pull('url.intended'), '/'));
     }
 
     public function logout(Request $request): RedirectResponse

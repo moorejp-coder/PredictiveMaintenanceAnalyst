@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\SafeRedirect;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -58,7 +59,7 @@ class VerifyRequestOrigin
             return 'sec-fetch-site';
         }
 
-        $allowed = $this->allowedOrigins($request);
+        $allowed = SafeRedirect::allowedOrigins($request);
 
         if ($request->headers->has('Origin')) {
             $origin = self::originOf((string) $request->headers->get('Origin'));
@@ -74,15 +75,6 @@ class VerifyRequestOrigin
         }
 
         return null;
-    }
-
-    /** @return list<string> the request's own origin and APP_URL's origin */
-    private function allowedOrigins(Request $request): array
-    {
-        return array_values(array_unique(array_filter([
-            self::originOf($request->getSchemeAndHttpHost()),
-            self::originOf((string) config('app.url')),
-        ])));
     }
 
     /** scheme://host[:port] in lower case, with the default port left out, or null when the value is not an http(s) URL. */

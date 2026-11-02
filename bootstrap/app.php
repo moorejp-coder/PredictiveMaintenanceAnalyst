@@ -3,6 +3,7 @@
 use App\Http\Middleware\AdminOrDemo;
 use App\Http\Middleware\AuthorizeResource;
 use App\Http\Middleware\BindSessionToClient;
+use App\Http\Middleware\DropForeignReferer;
 use App\Http\Middleware\EnforceSessionAge;
 use App\Http\Middleware\RedirectTrailingSlash;
 use App\Http\Middleware\SecurityHeaders;
@@ -44,6 +45,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // A second CSRF check: a write request whose Origin, Referer or
         // Sec-Fetch-Site names another site gets 403. The token check stays on.
         $middleware->web(append: [VerifyRequestOrigin::class]);
+        // Redirect allowlist: back() never follows a Referer from another site.
+        $middleware->web(append: [DropForeignReferer::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // A JSON API route rejects input outside its bounds with HTTP 400 and
