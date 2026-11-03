@@ -47,10 +47,13 @@ ssl_certificate /etc/letsencrypt/live/__DOMAIN__/fullchain.pem;
 ssl_certificate_key /etc/letsencrypt/live/__DOMAIN__/privkey.pem;
 ssl_protocols TLSv1.2 TLSv1.3;
 
-# Send http requests for this name to https. Certificate checks stay on http.
+# Send every request that is not https://__DOMAIN__ there: plain http on any
+# address (the DuckDNS name, the Elastic Beanstalk URL, the raw IP) and https
+# on any other name. Lets Encrypt certificate checks stay on http.
 set $prism_r "${scheme}://${host}";
-if ($request_uri ~* "^/\.well-known/acme-challenge/") { set $prism_r "skip"; }
-if ($prism_r = "http://__DOMAIN__") { return 301 https://__DOMAIN__$request_uri; }
+if ($prism_r = "https://__DOMAIN__") { set $prism_r "ok"; }
+if ($request_uri ~* "^/\.well-known/acme-challenge/") { set $prism_r "ok"; }
+if ($prism_r != "ok") { return 301 https://__DOMAIN__$request_uri; }
 CONF
 sed -i "s/__DOMAIN__/$DOMAIN/g" "$SSL_CONF"
 

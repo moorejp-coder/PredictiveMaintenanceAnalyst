@@ -70,7 +70,7 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringNotContainsString('upgrade-insecure-requests', $plain->headers->get('Content-Security-Policy'));
 
         $secure = $this->get('https://localhost/faq');
-        $secure->assertHeader('Strict-Transport-Security', 'max-age=31536000');
+        $secure->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         $this->assertStringContainsString('upgrade-insecure-requests', $secure->headers->get('Content-Security-Policy'));
     }
 
@@ -78,7 +78,7 @@ class SecurityHeadersTest extends TestCase
     {
         config(['app.url' => 'https://example.test']);
 
-        $this->get('/faq')->assertHeader('Strict-Transport-Security', 'max-age=31536000');
+        $this->get('/faq')->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     }
 
     public function test_the_not_found_page_has_the_headers_and_a_working_nonce(): void
@@ -104,6 +104,22 @@ class SecurityHeadersTest extends TestCase
         $this->app['router']->get('/__test-referrer', fn () => response('ok')->header('Referrer-Policy', 'no-referrer'));
 
         $this->get('/__test-referrer')->assertHeader('Referrer-Policy', 'no-referrer');
+    }
+
+    public function test_nginx_sends_the_same_headers_on_the_files_it_serves(): void
+    {
+        $page = $this->get('https://localhost/faq');
+        $conf = (string) file_get_contents(base_path('.platform/nginx/conf.d/elasticbeanstalk/laravel.conf'));
+
+        foreach (['Strict-Transport-Security', 'X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy', 'Permissions-Policy', 'Cross-Origin-Opener-Policy'] as $name) {
+            $value = (string) $page->headers->get($name);
+            $this->assertNotSame('', $value, $name);
+            $this->assertStringContainsString('add_header '.$name.' "'.$value.'" always;', $conf, $name);
+        }
+
+        // Static files get a policy that loads nothing but images, styles and
+        // fonts from PRISM, and may not be framed.
+        $this->assertStringContainsString("add_header Content-Security-Policy \"default-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'\" always;", $conf);
     }
 
     public function test_the_session_cookie_is_secure_when_the_app_url_is_https(): void

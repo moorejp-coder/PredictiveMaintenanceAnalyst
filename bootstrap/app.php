@@ -5,6 +5,7 @@ use App\Http\Middleware\AuthorizeResource;
 use App\Http\Middleware\BindSessionToClient;
 use App\Http\Middleware\DropForeignReferer;
 use App\Http\Middleware\EnforceSessionAge;
+use App\Http\Middleware\PreventRequestForgery;
 use App\Http\Middleware\RedirectTrailingSlash;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\VerifyRequestOrigin;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery as FrameworkPreventRequestForgery;
 use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\TokenMismatchException;
@@ -40,6 +42,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(RedirectTrailingSlash::class);
         // Prepended last, so it runs first and every response gets the headers.
         $middleware->prepend(SecurityHeaders::class);
+        // CSRF check without the JavaScript-readable XSRF-TOKEN cookie. The
+        // session cookie is the only cookie PRISM sets.
+        $middleware->web(replace: [FrameworkPreventRequestForgery::class => PreventRequestForgery::class]);
         // A changed password ends every other session of that account.
         $middleware->web(append: [AuthenticateSession::class, EnforceSessionAge::class, BindSessionToClient::class]);
         // A second CSRF check: a write request whose Origin, Referer or

@@ -33,7 +33,7 @@ Source: `.ebextensions/01-laravel.config` and `.platform/hooks/postdeploy/01_ove
 
 1. In the EC2 console, open Elastic IPs. Check that the address named PRISM-CUA-env is still attached to the instance.
 2. In DuckDNS, check that the prismcua address matches it. Update it if it differs.
-3. Open `http://prism-cua-env.eba-fsf9rffw.us-east-2.elasticbeanstalk.com/login` in a normal browser tab. If it loads, the app is up and nginx lost its HTTPS settings. Upload the latest deploy zip, which writes them again.
+3. Open `http://prism-cua-env.eba-fsf9rffw.us-east-2.elasticbeanstalk.com/login` in a normal browser tab. With HTTPS working, this address redirects to `https://prismcua.duckdns.org/login`. If the sign-in page loads on the http address instead, the app is up and nginx lost its HTTPS settings. Upload the latest deploy zip, which writes them again.
 4. If it does not load, open the Elastic Beanstalk environment page and read the health status and the newest events.
 
 ## Verify

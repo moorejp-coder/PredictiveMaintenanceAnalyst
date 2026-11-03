@@ -154,7 +154,7 @@ return [
     // to the day you changed the text.
     'policy_dates' => [
         'faq' => ['date' => 'October 26, 2026', 'hash' => 'e479ca90c864d35038db1c5dbd831c7717e532a565416d3f8090b22d80f7e2f9'],
-        'privacy' => ['date' => 'November 2, 2026', 'hash' => '9469f6a5ab3280dac5d6df7638b13e427ca35283a198d6fda0cdb313bfb6068b'],
+        'privacy' => ['date' => 'November 2, 2026', 'hash' => '1dd3ab2a918095d53356157def50d1328f373279b6ee26132fa8ef331be63917'],
         'terms' => ['date' => 'October 26, 2026', 'hash' => '4c4064afa204cc5d5b0440e6d8c33c62371284721fd364ba3be8fd171033c036'],
         'ai' => ['date' => 'October 26, 2026', 'hash' => '777ae1d2089b23fb9e5dca69cfac53f732e462274deadf1ed4b0aff24c5d0fe5'],
     ],

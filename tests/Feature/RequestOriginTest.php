@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\PreventRequestForgery;
 use App\Http\Middleware\VerifyRequestOrigin;
 use App\Models\AiFeedback;
 use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery as FrameworkPreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -36,7 +37,9 @@ class RequestOriginTest extends TestCase
     {
         $web = app(Kernel::class)->getMiddlewareGroups()['web'];
 
+        // PRISM's subclass of Laravel's check, which sets no XSRF-TOKEN cookie.
         $this->assertContains(PreventRequestForgery::class, $web);
+        $this->assertTrue(is_subclass_of(PreventRequestForgery::class, FrameworkPreventRequestForgery::class));
         $this->assertContains(VerifyRequestOrigin::class, $web);
     }
 
