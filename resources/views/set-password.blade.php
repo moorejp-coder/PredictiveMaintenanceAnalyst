@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="robots" content="noindex">
-    <meta name="referrer" content="no-referrer">
+    <meta name="referrer" content="same-origin">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Set your password | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="Choose a password for your PRISM contest judge account, then sign in to the milling machine failure-risk dashboard.">
     @include('partials.brand-head')
@@ -24,15 +25,13 @@
 @include('partials.skip-link')
 @include('partials.app-header', ['active' => null])
 <main class="wrap" id="main" tabindex="-1">
-    <div class="card">
+    {{-- After a form error the server has the token and email again (old
+         input), so the form shows at once. Otherwise email-link.js reads
+         them from the part of the link after "#" and checks them. --}}
+    @php($token = (string) old('token', ''))
+    @php($prefilled = $token !== '')
+    <div class="card" data-link-check="{{ url('/set-password/check') }}"@if (! $prefilled && $errors->any()) data-link-done @endif>
         <h1>Set your password</h1>
-        @unless ($valid)
-            <div class="error" id="set-error" role="alert">
-                <strong>This link is not valid.</strong>
-                It was already used or it expired. Ask the contest entrant for a new invite.
-            </div>
-        @else
-        <p class="lead">Choose a password for your PRISM judge account. Then sign in with this email address and your password.</p>
 
         @if ($errors->any())
             <div class="error" id="set-error" role="alert">
@@ -41,7 +40,22 @@
                     {{ $message }}
                 @endforeach
             </div>
+        @elseif (! $prefilled)
+            <p class="lead" id="link-checking" role="status">Checking your link.</p>
+            <noscript><div class="error" role="alert"><strong>This page needs JavaScript.</strong> It reads the link from your email in the browser, so the link never travels to the server in the address.</div></noscript>
         @endif
+
+        <div class="error" id="link-invalid" role="alert" hidden>
+            <strong>This link is not valid.</strong>
+            It was already used or it expired. Ask the contest entrant for a new invite.
+        </div>
+        <div class="error" id="link-limited" role="alert" hidden>
+            <strong>Too many tries with this link.</strong>
+            Wait an hour, then try again.
+        </div>
+
+        <div id="link-forms"@unless ($prefilled) hidden @endunless>
+        <p class="lead">Choose a password for your PRISM judge account. Then sign in with this email address and your password.</p>
 
         <form method="POST" action="{{ url('/set-password') }}">
             @csrf
@@ -49,11 +63,11 @@
             <input type="hidden" name="token" value="{{ $token }}">
             <div class="field">
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" value="{{ old('email', $email) }}" autocomplete="username" required readonly>
+                <input id="email" name="email" type="email" value="{{ old('email', '') }}" autocomplete="username" required readonly>
             </div>
             <div class="field">
                 <label for="password">New password</label>
-                <input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required autofocus
+                <input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required @if ($prefilled) autofocus @endif
                        aria-describedby="password-hint"@if ($errors->has('password')) aria-invalid="true"@endif>
                 <p class="hint" id="password-hint">At least 12 characters. A long phrase works well. No symbols or digits are required. A password from a known data breach or a common-password list is refused.</p>
             </div>
@@ -65,13 +79,14 @@
                 <button type="submit" class="btn btn--primary">Set password</button>
             </div>
         </form>
-        @endunless
+        </div>
 
         <div class="help">
             <p>This link works once. After you set a password, sign in at the login page.</p>
         </div>
     </div>
 </main>
+<script src="{{ asset('js/email-link.js') }}?v={{ filemtime(public_path('js/email-link.js')) }}"></script>
 @include('partials.cookie-notice')
 </body>
 </html>

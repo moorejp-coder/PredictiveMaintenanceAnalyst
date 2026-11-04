@@ -18,8 +18,9 @@ use Symfony\Component\HttpFoundation\Response;
  * - A changed IP address is only logged. Phones move between networks and
  *   judges share office addresses, so an IP change alone is not proof of theft.
  *
- * Logs hold the user id, both IP addresses and a short hash of the browser
- * string, never the cookie or a password. A session with no stored values
+ * The session keeps only SHA-256 hashes of the browser string and the IP
+ * address, never the raw values (data minimization). Logs hold the user id and
+ * the current IP address, never the cookie or a password. A session with no stored values
  * (opened before this check existed) is stamped on its next request.
  */
 class BindSessionToClient
@@ -32,7 +33,7 @@ class BindSessionToClient
     public static function stamp(Request $request): void
     {
         $request->session()->put(self::AGENT_KEY, self::agentHash($request));
-        $request->session()->put(self::IP_KEY, (string) $request->ip());
+        $request->session()->put(self::IP_KEY, self::ipHash($request));
     }
 
     public function handle(Request $request, Closure $next): Response
@@ -53,7 +54,6 @@ class BindSessionToClient
             Log::warning('Session ended: the browser changed', [
                 'user_id' => $request->user()->getAuthIdentifier(),
                 'ip' => $request->ip(),
-                'first_ip' => $session->get(self::IP_KEY),
             ]);
 
             Auth::logout();
@@ -67,18 +67,28 @@ class BindSessionToClient
 
         $firstIp = (string) $session->get(self::IP_KEY);
 
-        if ($firstIp !== '' && $firstIp !== (string) $request->ip()) {
+        // A session stamped before the hash change holds a raw address. It is
+        // compared as it is, then replaced by the hash below.
+        $same = $firstIp === self::ipHash($request) || $firstIp === (string) $request->ip();
+
+        if ($firstIp !== '' && ! $same) {
             Log::notice('Session IP address changed', [
                 'user_id' => $request->user()->getAuthIdentifier(),
-                'first_ip' => $firstIp,
                 'ip' => $request->ip(),
             ]);
+        }
 
-            // Log once per new address, not on every request.
-            $session->put(self::IP_KEY, (string) $request->ip());
+        // Log once per new address, not on every request.
+        if ($firstIp !== self::ipHash($request)) {
+            $session->put(self::IP_KEY, self::ipHash($request));
         }
 
         return $next($request);
+    }
+
+    private static function ipHash(Request $request): string
+    {
+        return hash('sha256', (string) $request->ip());
     }
 
     private static function agentHash(Request $request): string

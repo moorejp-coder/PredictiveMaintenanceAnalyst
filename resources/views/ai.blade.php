@@ -97,7 +97,7 @@
     <ul>
         <li>PRISM scores machines. It scores no person and builds no profile of any person.</li>
         <li>The readings are simulated, so PRISM holds no real operational data.</li>
-        <li>@if (config('prism.require_login'))The personal data is the name an operator types in the override log (PRISM does not verify it), the name, email address and password hash of each invited user, and the IP address in server logs.@else The only personal data is the name an operator types in the override log (PRISM does not verify it) and the IP address in server logs.@endif</li>
+        <li>@if (config('prism.require_login'))The personal data is the email address and password hash of each invited user, the account tied to each override log entry, any personal detail a person types into an override reason, and the IP address in server logs. The override form asks for no name.@else The only personal data is any personal detail a person types into an override reason and the IP address in server logs. The override form asks for no name.@endif</li>
         <li>PRISM uses no analytics, advertising or tracking scripts.</li>
         <li>Rate limits protect the AI routes from automated use.</li>
     </ul>

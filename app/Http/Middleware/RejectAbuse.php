@@ -52,7 +52,10 @@ class RejectAbuse
             }
 
             if ($hit !== null) {
-                $this->log($request, $hit, $field, $secret ? null : $value, mb_strlen($value));
+                // An attack pattern is logged with a short excerpt, so it can be
+                // studied. A text that is only too long is often a real person's
+                // writing, so it is logged by length alone (data minimization).
+                $this->log($request, $hit, $field, $secret || $hit === 'too_long' ? null : $value, mb_strlen($value));
 
                 throw ValidationException::withMessages([explode('.', $field)[0] => self::MESSAGE]);
             }

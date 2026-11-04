@@ -67,7 +67,7 @@ class SecurityHeaders
         }
 
         // A controller that set its own value (the set-password page sends
-        // Referrer-Policy: no-referrer) keeps it.
+        // Referrer-Policy: same-origin) keeps it.
         foreach ($headers as $name => $value) {
             if (! $response->headers->has($name)) {
                 $response->headers->set($name, $value);

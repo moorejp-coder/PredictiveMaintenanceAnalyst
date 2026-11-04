@@ -33,10 +33,10 @@ class JudgeInvite extends Notification
 
         // The host comes from APP_URL, never from the request. A forged Host or
         // X-Forwarded-Host header must not put another site in the link.
-        $url = CanonicalUrl::for(route('invite.show', [
-            'token' => $this->token,
-            'email' => $notifiable->getEmailForPasswordReset(),
-        ], false));
+        // The token and email go after "#". Browsers never send that part to
+        // the server, so neither lands in an access log or a proxy log.
+        $url = CanonicalUrl::for(route('invite.show', [], false))
+            .'#t='.rawurlencode($this->token).'&e='.rawurlencode($notifiable->getEmailForPasswordReset());
         $minutes = max(1, (int) config('auth.passwords.invites.expire'));
 
         return (new MailMessage)

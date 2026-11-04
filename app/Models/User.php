@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
 /**
  * @property int $failed_login_attempts Wrong passwords in a row since the last good sign-in.
  * @property Carbon|null $first_failed_login_at Time of the first wrong password in the current run.
- * @property list<string>|null $failed_login_ips Up to 10 IP addresses the wrong passwords came from.
+ * @property list<string>|null $failed_login_ips Up to 10 IP addresses the wrong passwords came from, stored encrypted.
  * @property Carbon|null $locked_at Set after 10 wrong passwords in a row. The lock ends 30 minutes later.
  * @property string|null $unlock_token_hash SHA-256 of the newest emailed unlock token.
  * @property Carbon|null $unlock_sent_at When the newest unlock link was sent.
@@ -42,7 +42,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'failed_login_attempts' => 'integer',
             'first_failed_login_at' => 'datetime',
-            'failed_login_ips' => 'array',
+            // Encrypted at rest with APP_KEY (AES-256-CBC with an HMAC).
+            'failed_login_ips' => 'encrypted:array',
             'locked_at' => 'datetime',
             'unlock_sent_at' => 'datetime',
         ];

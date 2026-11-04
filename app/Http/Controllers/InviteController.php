@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Support\EmailBudget;
-use App\Support\PlainText;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +33,9 @@ class InviteController extends Controller
 
     public const MAX_LINKS_PER_EMAIL = 3;
 
+    /** The name every invited account gets. The invite form asks for none. */
+    public const ACCOUNT_LABEL = 'Contest Judge';
+
     private const WINDOW_SECONDS = 3600;
 
     public function index(): View
@@ -48,14 +50,13 @@ class InviteController extends Controller
     {
         // A non-text value (email[]=a) becomes empty, so validation answers 422.
         $email = $request->input('email');
-        $request->merge([
-            'email' => is_string($email) ? Str::lower(trim($email)) : '',
-            'name' => PlainText::line($request->input('name')),
-        ]);
+        $request->merge(['email' => is_string($email) ? Str::lower(trim($email)) : '']);
 
+        // Only the email: PRISM needs it to send the link and to sign in. The
+        // form asks for no name (data minimization). Every invited account
+        // gets the same label, and a name sent anyway is ignored.
         $data = $request->validate([
             'email' => ['required', 'string', 'email:rfc', 'max:255'],
-            'name' => ['nullable', 'string', 'max:100'],
         ]);
 
         $emailKey = 'invite-links:'.hash('sha256', $data['email']);
@@ -72,7 +73,7 @@ class InviteController extends Controller
 
             $user = User::create([
                 'email' => $data['email'],
-                'name' => trim((string) ($data['name'] ?? '')) ?: 'Contest Judge',
+                'name' => self::ACCOUNT_LABEL,
                 'password' => Str::random(64),
             ]);
             RateLimiter::hit($addressKey, self::WINDOW_SECONDS);
@@ -90,19 +91,19 @@ class InviteController extends Controller
             // full error, with its trace, goes to the server log only.
             report($e);
 
-            return back()->withInput($request->only('email', 'name'))->withErrors([
+            return back()->withInput($request->only('email'))->withErrors([
                 'email' => 'The invite could not be sent right now. Try again in a few minutes.',
             ]);
         }
 
         if ($status === Password::ResetThrottled) {
-            return back()->withInput($request->only('email', 'name'))->withErrors([
+            return back()->withInput($request->only('email'))->withErrors([
                 'email' => 'An invite went to '.$user->email.' less than a minute ago. Wait, then try again.',
             ]);
         }
 
         if ($status !== Password::ResetLinkSent) {
-            return back()->withInput($request->only('email', 'name'))->withErrors([
+            return back()->withInput($request->only('email'))->withErrors([
                 'email' => 'The invite was not sent.',
             ]);
         }

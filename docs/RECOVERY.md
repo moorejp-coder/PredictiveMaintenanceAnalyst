@@ -24,7 +24,7 @@ Source: `.ebextensions/01-laravel.config` and `.platform/hooks/postdeploy/01_ove
 ## If the server was replaced
 
 1. Open the Elastic Beanstalk console. Check the environment is green and note its public IP address.
-2. Check these environment properties are still set: `APP_KEY`, `APP_URL`, `APP_DOMAIN`, `CERTBOT_EMAIL`, `REQUIRE_LOGIN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ANTHROPIC_API_KEY`, the `MAIL_*` values, `JUDGE_EMAIL`, `JUDGE_PASSWORD`. Add any that are missing.
+2. Check these environment properties are still set (keep the same `APP_KEY`: override reasons are encrypted with it, and a new key without `APP_PREVIOUS_KEYS` makes them unreadable): `APP_KEY`, `APP_URL`, `APP_DOMAIN`, `REQUIRE_LOGIN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ANTHROPIC_API_KEY`, the `MAIL_*` values, `JUDGE_EMAIL`, `JUDGE_PASSWORD`. Add any that are missing.
 3. Update the DuckDNS record to the new public IP. A new server has a new IP unless an Elastic IP is attached. Without the right IP, the certificate request in `02_https.sh` fails.
 4. Upload the latest deploy zip. The hooks create the database, run the migrations, create the fallback judge account and request the certificate.
 5. Read the deploy logs for lines starting with `PRISM:` or `PRISM HTTPS:`. They name any step that failed.

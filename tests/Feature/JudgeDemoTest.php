@@ -46,7 +46,6 @@ class JudgeDemoTest extends TestCase
         $this->get('/demo');
 
         $this->postJson('/api/overrides', [
-            'operator_name' => 'Test Operator',
             'reason' => 'Keeping the machine running for a test.',
             'scenario' => 'worn_tool',
             'tick' => 59,
@@ -116,7 +115,7 @@ class JudgeDemoTest extends TestCase
         $this->get('/overrides')
             ->assertOk()
             ->assertSee('Sample data, read only.')
-            ->assertSee('Sample Operator A')
+            ->assertSee('operator-a@example.test')
             ->assertSee('Override Log (sample)')
             ->assertSee('Recent AI ratings');
     }
@@ -131,7 +130,6 @@ class JudgeDemoTest extends TestCase
     public function test_the_sample_override_log_never_shows_real_entries(): void
     {
         OverrideLog::create([
-            'operator_name' => 'Real Person Zed',
             'reason' => 'A real reason that must stay private.',
             'machine' => 'Milling Machine M-01',
             'scenario' => 'overload',

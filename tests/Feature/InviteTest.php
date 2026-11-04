@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\InviteController;
 use App\Models\User;
 use App\Notifications\JudgeInvite;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -56,7 +57,8 @@ class InviteTest extends TestCase
 
         $this->adminGet('/admin/invites')->assertNotFound();
         $this->adminPost('/admin/invites', ['email' => 'judge@example.test'])->assertNotFound();
-        $this->get('/set-password/anything?email=judge@example.test')->assertNotFound();
+        $this->get('/set-password')->assertNotFound();
+        $this->postJson('/set-password/check', ['token' => 'anything', 'email' => 'judge@example.test'])->assertNotFound();
         $this->post('/set-password', [])->assertNotFound();
     }
 
@@ -95,7 +97,8 @@ class InviteTest extends TestCase
             ->assertSessionHas('status', 'Invite sent to judge@example.test.');
 
         $user = User::where('email', 'judge@example.test')->firstOrFail();
-        $this->assertSame('Pat Judge', $user->name);
+        // The form asks for no name, and a name sent anyway is not stored.
+        $this->assertSame(InviteController::ACCOUNT_LABEL, $user->name);
         $this->assertNull($user->email_verified_at);
         Notification::assertSentTo($user, JudgeInvite::class);
 
@@ -128,7 +131,8 @@ class InviteTest extends TestCase
         $mail = (new JudgeInvite('tok123'))->toMail($user);
 
         $this->assertSame('Set your password for the PRISM contest demo', $mail->subject);
-        $this->assertStringContainsString('/set-password/tok123?email=j%40example.test', $mail->actionUrl);
+        // The token and email sit after "#", which browsers never send to the server.
+        $this->assertStringEndsWith('/set-password#t=tok123&e=j%40example.test', $mail->actionUrl);
         $this->assertStringContainsString('works once and expires in 30 minutes', implode(' ', $mail->outroLines));
     }
 
@@ -144,7 +148,7 @@ class InviteTest extends TestCase
         Notification::assertSentTo($user, JudgeInvite::class, function (JudgeInvite $n) use ($user) {
             $url = $n->toMail($user)->actionUrl;
 
-            return str_starts_with($url, 'https://prismcua.duckdns.org/set-password/') && ! str_contains($url, 'evil.example');
+            return str_starts_with($url, 'https://prismcua.duckdns.org/set-password#') && ! str_contains($url, 'evil.example');
         });
     }
 
@@ -161,11 +165,15 @@ class InviteTest extends TestCase
             return true;
         });
 
-        $page = $this->get('/set-password/'.$token.'?email=judge@example.test')
+        $page = $this->get('/set-password')
             ->assertOk()
             ->assertSee('Set your password')
-            ->assertHeader('Referrer-Policy', 'no-referrer');
+            ->assertSee('js/email-link.js')
+            ->assertHeader('Referrer-Policy', 'same-origin');
         $this->assertStringContainsString('no-store', (string) $page->headers->get('Cache-Control'));
+        $this->postJson('/set-password/check', ['token' => $token, 'email' => 'judge@example.test'])
+            ->assertOk()
+            ->assertExactJson(['valid' => true]);
 
         $this->post('/set-password', [
             'token' => $token,
@@ -290,7 +298,7 @@ class InviteTest extends TestCase
 
     public function test_the_signed_in_judge_is_sent_past_the_set_password_page(): void
     {
-        $this->signIn()->get('/set-password/anything?email=judge@example.test')->assertRedirect('/');
+        $this->signIn()->get('/set-password')->assertRedirect('/');
     }
 
     public function test_the_token_is_long_random_and_stored_only_as_a_hash(): void
@@ -313,26 +321,19 @@ class InviteTest extends TestCase
         $user = User::factory()->unverified()->create(['email' => 'judge@example.test']);
         $token = $this->newToken($user);
 
-        $this->get('/set-password/'.$token.'?email=judge@example.test')
+        $this->postJson('/set-password/check', ['token' => $token, 'email' => 'judge@example.test'])
             ->assertOk()
-            ->assertSee('name="password"', false);
+            ->assertExactJson(['valid' => true]);
 
-        // A wrong token, an unknown email and a missing email look the same.
-        $same = null;
+        // A wrong token, an unknown email and a missing email get the same answer.
         foreach ([
-            '/set-password/wrong-token?email=judge@example.test',
-            '/set-password/'.$token.'?email=nobody@example.test',
-            '/set-password/'.$token,
-        ] as $url) {
-            $response = $this->get($url)
+            ['token' => 'wrong-token', 'email' => 'judge@example.test'],
+            ['token' => $token, 'email' => 'nobody@example.test'],
+            ['token' => $token],
+        ] as $body) {
+            $this->postJson('/set-password/check', $body)
                 ->assertStatus(410)
-                ->assertDontSee('name="password"', false)
-                ->assertSee('This link is not valid.');
-            $same ??= $response->getContent();
-            $this->assertSame(
-                preg_replace('/(value|nonce|content)="[^"]*"/', '', $same),
-                preg_replace('/(value|nonce|content)="[^"]*"/', '', $response->getContent()),
-            );
+                ->assertExactJson(['valid' => false]);
         }
     }
 
@@ -340,10 +341,10 @@ class InviteTest extends TestCase
     {
         $user = User::factory()->unverified()->create(['email' => 'judge@example.test']);
         $token = $this->newToken($user);
-        $url = '/set-password/'.$token.'?email=judge@example.test';
+        $body = ['token' => $token, 'email' => 'judge@example.test'];
 
         $this->travel(31)->minutes();
-        $this->get($url)->assertStatus(410)->assertDontSee('name="password"', false);
+        $this->postJson('/set-password/check', $body)->assertStatus(410);
         $this->travelBack();
 
         $this->post('/set-password', [
@@ -353,7 +354,7 @@ class InviteTest extends TestCase
             'password_confirmation' => $this->fixturePassword('judge'),
         ])->assertRedirect('/login');
 
-        $this->get($url)->assertStatus(410)->assertDontSee('name="password"', false);
+        $this->postJson('/set-password/check', $body)->assertStatus(410);
     }
 
     public function test_a_successful_reset_ends_every_other_session_of_the_account(): void
@@ -383,5 +384,33 @@ class InviteTest extends TestCase
         // password hash is refused.
         $this->post('/login', ['email' => $user->email, 'password' => $this->fixturePassword('old')])->assertSessionHasErrors('email');
         $this->withSession($oldSession + ['password_hash_web' => 'old-hash'])->actingAs($user->fresh())->get('/')->assertRedirect('/login');
+    }
+
+    public function test_the_link_never_puts_the_token_or_email_in_the_address(): void
+    {
+        $user = User::factory()->unverified()->create(['email' => 'judge@example.test']);
+        $token = $this->newToken($user);
+
+        // The old address with the token in the path is gone.
+        $this->get('/set-password/'.$token.'?email=judge@example.test')->assertNotFound();
+
+        // The page itself holds no token and no email until the script fills them in.
+        $this->get('/set-password')->assertOk()
+            ->assertDontSee($token)
+            ->assertDontSee('judge@example.test')
+            ->assertSee('id="link-forms" hidden', false);
+
+        // After a form error the server shows the form again with the values it had.
+        $this->from('/set-password')->post('/set-password', [
+            'token' => $token,
+            'email' => 'judge@example.test',
+            'password' => 'short',
+            'password_confirmation' => 'short',
+        ])->assertRedirect('/set-password')->assertSessionHasErrors('password');
+
+        $this->get('/set-password')->assertOk()
+            ->assertSee('value="'.$token.'"', false)
+            ->assertSee('value="judge@example.test"', false)
+            ->assertDontSee('id="link-forms" hidden', false);
     }
 }

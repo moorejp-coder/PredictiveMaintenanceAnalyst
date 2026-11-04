@@ -152,11 +152,17 @@ return [
     // fails when the text changes and the hash here does not, and the failure
     // message prints the new hash. When you update a hash, set that page's date
     // to the day you changed the text.
+    // The folder of PRISM's own log files. An account deletion removes the
+    // lines in them that name the account (App\Services\PersonalData).
+    // Null means storage/logs. This file is also read without Laravel booted,
+    // so it cannot call storage_path() itself.
+    'log_folder' => null,
+
     'policy_dates' => [
-        'faq' => ['date' => 'October 26, 2026', 'hash' => 'e479ca90c864d35038db1c5dbd831c7717e532a565416d3f8090b22d80f7e2f9'],
-        'privacy' => ['date' => 'November 2, 2026', 'hash' => '1dd3ab2a918095d53356157def50d1328f373279b6ee26132fa8ef331be63917'],
+        'faq' => ['date' => 'November 3, 2026', 'hash' => 'fb93756a9d1e256245b8f0a41e5391218855f6b2684a646e3aa0f3e34740aa0d'],
+        'privacy' => ['date' => 'November 3, 2026', 'hash' => '066cab27b69c3a22cd1340f698a38ee907238471438c1dd9a37e6ac73bf35702'],
         'terms' => ['date' => 'October 26, 2026', 'hash' => '4c4064afa204cc5d5b0440e6d8c33c62371284721fd364ba3be8fd171033c036'],
-        'ai' => ['date' => 'October 26, 2026', 'hash' => '777ae1d2089b23fb9e5dca69cfac53f732e462274deadf1ed4b0aff24c5d0fe5'],
+        'ai' => ['date' => 'November 3, 2026', 'hash' => '4b82ca8bab07fd15a7503b0cad0264e934d8debadca0101e986bdc739e82cd83'],
     ],
 
     'bands' => [

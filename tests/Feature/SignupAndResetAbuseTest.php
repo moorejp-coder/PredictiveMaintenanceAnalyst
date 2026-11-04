@@ -152,19 +152,17 @@ class SignupAndResetAbuseTest extends TestCase
         $user = User::factory()->create(['email' => 'judge@example.test']);
         Password::broker('invites')->createToken($user);
 
-        $unknown = $this->get('/set-password/guess?email=nobody%40example.test');
-        $wrong = $this->get('/set-password/guess?email=judge%40example.test');
+        $unknown = $this->postJson('/set-password/check', ['token' => 'guess', 'email' => 'nobody@example.test']);
+        $wrong = $this->postJson('/set-password/check', ['token' => 'guess', 'email' => 'judge@example.test']);
 
         $unknown->assertStatus(410);
         $wrong->assertStatus(410);
-        // The CSRF token and the style nonce change on every request.
-        $strip = fn (TestResponse $r): string => (string) preg_replace(['/name="_token" value="[^"]*"/', '/nonce="[^"]*"/'], '', (string) $r->getContent());
-        $this->assertSame($strip($unknown), $strip($wrong));
+        $this->assertSame($unknown->getContent(), $wrong->getContent());
 
         $message = 'This link is not valid. It was already used or it expired. Ask the contest entrant for a new invite.';
-        $this->from('/set-password/x')->post('/set-password', $this->resetForm('nobody@example.test', 'guess'))
+        $this->from('/set-password')->post('/set-password', $this->resetForm('nobody@example.test', 'guess'))
             ->assertSessionHasErrors(['email' => $message]);
-        $this->from('/set-password/x')->post('/set-password', $this->resetForm('judge@example.test', 'guess'))
+        $this->from('/set-password')->post('/set-password', $this->resetForm('judge@example.test', 'guess'))
             ->assertSessionHasErrors(['email' => $message]);
     }
 
@@ -175,7 +173,7 @@ class SignupAndResetAbuseTest extends TestCase
 
         for ($i = 1; $i <= JudgePasswordController::MAX_BAD_TOKENS_PER_EMAIL; $i++) {
             $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.'.$i])
-                ->from('/set-password/x')
+                ->from('/set-password')
                 ->post('/set-password', $this->resetForm('judge@example.test', 'guess-'.$i))
                 ->assertSessionHasErrors('email');
         }
@@ -186,7 +184,7 @@ class SignupAndResetAbuseTest extends TestCase
             ->assertStatus(429)
             ->assertHeader('Retry-After', '3600');
         $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.51'])
-            ->get('/set-password/'.$token.'?email=judge%40example.test')
+            ->postJson('/set-password/check', ['token' => $token, 'email' => 'judge@example.test'])
             ->assertStatus(429);
         $this->assertNull($user->fresh()->email_verified_at);
     }
@@ -195,13 +193,13 @@ class SignupAndResetAbuseTest extends TestCase
     {
         for ($i = 1; $i <= JudgePasswordController::MAX_BAD_TOKENS_PER_EMAIL; $i++) {
             $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.'.$i])
-                ->get('/set-password/guess-'.$i.'?email=nobody%40example.test')
+                ->postJson('/set-password/check', ['token' => 'guess-'.$i, 'email' => 'nobody@example.test'])
                 ->assertStatus(410);
         }
 
         // An unknown email locks the same way, so the limit reveals nothing.
         $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.60'])
-            ->get('/set-password/guess?email=nobody%40example.test')
+            ->postJson('/set-password/check', ['token' => 'guess', 'email' => 'nobody@example.test'])
             ->assertStatus(429)
             ->assertHeader('Retry-After');
     }
@@ -218,6 +216,6 @@ class SignupAndResetAbuseTest extends TestCase
 
         $this->post('/set-password', $this->resetForm('judge@example.test', $token))->assertRedirect('/login');
 
-        $this->get('/set-password/guess?email=judge%40example.test')->assertStatus(410);
+        $this->postJson('/set-password/check', ['token' => 'guess', 'email' => 'judge@example.test'])->assertStatus(410);
     }
 }

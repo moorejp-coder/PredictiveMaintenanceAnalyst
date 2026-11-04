@@ -72,7 +72,6 @@ class AbuseGuardTest extends TestCase
     private function override(array $with = []): array
     {
         return array_merge([
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'scenario' => 'overload',
             'tick' => 59,
@@ -96,7 +95,7 @@ class AbuseGuardTest extends TestCase
             && str_contains($context['excerpt'], 'DROP TABLE'));
     }
 
-    public function test_a_very_long_string_is_rejected_and_logged_without_the_full_text(): void
+    public function test_a_very_long_string_is_rejected_and_logged_by_length_only(): void
     {
         $this->signIn();
         Log::spy();
@@ -106,7 +105,7 @@ class AbuseGuardTest extends TestCase
         $this->assertSame(0, OverrideLog::count());
         Log::shouldHaveReceived('warning')->once()->withArgs(fn (string $message, array $context) => $context['reason'] === 'too_long'
             && $context['length'] === 5000
-            && mb_strlen($context['excerpt']) <= 103);
+            && $context['excerpt'] === null);
     }
 
     public function test_an_attack_in_a_query_string_is_rejected_and_logged(): void

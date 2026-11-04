@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="robots" content="noindex">
-    <meta name="referrer" content="no-referrer">
+    <meta name="referrer" content="same-origin">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Change your password | {{ config('app.name', 'PRISM') }}</title>
     <meta name="description" content="Change the password of a PRISM account after repeated failed sign-ins, or unlock it.">
     @include('partials.brand-head')
@@ -27,15 +28,13 @@
 @include('partials.skip-link')
 @include('partials.app-header', ['active' => null])
 <main class="wrap" id="main" tabindex="-1">
-    <div class="card">
+    {{-- After a form error the server has the token and email again (old
+         input), so the forms show at once. Otherwise email-link.js reads
+         them from the part of the link after "#" and checks them. --}}
+    @php($token = (string) old('token', ''))
+    @php($prefilled = $token !== '')
+    <div class="card" data-link-check="{{ url('/unlock-account/check') }}"@if (! $prefilled && $errors->any()) data-link-done @endif>
         <h1>Change your password</h1>
-        @unless ($valid)
-            <div class="error" id="unlock-error" role="alert">
-                <strong>This link is not valid.</strong>
-                It was already used or it expired. A locked account unlocks on its own 30 minutes after the lock began.
-            </div>
-        @else
-        <p class="lead">Someone tried to log into your account multiple times. If this wasn't you, choose a new password. Saving it also unlocks your account and signs out every other browser.</p>
 
         @if ($errors->any())
             <div class="error" id="unlock-error" role="alert">
@@ -44,7 +43,22 @@
                     {{ $message }}
                 @endforeach
             </div>
+        @elseif (! $prefilled)
+            <p class="lead" id="link-checking" role="status">Checking your link.</p>
+            <noscript><div class="error" role="alert"><strong>This page needs JavaScript.</strong> It reads the link from your email in the browser, so the link never travels to the server in the address.</div></noscript>
         @endif
+
+        <div class="error" id="link-invalid" role="alert" hidden>
+            <strong>This link is not valid.</strong>
+            It was already used or it expired. A locked account unlocks on its own 30 minutes after the lock began.
+        </div>
+        <div class="error" id="link-limited" role="alert" hidden>
+            <strong>Too many tries with this link.</strong>
+            Wait a minute, then try again.
+        </div>
+
+        <div id="link-forms"@unless ($prefilled) hidden @endunless>
+        <p class="lead">Someone tried to log into your account multiple times. If this wasn't you, choose a new password. Saving it also unlocks your account and signs out every other browser.</p>
 
         <form method="POST" action="{{ url('/unlock-account/password') }}">
             @csrf
@@ -52,11 +66,11 @@
             <input type="hidden" name="token" value="{{ $token }}">
             <div class="field">
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" value="{{ $email }}" autocomplete="username" required readonly>
+                <input id="email" name="email" type="email" value="{{ old('email', '') }}" autocomplete="username" required readonly>
             </div>
             <div class="field">
                 <label for="password">New password</label>
-                <input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required autofocus
+                <input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required @if ($prefilled) autofocus @endif
                        aria-describedby="password-hint"@if ($errors->has('password')) aria-invalid="true"@endif>
                 <p class="hint" id="password-hint">At least 12 characters. A long phrase works well. No symbols or digits are required. A password from a known data breach or a common-password list is refused.</p>
             </div>
@@ -76,11 +90,11 @@
                 @csrf
                 @include('partials.honeypot', ['hpId' => 'unlock'])
                 <input type="hidden" name="token" value="{{ $token }}">
-                <input type="hidden" name="email" value="{{ $email }}">
+                <input type="hidden" name="email" value="{{ old('email', '') }}">
                 <button type="submit" class="btn">Unlock without changing password</button>
             </form>
         </section>
-        @endunless
+        </div>
 
         <div class="help">
             <p>This link works once and expires 60 minutes after the email was sent.</p>
@@ -88,6 +102,7 @@
         </div>
     </div>
 </main>
+<script src="{{ asset('js/email-link.js') }}?v={{ filemtime(public_path('js/email-link.js')) }}"></script>
 @include('partials.cookie-notice')
 </body>
 </html>

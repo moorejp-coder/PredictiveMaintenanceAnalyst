@@ -7,7 +7,9 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Notifications\AccountLocked;
 use App\Rules\NotCommonPassword;
+use App\Support\LogId;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -25,21 +27,32 @@ class UnlockAccountController extends Controller
 {
     private const INVALID = 'This link is not valid. It was already used or it expired. If the account is still locked, it unlocks on its own 30 minutes after the lock began.';
 
-    public function show(Request $request, string $token): Response
+    /**
+     * The page the emailed link opens. The token and email ride after "#" in
+     * the link, so they never reach the server in the address or its access
+     * log. public/js/email-link.js reads them and asks check() about them.
+     */
+    public function show(): Response
     {
-        $queryEmail = $request->query('email', '');
-        $email = Str::lower(trim(mb_substr(is_string($queryEmail) ? $queryEmail : '', 0, 255)));
+        // same-origin, not no-referrer: the address holds no secret, and with
+        // no-referrer browsers send "Origin: null" on the form post, which
+        // VerifyRequestOrigin refuses as a cross-site request.
+        return response()
+            ->view('unlock-account')
+            ->header('Referrer-Policy', 'same-origin')
+            ->header('Cache-Control', 'no-store');
+    }
+
+    /** Is this link good? 200 when it is, 410 for every other case. */
+    public function check(Request $request): JsonResponse
+    {
+        $email = $request->input('email');
+        $token = $request->input('token');
+        $email = is_string($email) ? Str::lower(trim(mb_substr($email, 0, 255))) : '';
+        $token = is_string($token) ? trim(mb_substr($token, 0, 255)) : '';
         $valid = $this->linkUser($email, $token) !== null;
 
-        // The link carries a token, so keep it out of Referer headers and caches.
-        return response()
-            ->view('unlock-account', [
-                'token' => $valid ? $token : '',
-                'email' => $valid ? $email : '',
-                'valid' => $valid,
-            ], $valid ? 200 : 410)
-            ->header('Referrer-Policy', 'no-referrer')
-            ->header('Cache-Control', 'no-store');
+        return response()->json(['valid' => $valid], $valid ? 200 : 410)->header('Cache-Control', 'no-store');
     }
 
     /** Unlock without changing the password. */
@@ -53,7 +66,7 @@ class UnlockAccountController extends Controller
 
         $this->finish($user);
         $user->save();
-        Log::notice('Account unlocked from the emailed link', ['email_hash' => hash('sha256', $data['email'])]);
+        Log::notice('Account unlocked from the emailed link', ['email_hash' => LogId::email($data['email'])]);
 
         return redirect('/login')->with('status', 'Your account is unlocked. Sign in with your email and password.');
     }
@@ -79,7 +92,7 @@ class UnlockAccountController extends Controller
         ])->setRememberToken(Str::random(60));
         $user->save();
         event(new PasswordReset($user));
-        Log::notice('Password changed from the account lock email', ['email_hash' => hash('sha256', $data['email'])]);
+        Log::notice('Password changed from the account lock email', ['email_hash' => LogId::email($data['email'])]);
 
         return redirect('/login')->with('status', 'Your password is changed and your account is unlocked. Sign in with your new password.');
     }

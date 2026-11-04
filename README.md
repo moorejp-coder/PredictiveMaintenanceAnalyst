@@ -34,7 +34,7 @@ Safety disclaimer: PRISM supports a qualified technician and does not replace an
 - It gives no failure date. The projection looks a few readings ahead on simulated trends.
 - It records no stops, downtime or confirmed faults.
 - It lets neither the AI nor the learned estimate change the score, the band or the action.
-- It does not verify the operator name typed into the override log.
+- It asks for no operator name. An override entry records the signed-in account instead.
 
 ## How PRISM meets the judging criteria
 

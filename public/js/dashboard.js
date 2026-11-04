@@ -37,7 +37,7 @@
     // Override log: shown only while PRISM says to stop the machine.
     const ov = {
         box: $('override'), open: $('override-open'), logged: $('override-logged'), modal: $('override-modal'),
-        form: $('override-form'), summary: $('override-summary'), name: $('override-name'), reason: $('override-reason'),
+        form: $('override-form'), summary: $('override-summary'), reason: $('override-reason'),
         error: $('override-error'), submit: $('override-submit'), cancel: $('override-cancel'),
         done: $('override-done'), doneText: $('override-done-text'), close: $('override-close'),
     };
@@ -306,7 +306,7 @@
         ov.form.hidden = false;
         ov.done.hidden = true;
         ov.modal.showModal();
-        ov.name.focus();
+        ov.reason.focus();
     });
     ov.cancel.addEventListener('click', () => ov.modal.close());
     ov.close.addEventListener('click', () => ov.modal.close());
@@ -316,9 +316,7 @@
     ov.form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!ovTarget) { return; }
-        const operator = ov.name.value.trim();
         const reason = ov.reason.value.trim();
-        if (operator.length < 2) { ovShowError('Enter your name.'); ov.name.focus(); return; }
         if (reason.length < 10) { ovShowError('Give a reason of at least 10 characters.'); ov.reason.focus(); return; }
 
         ov.error.hidden = true;
@@ -328,7 +326,7 @@
             const res = await fetch(body.dataset.overrides, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
-                body: JSON.stringify({ operator_name: operator, reason: reason, scenario: ovTarget.scenario, tick: ovTarget.tick, homepage: (ov.form.querySelector('[name=homepage]') || {}).value || '' }),
+                body: JSON.stringify({ reason: reason, scenario: ovTarget.scenario, tick: ovTarget.tick, homepage: (ov.form.querySelector('[name=homepage]') || {}).value || '' }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -346,7 +344,7 @@
             ov.form.hidden = true;
             ov.done.hidden = false;
             ov.doneText.textContent = 'Recorded as entry ' + data.id + ' at ' + when + '. PRISM still says to stop the machine and inspect it.';
-            ov.logged.textContent = 'Override recorded: ' + operator + ', ' + when + '.';
+            ov.logged.textContent = 'Override recorded at ' + when + '.';
             ov.reason.value = '';
             ov.close.focus();
         } catch (err) {

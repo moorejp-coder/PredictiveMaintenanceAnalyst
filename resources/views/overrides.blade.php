@@ -26,9 +26,16 @@
     <p><a href="{{ url('/') }}">Back to the dashboard</a></p>
     <h1>Override Log{{ !empty($sample) ? ' (sample)' : '' }}</h1>
     @if (!empty($sample))
-        <p class="sample-note" role="note"><strong>Sample data, read only.</strong> The names, reasons and times below are made up for the Judge Demo. Nothing you do in the demo is saved here. The real log is private. The scores and readings are rebuilt by the same code that scores the live dashboard.</p>
+        <p class="sample-note" role="note"><strong>Sample data, read only.</strong> The accounts, reasons and times below are made up for the Judge Demo. Nothing you do in the demo is saved here. The real log is private. The scores and readings are rebuilt by the same code that scores the live dashboard.</p>
     @endif
-    <p>Each row is a time an operator chose to keep a machine running after PRISM said "Stop the machine and inspect it now." The name is what the operator typed. The name is not tied to any sign-in, so PRISM does not verify who typed it. The score and reading were rebuilt by the server. Times are UTC. {{ empty($sample) ? 'Showing the newest 200 entries.' : 'Showing 3 sample entries.' }}</p>
+    <p>Each row is a time an operator chose to keep a machine running after PRISM said "Stop the machine and inspect it now." The account is the one signed in when the entry was saved. "Not signed in" means the sign-in was off. PRISM asks for no name. The score and reading were rebuilt by the server. Times are UTC. {{ empty($sample) ? 'Showing the newest 200 entries.' : 'Showing 3 sample entries.' }}</p>
+
+    @if (session('status'))
+        <div class="notice" role="status"><strong>{{ session('status') }}</strong></div>
+    @endif
+    @if (empty($sample))
+        <p>To answer a deletion request, Erase removes an entry for good, with its original reason. An owner's own delete only marks the entry deleted.</p>
+    @endif
 
     <p><strong>AI answer ratings:</strong>
     @if ($ratings === null)
@@ -48,11 +55,12 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">When (UTC)</th>
-                        <th scope="col">Operator</th>
+                        <th scope="col">Account</th>
                         <th scope="col">Why they kept running</th>
                         <th scope="col">Machine</th>
                         <th scope="col">Risk score</th>
                         <th scope="col">Reading</th>
+                        @if (empty($sample))<th scope="col">Erase</th>@endif
                     </tr>
                 </thead>
                 <tbody>
@@ -60,10 +68,10 @@
                     <tr>
                         <td class="num">{{ $log->entry }}</td>
                         <td class="num"><time datetime="{{ $log->created_at->toIso8601String() }}">{{ $log->created_at->utc()->format('Y-m-d H:i:s') }}</time></td>
-                        <td>{{ $log->operator_name }}</td>
+                        <td>{{ $log->account }}</td>
                         <td class="reason">{{ $log->reason }}
                             @if (isset($log->edited_at))
-                                <br><small>Edited {{ $log->edited_at->utc()->format('Y-m-d H:i') }} UTC. Original name: {{ $log->original_operator_name }}. Original reason: {{ $log->original_reason }}</small>
+                                <br><small>Edited {{ $log->edited_at->utc()->format('Y-m-d H:i') }} UTC. Original reason: {{ $log->original_reason }}</small>
                             @endif
                             @if (isset($log->deleted_at))
                                 <br><small><strong>Deleted by its owner</strong> {{ $log->deleted_at->utc()->format('Y-m-d H:i') }} UTC.</small>
@@ -72,6 +80,14 @@
                         <td>{{ $log->machine }}</td>
                         <td class="num">{{ $log->risk_score }} / 100</td>
                         <td>{{ \App\Services\SensorSimulator::SCENARIOS[$log->scenario]['label'] ?? $log->scenario }}, reading {{ ($log->tick % $cycle) + 1 }} of {{ $cycle }}</td>
+                        @if (empty($sample))
+                        <td>
+                            <form method="POST" action="{{ url('/admin/overrides/'.$log->uuid.'/erase') }}">
+                                @csrf
+                                <button type="submit" class="btn" aria-label="Erase entry {{ $log->entry }} for good">Erase</button>
+                            </form>
+                        </td>
+                        @endif
                     </tr>
                 @endforeach
                 </tbody>

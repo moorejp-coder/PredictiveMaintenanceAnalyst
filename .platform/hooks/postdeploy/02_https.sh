@@ -1,10 +1,12 @@
 #!/bin/bash
 # Turns on HTTPS with a free Lets Encrypt certificate for a DuckDNS name.
 #
-# Needs two Elastic Beanstalk environment properties:
+# Needs one Elastic Beanstalk environment property:
 #   APP_DOMAIN     the DuckDNS name, for example prism-cua.duckdns.org
-#   CERTBOT_EMAIL  an address Lets Encrypt uses for expiry notices
-# Without both, this script does nothing and the site stays on http.
+# Without it, this script does nothing and the site stays on http.
+# CERTBOT_EMAIL is optional and best left unset (data minimization). Lets
+# Encrypt stopped sending expiry emails on June 4, 2025, so the address
+# would only join its general mailing list. Renewal below is automatic.
 #
 # Steps: install certbot once, request the certificate once, add the HTTPS
 # settings to nginx, and install a twice-daily renewal check.
@@ -17,9 +19,15 @@ WEBROOT=/var/app/current/public
 CERTBOT=/opt/certbot/bin/certbot
 SSL_CONF=/etc/nginx/conf.d/elasticbeanstalk/prism-ssl.conf
 
-if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
-  echo "PRISM HTTPS: APP_DOMAIN or CERTBOT_EMAIL is not set. Skipping HTTPS."
+if [ -z "$DOMAIN" ]; then
+  echo "PRISM HTTPS: APP_DOMAIN is not set. Skipping HTTPS."
   exit 0
+fi
+
+if [ -n "$EMAIL" ]; then
+  CONTACT=(--email "$EMAIL" --no-eff-email)
+else
+  CONTACT=(--register-unsafely-without-email)
 fi
 
 # 1. Install certbot once, in its own folder.
@@ -35,7 +43,7 @@ fi
 # 2. Request the certificate once.
 if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
   "$CERTBOT" certonly --webroot -w "$WEBROOT" -d "$DOMAIN" \
-    --email "$EMAIL" --agree-tos --no-eff-email --non-interactive \
+    "${CONTACT[@]}" --agree-tos --non-interactive \
     || { echo "PRISM HTTPS: certificate request failed. Check that $DOMAIN points at this server's public IP and that port 80 is open."; exit 0; }
 fi
 

@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\PersonalData;
+use App\Services\PersonalDataExport;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -42,6 +46,71 @@ class AccountController extends Controller
         Auth::logoutOtherDevices($data['password']);
 
         return redirect('/account')->with('status', 'Every other browser is signed out. This one stays signed in.');
+    }
+
+    /**
+     * Downloads everything PRISM holds about the signed-in account as one
+     * JSON file (PersonalDataExport). The password confirms the request, so
+     * a stolen session alone cannot take the data.
+     */
+    public function export(Request $request, PersonalDataExport $export): JsonResponse|RedirectResponse
+    {
+        $request->validateWithBag('export', ['password' => ['required', 'string', 'max:255']]);
+        $user = $this->currentUser($request);
+
+        if (! Hash::check((string) $request->input('password'), $user->getAuthPassword())) {
+            return back()->withErrors(['password' => 'The password is wrong.'], 'export');
+        }
+
+        Log::notice('Personal data exported', ['user_id' => $user->getAuthIdentifier()]);
+
+        return response()
+            ->json($export->for($user), 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+            ->header('Content-Disposition', 'attachment; filename="prism-data-export-'.now()->utc()->format('Y-m-d').'.json"')
+            ->header('Cache-Control', 'no-store');
+    }
+
+    /**
+     * Deletes the signed-in account and everything tied to it, for good
+     * (PersonalData::deleteAccount), then emails a confirmation and shows
+     * what was removed. The password and a ticked box confirm the request.
+     */
+    public function deleteAccount(Request $request, PersonalData $data): RedirectResponse|JsonResponse
+    {
+        $request->validateWithBag('delete', [
+            'password' => ['required', 'string', 'max:255'],
+            'confirm' => ['accepted'],
+        ], [
+            'confirm.accepted' => 'Tick the box to confirm that the deletion cannot be undone.',
+        ]);
+
+        $user = $this->currentUser($request);
+
+        if (! Hash::check((string) $request->input('password'), $user->getAuthPassword())) {
+            return back()->withErrors(['password' => 'The password is wrong.'], 'delete');
+        }
+
+        // An admin account comes from ADMIN_EMAIL and the deploy recreates it,
+        // so deleting it here would not last.
+        if ($user->isAdmin()) {
+            return back()->withErrors(['password' => 'This is the admin account set by ADMIN_EMAIL. Remove ADMIN_EMAIL in the Elastic Beanstalk console instead.'], 'delete');
+        }
+
+        $email = (string) $user->email;
+        $removed = $data->deleteAccount($user);
+        $emailed = $data->sendConfirmation($email, $removed);
+
+        // logoutCurrentDevice, not logout: logout saves the user to change
+        // its remember token, which would write the deleted row back.
+        Auth::logoutCurrentDevice();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($request->expectsJson()) {
+            return response()->json(['deleted' => true, 'removed' => $removed, 'confirmation_email_sent' => $emailed]);
+        }
+
+        return redirect('/account/deleted')->with('deletion', ['removed' => $removed, 'emailed' => $emailed]);
     }
 
     /** The routes sit behind the auth middleware, so a missing user is an error, not a normal case. */

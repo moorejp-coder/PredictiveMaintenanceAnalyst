@@ -69,6 +69,8 @@ class SessionSecurityTest extends TestCase
             ->assertOk();
 
         Log::shouldHaveReceived('notice')->withArgs(fn ($message) => $message === 'Session IP address changed')->once();
+        // The session keeps a hash of the address, never the address itself.
+        $this->assertSame(hash('sha256', '203.0.113.50'), session('client_ip'));
     }
 
     public function test_sign_out_everywhere_ends_other_sessions_and_keeps_this_one(): void

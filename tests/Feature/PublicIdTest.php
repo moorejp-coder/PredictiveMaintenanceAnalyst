@@ -16,7 +16,6 @@ class PublicIdTest extends TestCase
     private function payload(): array
     {
         return [
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'scenario' => 'overload',
             'tick' => 59,
@@ -77,7 +76,7 @@ class PublicIdTest extends TestCase
         $rowNumber = OverrideLog::sole()->id;
 
         $this->getJson("/api/overrides/{$rowNumber}")->assertNotFound();
-        $this->putJson("/api/overrides/{$rowNumber}", ['operator_name' => 'New Name', 'reason' => 'A new reason that is long enough.'])->assertNotFound();
+        $this->putJson("/api/overrides/{$rowNumber}", ['reason' => 'A new reason that is long enough.'])->assertNotFound();
         $this->deleteJson("/api/overrides/{$rowNumber}")->assertNotFound();
         $this->assertModelExists(OverrideLog::sole());
     }
