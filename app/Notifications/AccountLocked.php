@@ -43,10 +43,9 @@ class AccountLocked extends Notification
         }
 
         // The host comes from APP_URL, never from the request.
-        $url = CanonicalUrl::for(route('unlock.show', [
-            'token' => $this->token,
-            'email' => $notifiable->email,
-        ], false));
+        // The token and email go after "#", so neither lands in an access log.
+        $url = CanonicalUrl::for(route('unlock.show', [], false))
+            .'#t='.rawurlencode($this->token).'&e='.rawurlencode((string) $notifiable->email);
 
         $first = $this->firstAttempt->copy()->utc();
         $last = $this->lockedAt->copy()->utc();

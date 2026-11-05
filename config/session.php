@@ -47,7 +47,10 @@ return [
     |
     */
 
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    // On by default: session files on the server hold the user id, hashes of
+    // the IP address and browser, and a typed email after a failed form. They
+    // are encrypted with APP_KEY, like the cookie.
+    'encrypt' => env('SESSION_ENCRYPT', true),
 
     /*
     |--------------------------------------------------------------------------

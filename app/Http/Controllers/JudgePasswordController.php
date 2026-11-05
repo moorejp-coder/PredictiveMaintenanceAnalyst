@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Rules\NotCommonPassword;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -32,34 +33,44 @@ class JudgePasswordController extends Controller
 
     private const WINDOW_SECONDS = 3600;
 
-    public function show(Request $request, string $token): Response
+    /**
+     * The page the emailed link opens. The token and email ride after "#" in
+     * the link, so they never reach the server in the address or its access
+     * log. public/js/email-link.js reads them and asks check() about them.
+     */
+    public function show(): Response
     {
-        $queryEmail = $request->query('email', '');
-        $email = Str::lower(trim(mb_substr(is_string($queryEmail) ? $queryEmail : '', 0, 255)));
+        // same-origin, not no-referrer: the address holds no secret, and with
+        // no-referrer browsers send "Origin: null" on the form post, which
+        // VerifyRequestOrigin refuses as a cross-site request.
+        return response()
+            ->view('set-password')
+            ->header('Referrer-Policy', 'same-origin')
+            ->header('Cache-Control', 'no-store');
+    }
 
-        // Check the link before the form appears. An unknown email, a wrong
-        // token, a spent token and an expired token all show the same page,
-        // so the page never says which accounts exist.
+    /**
+     * Is this link good? 200 when it is, 410 otherwise. An unknown email, a
+     * wrong token, a spent token and an expired token get the same answer, so
+     * the answer never says which accounts exist.
+     */
+    public function check(Request $request): JsonResponse
+    {
+        $email = Str::lower(self::text($request->input('email')));
+        $token = self::text($request->input('token'));
+
         if ($email !== '') {
             $this->ensureUnder($email);
         }
 
         $broker = Password::broker('invites');
         $user = $email === '' ? null : $broker->getUser(['email' => $email]);
-        $valid = $user !== null && $broker->tokenExists($user, $token);
+        $valid = $user !== null && $token !== '' && $broker->tokenExists($user, $token);
         if (! $valid && $email !== '') {
             RateLimiter::hit(self::badTokenKey($email), self::WINDOW_SECONDS);
         }
 
-        // The link carries a token, so keep it out of Referer headers and caches.
-        return response()
-            ->view('set-password', [
-                'token' => $valid ? $token : '',
-                'email' => $valid ? $email : '',
-                'valid' => $valid,
-            ], $valid ? 200 : 410)
-            ->header('Referrer-Policy', 'no-referrer')
-            ->header('Cache-Control', 'no-store');
+        return response()->json(['valid' => $valid], $valid ? 200 : 410)->header('Cache-Control', 'no-store');
     }
 
     public function update(Request $request): RedirectResponse
@@ -113,6 +124,12 @@ class JudgePasswordController extends Controller
         return back()
             ->withInput($request->only('email'))
             ->withErrors(['email' => 'This link is not valid. It was already used or it expired. Ask the contest entrant for a new invite.']);
+    }
+
+    /** A text value cut to 255 characters and trimmed. Anything else becomes empty. */
+    private static function text(mixed $value): string
+    {
+        return is_string($value) ? trim(mb_substr($value, 0, 255)) : '';
     }
 
     private static function badTokenKey(string $email): string

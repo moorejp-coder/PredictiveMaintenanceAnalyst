@@ -36,7 +36,6 @@ class OverrideLog extends Model
 
     protected $fillable = [
         'user_id',
-        'operator_name',
         'reason',
         'machine',
         'scenario',
@@ -45,15 +44,19 @@ class OverrideLog extends Model
         'action_shown',
         'reading',
         'edited_at',
-        'original_operator_name',
         'original_reason',
     ];
 
     protected function casts(): array
     {
+        // The reason is free text, so a person may type personal details
+        // into it. It is stored encrypted (AES-256-CBC with an HMAC, keyed by
+        // APP_KEY), so a copy of the database file alone does not reveal it.
         return [
             'reading' => 'array',
             'edited_at' => 'datetime',
+            'reason' => 'encrypted',
+            'original_reason' => 'encrypted',
         ];
     }
 }

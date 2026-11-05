@@ -27,7 +27,6 @@ class OverrideOwnershipTest extends TestCase
     {
         return OverrideLog::create([
             'user_id' => $owner?->id,
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'machine' => 'Milling Machine M-01',
             'scenario' => 'overload',
@@ -41,7 +40,7 @@ class OverrideOwnershipTest extends TestCase
     /** @return array<string, string> */
     private function edit(): array
     {
-        return ['operator_name' => 'New Name', 'reason' => 'A new reason that is long enough.'];
+        return ['reason' => 'A new reason that is long enough.'];
     }
 
     public function test_the_owner_can_view_edit_and_delete_their_entry(): void
@@ -50,8 +49,8 @@ class OverrideOwnershipTest extends TestCase
         $this->actingAs($this->owner);
 
         $this->getJson("/api/overrides/{$log->uuid}")->assertOk()->assertJsonPath('data.id', $log->uuid);
-        $this->putJson("/api/overrides/{$log->uuid}", $this->edit())->assertOk()->assertJsonPath('data.operator_name', 'New Name');
-        $this->assertSame('New Name', $log->fresh()->operator_name);
+        $this->putJson("/api/overrides/{$log->uuid}", $this->edit())->assertOk()->assertJsonPath('data.reason', 'A new reason that is long enough.');
+        $this->assertSame('A new reason that is long enough.', $log->fresh()->reason);
         $this->deleteJson("/api/overrides/{$log->uuid}")->assertNoContent();
         $this->assertSoftDeleted($log);
     }
@@ -62,10 +61,9 @@ class OverrideOwnershipTest extends TestCase
         $this->actingAs($this->owner);
 
         $this->putJson("/api/overrides/{$log->uuid}", $this->edit())->assertOk();
-        $this->putJson("/api/overrides/{$log->uuid}", ['operator_name' => 'Third Name', 'reason' => 'A third reason that is long enough.'])->assertOk();
+        $this->putJson("/api/overrides/{$log->uuid}", ['reason' => 'A third reason that is long enough.'])->assertOk();
 
         $fresh = $log->fresh();
-        $this->assertSame('Pat Rivera', $fresh->original_operator_name);
         $this->assertSame('Finishing the last part of the shift with a supervisor watching.', $fresh->original_reason);
         $this->assertNotNull($fresh->edited_at);
 
@@ -74,8 +72,8 @@ class OverrideOwnershipTest extends TestCase
 
         $this->actingAs($this->adminUser())->get('/overrides')
             ->assertOk()
-            ->assertSee('Third Name')
-            ->assertSee('Original name: Pat Rivera')
+            ->assertSee('A third reason that is long enough.')
+            ->assertSee('Original reason: Finishing the last part of the shift with a supervisor watching.')
             ->assertSee('Deleted by its owner');
     }
 
@@ -88,7 +86,7 @@ class OverrideOwnershipTest extends TestCase
         $this->putJson("/api/overrides/{$log->uuid}", $this->edit())->assertNotFound();
         $this->deleteJson("/api/overrides/{$log->uuid}")->assertNotFound();
 
-        $this->assertSame('Pat Rivera', $log->fresh()->operator_name);
+        $this->assertSame('Finishing the last part of the shift with a supervisor watching.', $log->fresh()->reason);
     }
 
     public function test_an_entry_with_no_owner_is_forbidden_to_everyone(): void
@@ -139,7 +137,7 @@ class OverrideOwnershipTest extends TestCase
         $this->actingAs($this->owner);
 
         $this->getJson('/api/overrides/0198a1c2-0000-7000-8000-000000000000')->assertNotFound();
-        $this->putJson("/api/overrides/{$log->uuid}", ['operator_name' => 'x', 'reason' => 'short'])->assertStatus(400);
+        $this->putJson("/api/overrides/{$log->uuid}", ['reason' => 'short'])->assertStatus(400);
     }
 
     public function test_the_routes_do_not_exist_while_the_sign_in_is_off(): void

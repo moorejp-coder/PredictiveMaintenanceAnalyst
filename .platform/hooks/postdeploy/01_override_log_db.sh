@@ -29,6 +29,10 @@ php artisan db:seed --class=JudgeSeeder --force || echo "PRISM: the backup judge
 # answer 403.
 php artisan db:seed --class=AdminSeeder --force || echo "PRISM: the admin account was not created."
 
+# Removes invite links older than their 30-minute life, so an unused link
+# does not keep an email address in the token table.
+php artisan auth:clear-resets invites || echo "PRISM: expired invite links were not cleared."
+
 # The web server user must be able to write the file and its folder.
 chown -R webapp:webapp "$DATA_DIR" || true
 chmod 750 "$DATA_DIR" || true

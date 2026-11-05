@@ -92,7 +92,7 @@ class PasswordRulesTest extends TestCase
         Log::spy();
         $password = 'Unbelievable';
 
-        $response = $this->from('/set-password/x')->post('/set-password', $this->form($password));
+        $response = $this->from('/set-password')->post('/set-password', $this->form($password));
 
         $response->assertSessionHasErrors('password');
         $response->assertSessionMissing('_old_input.password');

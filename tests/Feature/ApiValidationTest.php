@@ -27,7 +27,6 @@ class ApiValidationTest extends TestCase
     private function override(array $with = []): array
     {
         return array_merge([
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'scenario' => 'overload',
             'tick' => 59,
@@ -46,11 +45,6 @@ class ApiValidationTest extends TestCase
     public static function badOverrides(): array
     {
         return [
-            'name missing' => [['operator_name' => null]],
-            'name too short' => [['operator_name' => 'P']],
-            'name too long' => [['operator_name' => str_repeat('a', 101)]],
-            'name is an array' => [['operator_name' => ['Pat']]],
-            'name is a number' => [['operator_name' => ['a' => 1]]],
             'reason missing' => [['reason' => null]],
             'reason too short' => [['reason' => 'too short']],
             'reason too long' => [['reason' => str_repeat('a', 501)]],
@@ -64,7 +58,7 @@ class ApiValidationTest extends TestCase
             'tick above the limit' => [['tick' => 1000001]],
             'tick is an array' => [['tick' => [1, 2]]],
             'tick is a boolean' => [['tick' => true]],
-            'name is a boolean' => [['operator_name' => true]],
+            'reason is a boolean' => [['reason' => true]],
         ];
     }
 
@@ -136,7 +130,6 @@ class ApiValidationTest extends TestCase
         $this->getJson('/api/readings?scenario=overload&tick=1000000')->assertOk();
         $this->postJson('/api/ai-feedback', $this->rating(['tick' => 1000000]))->assertCreated();
         $this->postJson('/api/overrides', $this->override([
-            'operator_name' => str_repeat('a', 100),
             'reason' => str_repeat('b', 500),
         ]))->assertCreated();
     }

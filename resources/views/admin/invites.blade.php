@@ -42,11 +42,6 @@
             <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="off" required autofocus
                    @if ($errors->has('email')) aria-invalid="true" aria-describedby="invite-error" @endif>
         </div>
-        <div class="field">
-            <label for="name">Judge name (optional)</label>
-            <input id="name" name="name" type="text" value="{{ old('name') }}" autocomplete="off" maxlength="100" aria-describedby="name-hint">
-            <p class="hint" id="name-hint">Shown only on this page. Leave blank for "Contest Judge".</p>
-        </div>
         <button type="submit" class="btn btn--primary">Send invite</button>
     </form>
 
@@ -56,7 +51,7 @@
     @else
         <table>
             <caption class="visually-hidden" style="position:absolute;left:-9999px">Judge accounts and their status</caption>
-            <thead><tr><th scope="col">Email</th><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Created (UTC)</th></tr></thead>
+            <thead><tr><th scope="col">Email</th><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Created (UTC)</th><th scope="col">Delete</th></tr></thead>
             <tbody>
             @foreach ($users as $user)
                 <tr>
@@ -64,11 +59,21 @@
                     <td>{{ $user->name }}</td>
                     <td><span class="tag">{{ $user->email_verified_at ? 'Active' : 'Invited' }}</span></td>
                     <td>{{ $user->created_at?->utc()->format('Y-m-d H:i') }}</td>
+                    <td>
+                        @if ($user->email !== auth()->user()?->email)
+                        <form method="POST" action="{{ url('/admin/accounts/delete') }}">
+                            @csrf
+                            @include('partials.honeypot', ['hpId' => 'delete-'.$loop->index])
+                            <input type="hidden" name="email" value="{{ $user->email }}">
+                            <button type="submit" class="btn" aria-label="Delete the account {{ $user->email }} for good">Delete</button>
+                        </form>
+                        @endif
+                    </td>
                 </tr>
             @endforeach
             </tbody>
         </table>
-        <p class="hint">Invited: no password set yet. Active: the judge set a password and signs in at the login page.</p>
+        <p class="hint">Invited: no password set yet. Active: the judge set a password and signs in at the login page. Delete removes the account, its unused invite link and every override entry it wrote, for good. Use it for a deletion request.</p>
     @endif
 </main>
 </body>

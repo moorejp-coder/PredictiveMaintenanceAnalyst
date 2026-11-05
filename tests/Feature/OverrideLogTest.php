@@ -21,7 +21,6 @@ class OverrideLogTest extends TestCase
     private function payload(array $overrides = []): array
     {
         return array_merge([
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'scenario' => 'overload',
             'tick' => 59,
@@ -35,7 +34,7 @@ class OverrideLogTest extends TestCase
             ->assertJsonStructure(['id', 'recorded_at']);
 
         $log = OverrideLog::sole();
-        $this->assertSame('Pat Rivera', $log->operator_name);
+        $this->assertSame(auth()->id(), $log->user_id);
         $this->assertSame('Finishing the last part of the shift with a supervisor watching.', $log->reason);
         $this->assertSame('overload', $log->scenario);
         $this->assertSame(59, $log->tick);
@@ -62,11 +61,17 @@ class OverrideLogTest extends TestCase
         $this->assertSame(0, OverrideLog::count());
     }
 
-    public function test_name_and_reason_are_required(): void
+    public function test_a_typed_name_is_not_asked_for_and_not_stored(): void
     {
-        $this->postJson('/api/overrides', $this->payload(['operator_name' => '']))
-            ->assertStatus(400)
-            ->assertJsonValidationErrors('operator_name');
+        $this->postJson('/api/overrides', $this->payload(['operator_name' => 'Pat Rivera']))->assertCreated();
+
+        $this->assertArrayNotHasKey('operator_name', OverrideLog::sole()->getAttributes());
+        $this->assertFalse(Schema::hasColumn('override_logs', 'operator_name'));
+        $this->assertFalse(Schema::hasColumn('override_logs', 'original_operator_name'));
+    }
+
+    public function test_a_reason_is_required(): void
+    {
 
         $this->postJson('/api/overrides', $this->payload(['reason' => 'too short']))
             ->assertStatus(400)
@@ -114,15 +119,14 @@ class OverrideLogTest extends TestCase
         $this->actingAs($this->adminUser())->get('/overrides')
             ->assertOk()
             ->assertSee('Override Log')
-            ->assertSee('Pat Rivera')
             ->assertSee('Finishing the last part of the shift')
             ->assertSee('noindex', false);
     }
 
-    public function test_names_and_reasons_are_escaped_on_the_review_page(): void
+    public function test_reasons_are_escaped_on_the_review_page(): void
     {
         config(['prism.require_login' => true]);
-        $this->postJson('/api/overrides', $this->payload(['operator_name' => '<b>Pat</b> & "Co"']))
+        $this->postJson('/api/overrides', $this->payload(['reason' => '<b>Pat</b> & "Co" kept it running']))
             ->assertCreated();
 
         $this->actingAs($this->adminUser())->get('/overrides')
@@ -131,21 +135,19 @@ class OverrideLogTest extends TestCase
             ->assertSee('&lt;b&gt;Pat&lt;/b&gt;', false);
     }
 
-    public function test_control_characters_are_removed_before_a_name_and_reason_are_stored(): void
+    public function test_control_characters_are_removed_before_a_reason_is_stored(): void
     {
         $this->postJson('/api/overrides', $this->payload([
-            'operator_name' => "Pat\0 \nRivera",
             'reason' => "Finishing the shift\0 with a\r\nsupervisor watching.",
         ]))->assertCreated();
 
         $log = OverrideLog::sole();
-        $this->assertSame('Pat Rivera', $log->operator_name);
         $this->assertSame("Finishing the shift with a\nsupervisor watching.", $log->reason);
     }
 
     public function test_text_that_is_not_valid_utf8_or_not_a_string_is_refused(): void
     {
-        $this->postJson('/api/overrides', $this->payload(['operator_name' => ['Pat']]))->assertStatus(400);
+        $this->postJson('/api/overrides', $this->payload(['reason' => ['Pat']]))->assertStatus(400);
         $this->post('/api/overrides', $this->payload(['reason' => "bad \xC3\x28 bytes in the reason"]), ['Accept' => 'application/json'])
             ->assertStatus(400);
         $this->assertSame(0, OverrideLog::count());

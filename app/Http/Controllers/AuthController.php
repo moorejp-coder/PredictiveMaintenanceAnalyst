@@ -9,6 +9,7 @@ use App\Http\Middleware\EnforceSessionAge;
 use App\Models\User;
 use App\Notifications\AccountLocked;
 use App\Support\EmailBudget;
+use App\Support\LogId;
 use App\Support\SafeRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -102,7 +103,7 @@ class AuthController extends Controller
         if ($user !== null && $user->isLocked()) {
             Hash::check($credentials['password'], $user->getAuthPassword());
             $this->recordAddressFailure($ip);
-            Log::notice('Sign-in refused for a locked account', ['ip' => $ip, 'email_hash' => hash('sha256', $email)]);
+            Log::notice('Sign-in refused for a locked account', ['ip' => $ip, 'email_hash' => LogId::email($email)]);
 
             return $this->refuse($request, self::INVALID);
         }
@@ -112,7 +113,7 @@ class AuthController extends Controller
         if ($user !== null && $user->email_verified_at === null) {
             Hash::check($credentials['password'], $user->getAuthPassword());
             $this->recordAddressFailure($ip);
-            Log::notice('Sign-in refused for an unverified account', ['ip' => $ip, 'email_hash' => hash('sha256', $email)]);
+            Log::notice('Sign-in refused for an unverified account', ['ip' => $ip, 'email_hash' => LogId::email($email)]);
 
             return $this->refuse($request, self::INVALID);
         }
@@ -128,7 +129,7 @@ class AuthController extends Controller
             if ($user !== null) {
                 $this->recordAccountFailure($user, $ip);
             }
-            Log::notice('Failed sign-in', ['ip' => $ip, 'email_hash' => hash('sha256', $email)]);
+            Log::notice('Failed sign-in', ['ip' => $ip, 'email_hash' => LogId::email($email)]);
 
             return $this->refuse($request, self::INVALID);
         }
@@ -215,7 +216,7 @@ class AuthController extends Controller
 
         if ($user->failed_login_attempts >= self::MAX_FAILURES_PER_ACCOUNT) {
             $user->forceFill(['locked_at' => now()])->save();
-            Log::warning('Account locked for 30 minutes after repeated wrong passwords', ['email_hash' => hash('sha256', (string) $user->email)]);
+            Log::warning('Account locked for 30 minutes after repeated wrong passwords', ['email_hash' => LogId::email((string) $user->email)]);
             $this->sendLockEmail($user);
         }
     }
@@ -235,7 +236,8 @@ class AuthController extends Controller
         // One account gets at most two lock emails an hour, because each lock
         // lasts 30 minutes.
         if (! EmailBudget::available()) {
-            Log::error('Account lock email skipped: daily email cap reached', ['email_hash' => hash('sha256', (string) $user->email)]);
+            Log::error('Account lock email skipped: daily email cap reached', ['email_hash' => LogId::email((string) $user->email)]);
+            $user->forceFill(['failed_login_ips' => null])->save();
 
             return;
         }
@@ -245,8 +247,12 @@ class AuthController extends Controller
         try {
             $user->notify(new AccountLocked($token, $user->first_failed_login_at ?? $lockedAt, $lockedAt, $user->failed_login_ips ?? []));
         } catch (Throwable $e) {
-            Log::error('Could not send the account lock email', ['email_hash' => hash('sha256', (string) $user->email), 'error' => $e->getMessage()]);
+            Log::error('Could not send the account lock email', ['email_hash' => LogId::email((string) $user->email), 'error' => $e->getMessage()]);
         }
+
+        // The IP addresses exist only to go into this email. Once it is
+        // built, the account stops keeping them (data minimization).
+        $user->forceFill(['failed_login_ips' => null])->save();
     }
 
     /** A hash made with the app's own hasher settings, so its check costs the same. */

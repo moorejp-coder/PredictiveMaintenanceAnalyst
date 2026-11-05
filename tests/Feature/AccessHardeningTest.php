@@ -18,7 +18,6 @@ class AccessHardeningTest extends TestCase
         config(['prism.require_login' => true]);
 
         $this->actingAs($user)->postJson('/api/overrides', [
-            'operator_name' => 'Someone Else',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'scenario' => 'overload',
             'tick' => 59,
@@ -61,7 +60,6 @@ class AccessHardeningTest extends TestCase
         }
 
         $this->postJson('/api/overrides', [
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'scenario' => 'overload',
             'tick' => 59,

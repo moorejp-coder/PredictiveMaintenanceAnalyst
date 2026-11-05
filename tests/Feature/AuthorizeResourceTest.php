@@ -37,7 +37,6 @@ class AuthorizeResourceTest extends TestCase
     {
         return OverrideLog::create([
             'user_id' => $this->owner->id,
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'machine' => 'Milling Machine M-01',
             'scenario' => 'overload',

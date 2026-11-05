@@ -39,18 +39,14 @@ class MyOverrideController extends Controller
         return response()->json(['data' => $this->present($overrideLog)])->header('Cache-Control', 'no-store');
     }
 
-    /** Only the typed name and reason change, and the original is kept. The score and reading stay as PRISM showed them. */
+    /** Only the reason changes, and the original is kept. The score and reading stay as PRISM showed them. */
     public function update(Request $request, OverrideLog $overrideLog): JsonResponse
     {
         Gate::authorize('update', $overrideLog);
 
-        $request->merge([
-            'operator_name' => PlainText::line($request->input('operator_name')),
-            'reason' => PlainText::text($request->input('reason')),
-        ]);
+        $request->merge(['reason' => PlainText::text($request->input('reason'))]);
 
         $data = $request->validate([
-            'operator_name' => ['required', 'string', 'min:2', 'max:100'],
             'reason' => ['required', 'string', 'min:10', 'max:500'],
         ]);
 
@@ -58,7 +54,6 @@ class MyOverrideController extends Controller
         // page still shows the original after a change.
         $overrideLog->update($data + [
             'edited_at' => now(),
-            'original_operator_name' => $overrideLog->original_operator_name ?? $overrideLog->operator_name,
             'original_reason' => $overrideLog->original_reason ?? $overrideLog->reason,
         ]);
 
@@ -86,7 +81,6 @@ class MyOverrideController extends Controller
     {
         return [
             'id' => $log->uuid,
-            'operator_name' => $log->operator_name,
             'reason' => $log->reason,
             'machine' => $log->machine,
             'scenario' => $log->scenario,

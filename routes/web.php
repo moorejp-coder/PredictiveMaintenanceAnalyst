@@ -11,6 +11,7 @@ use App\Http\Controllers\InviteController;
 use App\Http\Controllers\JudgePasswordController;
 use App\Http\Controllers\MyOverrideController;
 use App\Http\Controllers\OverrideController;
+use App\Http\Controllers\PersonalDataController;
 use App\Http\Controllers\UnlockAccountController;
 use App\Http\Middleware\BlockInDemo;
 use App\Http\Middleware\CapAiCalls;
@@ -36,20 +37,26 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:
 Route::get('/demo', [DemoController::class, 'start'])->name('demo');
 
 // Judge invites. The entrant types a judge's email on /admin/invites (its own
-// password). The judge gets an email with a link to /set-password/{token},
+// password). The judge gets an email with a link to /set-password,
 // chooses a password, then signs in at /login. All of it is 404 while
 // REQUIRE_LOGIN is off.
 Route::middleware(EnsureLoginEnabled::class)->group(function () {
     Route::middleware('guest')->group(function () {
-        Route::get('/set-password/{token}', [JudgePasswordController::class, 'show'])
+        // The link carries its token and email after "#", so neither reaches
+        // the server in the address. The page's script posts them to /check.
+        Route::get('/set-password', [JudgePasswordController::class, 'show'])
             ->middleware(['throttle:auth-link', RejectAbuse::class])->name('invite.show');
+        Route::post('/set-password/check', [JudgePasswordController::class, 'check'])
+            ->middleware(['throttle:auth-link', RejectAbuse::class]);
         Route::post('/set-password', [JudgePasswordController::class, 'update'])
             ->middleware(['throttle:password-set', RejectAbuse::class])->name('invite.update');
 
         // The link in the account-locked email (AuthController). The GET shows
         // a change-password form and an Unlock button. Each POST unlocks.
-        Route::get('/unlock-account/{token}', [UnlockAccountController::class, 'show'])
+        Route::get('/unlock-account', [UnlockAccountController::class, 'show'])
             ->middleware(['throttle:auth-link', RejectAbuse::class])->name('unlock.show');
+        Route::post('/unlock-account/check', [UnlockAccountController::class, 'check'])
+            ->middleware(['throttle:auth-link', RejectAbuse::class]);
         Route::post('/unlock-account', [UnlockAccountController::class, 'update'])
             ->middleware(['throttle:auth', RejectAbuse::class]);
         Route::post('/unlock-account/password', [UnlockAccountController::class, 'changePassword'])
@@ -59,6 +66,12 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/account', [AccountController::class, 'show'])->name('account');
         Route::post('/logout-everywhere', [AccountController::class, 'logoutEverywhere'])
+            ->middleware(['throttle:auth', RejectAbuse::class]);
+        // Downloads all data PRISM holds about the account (GDPR access and portability).
+        Route::post('/account/export', [AccountController::class, 'export'])
+            ->middleware(['throttle:auth', RejectAbuse::class]);
+        // Deletes the account and all its data for good (GDPR right to erasure).
+        Route::post('/account/delete', [AccountController::class, 'deleteAccount'])
             ->middleware(['throttle:auth', RejectAbuse::class]);
         // A user's own override entries. Each route that names an entry checks
         // the owner in OverrideLogPolicy and answers 403 for anyone else. The
@@ -80,7 +93,15 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
     Route::middleware('authorize.resource:is-admin')->group(function () {
         Route::get('/admin/invites', [InviteController::class, 'index'])->middleware('throttle:heavy-read');
         Route::post('/admin/invites', [InviteController::class, 'store'])->middleware(['throttle:invites', RejectAbuse::class]);
+        // Deletion requests (Privacy Policy, section 7). Both remove rows for good.
+        Route::post('/admin/accounts/delete', [PersonalDataController::class, 'deleteAccount'])
+            ->middleware(['throttle:api-write', RejectAbuse::class]);
+        Route::post('/admin/overrides/{overrideLog}/erase', [PersonalDataController::class, 'eraseOverride'])
+            ->whereUuid('overrideLog')->withTrashed()->middleware('throttle:api-write');
     });
+    // The receipt shown after an account deletes itself. It reads only what
+    // the deletion flashed to this browser's session.
+    Route::view('/account/deleted', 'account-deleted');
     // The override review page. Admins see the real log. A Judge Demo session sees
     // fixed sample rows and reads nothing from the log.
     Route::get('/overrides', [OverrideController::class, 'index'])->middleware(['admin.or.demo', 'throttle:heavy-read']);

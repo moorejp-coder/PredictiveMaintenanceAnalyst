@@ -20,7 +20,7 @@ class ApiFieldsTest extends TestCase
     use RefreshDatabase;
 
     /** What the override API may send for one entry. */
-    private const OVERRIDE_FIELDS = ['created_at', 'id', 'machine', 'operator_name', 'reason', 'risk_score', 'scenario', 'tick'];
+    private const OVERRIDE_FIELDS = ['created_at', 'id', 'machine', 'reason', 'risk_score', 'scenario', 'tick'];
 
     /** Words that must never appear in any response body. */
     private const FORBIDDEN = ['password', 'remember_token', 'email', 'is_admin', 'isAdmin', 'user_id', 'action_shown', 'original_', 'edited_at', 'deleted_at', 'updated_at'];
@@ -29,7 +29,6 @@ class ApiFieldsTest extends TestCase
     {
         return OverrideLog::create([
             'user_id' => $owner?->id,
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'machine' => 'Milling Machine M-01',
             'scenario' => 'overload',
@@ -136,7 +135,7 @@ class ApiFieldsTest extends TestCase
         $this->assertSame(self::OVERRIDE_FIELDS, $this->keys($show->json('data')));
         $this->assertNoForbiddenWords($show->getContent());
 
-        $edit = $this->putJson("/api/overrides/{$mine->uuid}", ['operator_name' => 'New Name', 'reason' => 'A new reason that is long enough.'])->assertOk();
+        $edit = $this->putJson("/api/overrides/{$mine->uuid}", ['reason' => 'A new reason that is long enough.'])->assertOk();
         $this->assertSame(self::OVERRIDE_FIELDS, $this->keys($edit->json('data')));
         $this->assertNoForbiddenWords($edit->getContent());
     }
@@ -144,7 +143,6 @@ class ApiFieldsTest extends TestCase
     public function test_write_endpoints_return_only_a_public_id(): void
     {
         $override = $this->postJson('/api/overrides', [
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'scenario' => 'overload',
             'tick' => 40,
@@ -159,7 +157,7 @@ class ApiFieldsTest extends TestCase
         $this->assertSame(AiFeedback::query()->value('uuid'), $feedback->json('id'));
     }
 
-    public function test_the_review_page_shows_a_short_public_id_and_no_owner_details(): void
+    public function test_the_review_page_shows_a_short_public_id_and_only_the_owner_email(): void
     {
         config(['prism.require_login' => true]);
         $owner = User::factory()->create(['email' => 'owner-private@example.test', 'name' => 'Owner Private']);
@@ -168,8 +166,9 @@ class ApiFieldsTest extends TestCase
         $page = $this->actingAs($this->adminUser())->get('/overrides')->assertOk();
 
         $page->assertSee(substr($log->uuid, -8));
-        $page->assertSee('Pat Rivera');
-        $page->assertDontSee('owner-private@example.test', false);
+        // The account is the "who" of an entry, so the admin sees its email.
+        // The account name, the user id and the stored reading stay out.
+        $page->assertSee('owner-private@example.test', false);
         $page->assertDontSee('Owner Private');
         $page->assertDontSee('torque_nm', false);
     }
@@ -186,7 +185,7 @@ class ApiFieldsTest extends TestCase
 
         $real->assertNotFound();
         $this->assertSame($missing->getContent(), $real->getContent());
-        $this->putJson("/api/overrides/{$theirs->uuid}", ['operator_name' => 'New Name', 'reason' => 'A new reason that is long enough.'])->assertNotFound();
+        $this->putJson("/api/overrides/{$theirs->uuid}", ['reason' => 'A new reason that is long enough.'])->assertNotFound();
         $this->deleteJson("/api/overrides/{$theirs->uuid}")->assertNotFound();
         $this->assertNull($theirs->fresh()->edited_at);
     }
@@ -201,7 +200,7 @@ class ApiFieldsTest extends TestCase
         $this->postJson('/set-password', ['token' => 'x', 'email' => ['a@example.test'], 'password' => 'Long-Enough-Pass-1!', 'password_confirmation' => 'Long-Enough-Pass-1!'])
             ->assertStatus(422)->assertJsonValidationErrors('email');
 
-        $this->get('/set-password/sometoken?email[]=a@example.test')->assertStatus(410);
+        $this->postJson('/set-password/check', ['token' => 'sometoken', 'email' => ['a@example.test']])->assertStatus(410);
 
         $this->actingAs($this->adminUser())
             ->postJson('/admin/invites', ['email' => ['a@example.test']])

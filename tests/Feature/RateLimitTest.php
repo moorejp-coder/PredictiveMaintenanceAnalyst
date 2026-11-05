@@ -55,7 +55,6 @@ class RateLimitTest extends TestCase
     {
         $this->signIn();
         $payload = [
-            'operator_name' => 'Pat Rivera',
             'reason' => 'Finishing the last part of the shift with a supervisor watching.',
             'scenario' => 'overload',
             'tick' => 59,

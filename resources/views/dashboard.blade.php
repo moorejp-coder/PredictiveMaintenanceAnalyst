@@ -260,7 +260,7 @@
                 <p class="action" id="action">Waiting for the first simulated reading.</p>
                 <div class="override" id="override" hidden>
                     <button type="button" class="btn" id="override-open" aria-haspopup="dialog">Keep running anyway</button>
-                    <p class="note">If you keep the machine running, PRISM records your name, the time, and your reason.</p>
+                    <p class="note">If you keep the machine running, PRISM records your reason, the time and the account you are signed in with.</p>
                     <p class="logged" id="override-logged" role="status"></p>
                 </div>
             </section>
@@ -313,10 +313,6 @@
             <p id="override-summary"></p>
             <form id="override-form" novalidate>
                 @include('partials.honeypot', ['hpId' => 'override'])
-                <div class="ov-field">
-                    <label for="override-name">Your name</label>
-                    <input type="text" id="override-name" name="operator_name" autocomplete="name" maxlength="100" required>
-                </div>
                 <div class="ov-field">
                     <label for="override-reason">Why are you keeping it running?</label>
                     <textarea id="override-reason" name="reason" maxlength="500" required aria-describedby="override-reason-help"></textarea>

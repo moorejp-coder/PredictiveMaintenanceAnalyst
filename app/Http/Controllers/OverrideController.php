@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AiFeedback;
 use App\Models\OverrideLog;
+use App\Models\User;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
 use App\Support\DemoMode;
@@ -31,13 +32,11 @@ class OverrideController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $request->merge([
-            'operator_name' => PlainText::line($request->input('operator_name')),
-            'reason' => PlainText::text($request->input('reason')),
-        ]);
+        // No typed name: the entry records the signed-in account instead
+        // (data minimization). A name sent anyway is ignored.
+        $request->merge(['reason' => PlainText::text($request->input('reason'))]);
 
         $data = $request->validate([
-            'operator_name' => ['required', 'string', 'min:2', 'max:100'],
             'reason' => ['required', 'string', 'min:10', 'max:500'],
             'scenario' => ['required', Rule::in(array_keys(SensorSimulator::SCENARIOS))],
             'tick' => ['required', 'integer:strict', 'min:0', 'max:1000000'],
@@ -53,10 +52,9 @@ class OverrideController extends Controller
         }
 
         $log = OverrideLog::create([
-            // The signed-in account that sent the request, so the log shows who
-            // acted even when the typed name is wrong. Null with the sign-in off.
+            // The signed-in account that sent the request is the "who" of the
+            // entry. Null with the sign-in off.
             'user_id' => $request->user()?->getAuthIdentifier(),
-            'operator_name' => $data['operator_name'],
             'reason' => $data['reason'],
             'machine' => self::MACHINE,
             'scenario' => $data['scenario'],
@@ -104,23 +102,26 @@ class OverrideController extends Controller
             report($e);
         }
 
+        $logs = OverrideLog::withTrashed()->latest('id')->limit(200)
+            ->get(['uuid', 'user_id', 'created_at', 'reason', 'machine', 'risk_score', 'scenario', 'tick',
+                'edited_at', 'original_reason', 'deleted_at']);
+        // The account that wrote each entry, by email. The user id itself, the
+        // stored sensor reading and the action text stay out of the page.
+        $emails = User::query()->whereIn('id', $logs->pluck('user_id')->filter()->unique()->all())->pluck('email', 'id');
+
         return view('overrides', [
-            // Named columns only. user_id, the stored sensor reading and the
-            // action text stay in the database and out of the page.
-            'logs' => OverrideLog::withTrashed()->latest('id')->limit(200)
-                ->get(['uuid', 'created_at', 'operator_name', 'reason', 'machine', 'risk_score', 'scenario', 'tick',
-                    'edited_at', 'original_operator_name', 'original_reason', 'deleted_at'])
+            'logs' => $logs
                 ->map(fn (OverrideLog $log): object => (object) [
+                    'uuid' => $log->uuid,
                     'entry' => self::shortId($log->uuid),
                     'created_at' => $log->created_at,
-                    'operator_name' => $log->operator_name,
+                    'account' => $log->user_id === null ? 'Not signed in' : ($emails[$log->user_id] ?? 'Deleted account'),
                     'reason' => $log->reason,
                     'machine' => $log->machine,
                     'risk_score' => $log->risk_score,
                     'scenario' => $log->scenario,
                     'tick' => $log->tick,
                     'edited_at' => $log->edited_at,
-                    'original_operator_name' => $log->original_operator_name,
                     'original_reason' => $log->original_reason,
                     'deleted_at' => $log->deleted_at,
                 ]),
@@ -137,7 +138,7 @@ class OverrideController extends Controller
         $logs = collect(DemoSamples::overrides())->map(fn (array $row): object => (object) [
             'entry' => (string) $row['id'],
             'created_at' => Carbon::parse($row['at'], 'UTC'),
-            'operator_name' => $row['operator'],
+            'account' => $row['account'],
             'reason' => $row['reason'],
             'machine' => $row['machine'],
             'risk_score' => $row['risk_score'],

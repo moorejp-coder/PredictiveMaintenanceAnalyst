@@ -217,9 +217,12 @@ class AccountLockoutTest extends TestCase
         $this->assertStringContainsString("Someone tried to log into your account multiple times. If this wasn't you, please change your password.", $text);
         $this->assertStringContainsString('When: 10 wrong passwords in a row, 2 November 2026, between 19:31 and 19:40 UTC.', $text);
         $this->assertStringContainsString('From IP addresses: 203.0.113.9, 198.51.100.7.', $text);
+        // The addresses were kept only for this email.
+        $this->assertNull($user->fresh()->failed_login_ips);
         $this->assertStringContainsString('It unlocks on its own at 20:10 UTC', $text);
         $this->assertSame('Change your password', $mail->actionText);
-        $this->assertStringStartsWith('https://prism.example.test/unlock-account/', (string) $mail->actionUrl);
+        $this->assertStringStartsWith('https://prism.example.test/unlock-account#t=', (string) $mail->actionUrl);
+        $this->assertStringEndsWith('&e='.rawurlencode($user->email), (string) $mail->actionUrl);
     }
 
     public function test_the_link_opens_a_change_password_form_and_an_unlock_button_and_changes_nothing_by_itself(): void
@@ -229,11 +232,15 @@ class AccountLockoutTest extends TestCase
         $token = $this->unlockToken($user);
         $this->assertNotSame($token, $user->fresh()->unlock_token_hash);
 
-        $this->get('/unlock-account/'.$token.'?email='.urlencode($user->email))
+        $this->get('/unlock-account')
             ->assertOk()
             ->assertSee('Change password</button>', false)
             ->assertSee('Unlock without changing password</button>', false)
-            ->assertHeader('Referrer-Policy', 'no-referrer');
+            ->assertSee('js/email-link.js')
+            ->assertHeader('Referrer-Policy', 'same-origin');
+        $this->postJson('/unlock-account/check', ['token' => $token, 'email' => $user->email])
+            ->assertOk()
+            ->assertExactJson(['valid' => true]);
         $this->assertTrue($user->fresh()->isLocked());
     }
 
@@ -257,7 +264,7 @@ class AccountLockoutTest extends TestCase
         $this->app['auth']->logout();
 
         // The link works once.
-        $this->get('/unlock-account/'.$token.'?email='.urlencode($user->email))->assertStatus(410);
+        $this->postJson('/unlock-account/check', ['token' => $token, 'email' => $user->email])->assertStatus(410);
     }
 
     public function test_changing_the_password_from_the_link_unlocks_the_account(): void
@@ -289,10 +296,10 @@ class AccountLockoutTest extends TestCase
         $this->lockByGuessing($user);
         $token = $this->unlockToken($user);
 
-        $this->from('/unlock-account/'.$token)
+        $this->from('/unlock-account')
             ->post('/unlock-account/password', ['token' => $token, 'email' => $user->email, 'password' => 'short', 'password_confirmation' => 'short'])
             ->assertSessionHasErrors('password');
-        $this->from('/unlock-account/'.$token)
+        $this->from('/unlock-account')
             ->post('/unlock-account/password', ['token' => $token, 'email' => $user->email, 'password' => $this->fixturePassword('one-long-phrase'), 'password_confirmation' => $this->fixturePassword('another-long-phrase')])
             ->assertSessionHasErrors('password');
 
@@ -319,15 +326,15 @@ class AccountLockoutTest extends TestCase
         $token = $this->unlockToken($user);
         $new = $this->fixturePassword('a-brand-new-long-passphrase');
 
-        $this->get('/unlock-account/not-the-token?email='.urlencode($user->email))->assertStatus(410);
-        $this->get('/unlock-account/'.$token.'?email=nobody%40example.test')->assertStatus(410);
+        $this->postJson('/unlock-account/check', ['token' => 'not-the-token', 'email' => $user->email])->assertStatus(410);
+        $this->postJson('/unlock-account/check', ['token' => $token, 'email' => 'nobody@example.test'])->assertStatus(410);
         $this->post('/unlock-account', ['token' => 'not-the-token', 'email' => $user->email])
             ->assertRedirect('/login')
             ->assertSessionHasErrors('email');
         $this->assertTrue($user->fresh()->isLocked());
 
         $this->travel(61)->minutes();
-        $this->get('/unlock-account/'.$token.'?email='.urlencode($user->email))->assertStatus(410);
+        $this->postJson('/unlock-account/check', ['token' => $token, 'email' => $user->email])->assertStatus(410);
         $this->post('/unlock-account/password', ['token' => $token, 'email' => $user->email, 'password' => $new, 'password_confirmation' => $new])
             ->assertSessionHasErrors('email');
         $this->attempt('192.0.2.40', $user->email, $new)->assertSessionHasErrors(['email' => AuthController::INVALID]);
@@ -337,7 +344,8 @@ class AccountLockoutTest extends TestCase
     {
         config(['prism.require_login' => false]);
 
-        $this->get('/unlock-account/abc?email=judge%40example.test')->assertNotFound();
+        $this->get('/unlock-account')->assertNotFound();
+        $this->postJson('/unlock-account/check', ['token' => 'abc', 'email' => 'judge@example.test'])->assertNotFound();
         $this->post('/unlock-account', ['token' => 'abc', 'email' => 'judge@example.test'])->assertNotFound();
         $this->post('/unlock-account/password', ['token' => 'abc', 'email' => 'judge@example.test'])->assertNotFound();
     }
