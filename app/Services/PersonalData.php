@@ -8,7 +8,9 @@ use App\Models\OverrideLog;
 use App\Models\User;
 use App\Notifications\AccountDeleted;
 use App\Support\AccountTraces;
+use App\Support\AuditLog;
 use App\Support\EmailBudget;
+use App\Support\LogId;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -77,6 +79,10 @@ final class PersonalData
         // A record that a deletion happened, with no way back to the person:
         // the account id no longer exists and the email is a keyed hash.
         Log::notice('Account deleted on request', $result);
+        // The audit line names the account by its number and the keyed email
+        // code. The actor field shows who asked: the same account (self
+        // deletion), an admin, or nobody for the artisan command.
+        AuditLog::record('account.deleted', ['target_user_id' => $userId, 'email_code' => LogId::email($email), 'removed' => $result]);
 
         return $result;
     }
@@ -191,6 +197,7 @@ final class PersonalData
     {
         $log->forceDelete();
         Log::notice('Override entry erased on request', ['entry' => substr((string) $log->uuid, -8)]);
+        AuditLog::record('data.erased', ['scope' => 'override_entry', 'entry' => substr((string) $log->uuid, -8), 'count' => 1]);
     }
 
     /**
@@ -202,6 +209,7 @@ final class PersonalData
     {
         $count = (int) $query->forceDelete();
         Log::notice('Override entries erased on request', ['count' => $count]);
+        AuditLog::record('data.erased', ['scope' => 'override_entries', 'count' => $count]);
 
         return $count;
     }

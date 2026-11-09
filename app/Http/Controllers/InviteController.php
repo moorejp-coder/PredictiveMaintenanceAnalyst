@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\AuditLog;
 use App\Support\EmailBudget;
+use App\Support\LogId;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,10 +40,15 @@ class InviteController extends Controller
 
     private const WINDOW_SECONDS = 3600;
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $users = User::query()->orderByDesc('created_at')->get(['name', 'email', 'email_verified_at', 'created_at']);
+
+        // The page lists every account's email address.
+        AuditLog::record('data.bulk_read', ['scope' => 'account_list', 'count' => $users->count()], AuditLog::SUCCESS, $request);
+
         return view('admin.invites', [
-            'users' => User::query()->orderByDesc('created_at')->get(['name', 'email', 'email_verified_at', 'created_at']),
+            'users' => $users,
             'minutes' => max(1, (int) config('auth.passwords.invites.expire')),
         ]);
     }
@@ -67,6 +74,7 @@ class InviteController extends Controller
         }
 
         $user = User::where('email', $data['email'])->first();
+        $newAccount = $user === null;
         if ($user === null) {
             $addressKey = 'signups:'.$request->ip();
             $this->ensureUnder($addressKey, self::MAX_NEW_ACCOUNTS_PER_ADDRESS, 'Too many new accounts from this network. Wait an hour, then try again.');
@@ -107,6 +115,12 @@ class InviteController extends Controller
                 'email' => 'The invite was not sent.',
             ]);
         }
+
+        AuditLog::record('account.invite_sent', [
+            'target_user_id' => $user->getKey(),
+            'email_code' => LogId::email((string) $user->email),
+            'new_account' => $newAccount,
+        ], AuditLog::SUCCESS, $request);
 
         return back()->with('status', 'Invite sent to '.$user->email.'.');
     }

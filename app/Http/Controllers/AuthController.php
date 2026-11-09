@@ -8,6 +8,7 @@ use App\Http\Middleware\BindSessionToClient;
 use App\Http\Middleware\EnforceSessionAge;
 use App\Models\User;
 use App\Notifications\AccountLocked;
+use App\Support\AuditLog;
 use App\Support\EmailBudget;
 use App\Support\LogId;
 use App\Support\SafeRedirect;
@@ -84,6 +85,7 @@ class AuthController extends Controller
         $blockedUntil = Cache::get(self::blockKey($ip));
         if (is_int($blockedUntil) && $blockedUntil > now()->getTimestamp()) {
             Log::warning('Sign-in refused from a blocked address', ['ip' => $ip]);
+            AuditLog::record('auth.login.failed', ['reason' => 'address_blocked', 'email_code' => LogId::email($email)], AuditLog::FAILURE, $request);
 
             return $this->blocked($request, $blockedUntil - now()->getTimestamp());
         }
@@ -104,6 +106,7 @@ class AuthController extends Controller
             Hash::check($credentials['password'], $user->getAuthPassword());
             $this->recordAddressFailure($ip);
             Log::notice('Sign-in refused for a locked account', ['ip' => $ip, 'email_hash' => LogId::email($email)]);
+            AuditLog::record('auth.login.failed', ['reason' => 'account_locked', 'email_code' => LogId::email($email), 'target_user_id' => $user->getKey()], AuditLog::FAILURE, $request);
 
             return $this->refuse($request, self::INVALID);
         }
@@ -114,9 +117,15 @@ class AuthController extends Controller
             Hash::check($credentials['password'], $user->getAuthPassword());
             $this->recordAddressFailure($ip);
             Log::notice('Sign-in refused for an unverified account', ['ip' => $ip, 'email_hash' => LogId::email($email)]);
+            AuditLog::record('auth.login.failed', ['reason' => 'account_unverified', 'email_code' => LogId::email($email), 'target_user_id' => $user->getKey()], AuditLog::FAILURE, $request);
 
             return $this->refuse($request, self::INVALID);
         }
+
+        // Laravel can save a fresh hash of the same password during a good
+        // sign-in (when the hashing settings changed). That is not a password
+        // change by a person, so the audit log skips it (User::booted).
+        $request->attributes->set(AuditLog::SKIP_PASSWORD_EVENT, true);
 
         if (! Auth::attempt($credentials)) {
             // Laravel skips the hash check for an unknown email. Run one
@@ -130,6 +139,11 @@ class AuthController extends Controller
                 $this->recordAccountFailure($user, $ip);
             }
             Log::notice('Failed sign-in', ['ip' => $ip, 'email_hash' => LogId::email($email)]);
+            AuditLog::record('auth.login.failed', [
+                'reason' => $user === null ? 'unknown_email' : 'wrong_password',
+                'email_code' => LogId::email($email),
+                'target_user_id' => $user?->getKey(),
+            ], AuditLog::FAILURE, $request);
 
             return $this->refuse($request, self::INVALID);
         }
@@ -145,6 +159,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
         $request->session()->put(EnforceSessionAge::SESSION_KEY, now()->getTimestamp());
         BindSessionToClient::stamp($request);
+        AuditLog::record('auth.login.success', ['email_code' => LogId::email($email)], AuditLog::SUCCESS, $request);
 
         // The page the guest asked for before sign-in, if it is on PRISM.
         return redirect(SafeRedirect::path($request->session()->pull('url.intended'), '/'));
@@ -154,6 +169,7 @@ class AuthController extends Controller
     {
         abort_unless(config('prism.require_login'), 404);
 
+        AuditLog::record('auth.logout', [], AuditLog::SUCCESS, $request);
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -197,6 +213,7 @@ class AuthController extends Controller
             Cache::put(self::blockKey($ip), now()->getTimestamp() + self::ADDRESS_BLOCK_SECONDS, self::ADDRESS_BLOCK_SECONDS);
             RateLimiter::clear($key);
             Log::warning('Address blocked for 15 minutes after repeated failed sign-ins', ['ip' => $ip]);
+            AuditLog::record('auth.address_blocked', ['minutes' => self::ADDRESS_BLOCK_SECONDS / 60, 'failures' => self::MAX_FAILURES_PER_ADDRESS], AuditLog::ALERT);
         }
     }
 
@@ -217,6 +234,7 @@ class AuthController extends Controller
         if ($user->failed_login_attempts >= self::MAX_FAILURES_PER_ACCOUNT) {
             $user->forceFill(['locked_at' => now()])->save();
             Log::warning('Account locked for 30 minutes after repeated wrong passwords', ['email_hash' => LogId::email((string) $user->email)]);
+            AuditLog::record('auth.account_locked', ['target_user_id' => $user->getKey(), 'email_code' => LogId::email((string) $user->email), 'minutes' => User::LOCK_MINUTES, 'failures' => self::MAX_FAILURES_PER_ACCOUNT], AuditLog::ALERT);
             $this->sendLockEmail($user);
         }
     }
