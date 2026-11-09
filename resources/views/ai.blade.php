@@ -53,17 +53,17 @@
         <li><strong>Sent in call 2:</strong> the machine ID (M-01), the band, the priority, the action line, the names of the drivers scored at 40 or above, and the cause and checks from call 1. Call 2 does not receive the score, the fact sentences or the metrics.</li>
         <li><strong>Never sent:</strong> text typed by a visitor, names, IP addresses, or the scoring rules. The tools return results, not rules, and a what-if shows only the score a changed value would give. The server rebuilds the reading from the scenario and reading number, so a visitor cannot put words in a tool call.</li>
         <li><strong>Provider and model:</strong> Anthropic's API. The model name is set by the <code>ANTHROPIC_MODEL</code> property. The default in <code>config/services.php</code> is <code>{{ config('services.anthropic.model') }}</code>.</li>
-        <li><strong>Limits:</strong> the investigation stops after four rounds or 12 seconds. The work order call has an 8 second timeout. No call is retried after a timeout. The page shows the token counts the API reports.</li>
+        <li><strong>Limits:</strong> the investigation stops after four rounds or 12 seconds. The work order call has an 8 second timeout. No call is retried after a timeout. The page shows the token counts the API reports. Spending caps also stop the AI calls once the site spends its daily dollar budget or one visitor spends the hourly budget (<code>config/prism.php</code>). The built-in text shows instead.</li>
         <li><strong>Checked in code:</strong> the answer must name the tools it used, and every number in its words must appear in the input or in a tool result. An answer that fails this check is dropped.</li>
     </ul>
     <p class="src">Sources: <code>README.md</code> section "AI steps", <a href="{{ url('/privacy') }}">Privacy Policy</a> section 9.</p>
 
     <h2 id="oversight">3. Human oversight</h2>
     <ul>
-        <li>Every AI answer carries an "AI-GENERATED" label and a reminder that a technician decides. When PRISM shows its built-in explanation instead, the label reads "RULE-BASED, NO AI USED".</li>
+        <li>Every AI answer carries an "AI-GENERATED" label and a reminder that a technician decides. When PRISM shows its built-in explanation instead, the label reads "RULE-BASED, NO AI USED". When one of the two steps used the AI and the other used the built-in text, the label reads "PART AI-GENERATED".</li>
         <li>The AI cannot change the score, the band or the action. Those come from the rules.</li>
-        <li>PRISM has no tool to act on a machine. The AI's six tools only read, and a what-if scores a copy. PRISM sends no alerts and changes nothing outside its own page.</li>
-        <li>When PRISM says to stop and an operator keeps running, the override log records a name, a reason and the time. Someone with the password reviews the log.</li>
+        <li>PRISM has no tool to act on a machine. The AI's six tools only read, and a what-if scores a copy. PRISM sends no machine alerts and changes nothing outside its own page. Its only emails are account emails: the invite, the account lock notice and the account deletion confirmation. The entrant can also turn on security alerts about the site itself, such as many failed sign-ins. They go to the entrant by email or Slack, never to a visitor, and say nothing about a machine.</li>
+        <li>When PRISM says to stop and an operator keeps running, the override log records the signed-in account, a reason and the time. It asks for no name. Only the entrant's admin account opens the page that lists the log.</li>
         <li>You can rate an AI answer "Helpful" or "Wrong". PRISM stores the rating, the step, the source, the scenario, the reading number and the time. It stores no name, no text and no IP address in that row.</li>
     </ul>
 
@@ -97,9 +97,9 @@
     <ul>
         <li>PRISM scores machines. It scores no person and builds no profile of any person.</li>
         <li>The readings are simulated, so PRISM holds no real operational data.</li>
-        <li>@if (config('prism.require_login'))The personal data is the email address and password hash of each invited user, the account tied to each override log entry, any personal detail a person types into an override reason, and the IP address in server logs. The override form asks for no name.@else The only personal data is any personal detail a person types into an override reason and the IP address in server logs. The override form asks for no name.@endif</li>
+        <li>@if (config('prism.require_login'))The personal data is the email address and password hash of each invited user, the account tied to each override log entry, any personal detail a person types into an override reason, and IP addresses in the server, application and security audit logs. An account also keeps the IP addresses of up to 10 recent wrong passwords, encrypted, until a lock email or a good sign-in clears them. It also keeps up to 20 networks it has signed in from as one-way codes, with the first and last sign-in time and, only if the network in front of PRISM supplies it, a country. The override form asks for no name.@else The only personal data is any personal detail a person types into an override reason and IP addresses in the server, application and security audit logs. The override form asks for no name.@endif</li>
         <li>PRISM uses no analytics, advertising or tracking scripts.</li>
-        <li>Rate limits protect the AI routes from automated use.</li>
+        <li>Rate limits and spending caps protect the AI routes from automated use.</li>
     </ul>
     <p class="src">Source: <a href="{{ url('/privacy') }}">Privacy Policy</a>.</p>
 
@@ -107,7 +107,7 @@
     <p>NIST names four core functions: Govern, Map, Measure and Manage. This table is PRISM's own mapping. NIST has not reviewed or certified PRISM.</p>
     <table>
         <tr><th scope="col">Function</th><th scope="col">What PRISM does</th></tr>
-        <tr><td>Govern</td><td>A named owner (James Moore). Terms, Privacy Policy and FAQ. A password on the override log. Rate limits on the AI routes.</td></tr>
+        <tr><td>Govern</td><td>A named owner (James Moore). Terms, Privacy Policy and FAQ. Admin-only access to the override log. Rate limits and spending caps on the AI routes.</td></tr>
         <tr><td>Map</td><td>A defined scope: one simulated milling machine and a maintenance technician as the user. Known limits listed in section 4.</td></tr>
         <tr><td>Measure</td><td>A repeatable backtest. Automated tests in <code>tests/</code>. Token counts shown on each AI answer. Helpful and Wrong ratings.</td></tr>
         <tr><td>Manage</td><td>A built-in fallback when the AI fails. Code sets the priority. The AI cannot change the score. An override log. Unbuilt features listed as not built.</td></tr>
