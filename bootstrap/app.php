@@ -28,6 +28,12 @@ use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
+// A stack trace holds the arguments of each call, such as a password or a
+// token passed to a function. PHP drops them from exception traces when this
+// is on, so a logged trace shows files and lines only. The log redaction in
+// App\Logging is a second net under this one.
+ini_set('zend.exception_ignore_args', '1');
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
