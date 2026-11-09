@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\Alerts;
 use App\Support\AuditLog;
 use App\Support\EmailBudget;
 use App\Support\LogId;
@@ -45,7 +46,7 @@ class InviteController extends Controller
         $users = User::query()->orderByDesc('created_at')->get(['name', 'email', 'email_verified_at', 'created_at']);
 
         // The page lists every account's email address.
-        AuditLog::record('data.bulk_read', ['scope' => 'account_list', 'count' => $users->count()], AuditLog::SUCCESS, $request);
+        Alerts::bulkRead('account_list', $users->count(), $request);
 
         return view('admin.invites', [
             'users' => $users,
@@ -121,6 +122,7 @@ class InviteController extends Controller
             'email_code' => LogId::email((string) $user->email),
             'new_account' => $newAccount,
         ], AuditLog::SUCCESS, $request);
+        Alerts::passwordLinkSent((string) $user->email, $request);
 
         return back()->with('status', 'Invite sent to '.$user->email.'.');
     }

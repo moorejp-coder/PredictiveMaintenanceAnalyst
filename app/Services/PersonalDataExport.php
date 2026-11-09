@@ -52,6 +52,7 @@ final class PersonalDataExport
             'activity' => [
                 'pending_invite_link' => $this->inviteLink((string) $user->email),
                 'signed_in_sessions' => $this->sessions((int) $user->getKey()),
+                'sign_in_origins' => $this->origins((int) $user->getKey()),
                 'log_lines' => $this->logLines((int) $user->getKey(), (string) $user->email, $ownIds),
             ],
             'connected_services' => $this->connectedServices(),
@@ -111,6 +112,33 @@ final class PersonalDataExport
         $created = DB::table($table)->where('email', $email)->value('created_at');
 
         return $created === null ? null : ['created_at' => self::time(Carbon::parse((string) $created))];
+    }
+
+    /**
+     * The networks the account has signed in from (App\Support\LoginOrigins).
+     * Only the country and the first and last time. The network code is a
+     * keyed hash with no meaning outside the server, so it stays out.
+     *
+     * @return list<array{country: string|null, first_seen_at: string|null, last_seen_at: string|null}>
+     */
+    private function origins(int $userId): array
+    {
+        if (! Schema::hasTable('login_origins')) {
+            return [];
+        }
+
+        $origins = [];
+        $rows = DB::table('login_origins')->where('user_id', $userId)->orderBy('first_seen_at')->orderBy('id')
+            ->get(['country', 'first_seen_at', 'last_seen_at']);
+        foreach ($rows as $row) {
+            $origins[] = [
+                'country' => is_string($row->country) ? $row->country : null,
+                'first_seen_at' => $row->first_seen_at === null ? null : self::time(Carbon::parse((string) $row->first_seen_at)),
+                'last_seen_at' => $row->last_seen_at === null ? null : self::time(Carbon::parse((string) $row->last_seen_at)),
+            ];
+        }
+
+        return $origins;
     }
 
     /** @return list<array{last_active_at: string|null}> */

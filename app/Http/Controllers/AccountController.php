@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\PersonalData;
 use App\Services\PersonalDataExport;
+use App\Support\Alerts;
 use App\Support\AuditLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
@@ -69,6 +70,7 @@ class AccountController extends Controller
 
         Log::notice('Personal data exported', ['user_id' => $user->getAuthIdentifier()]);
         AuditLog::record('data.export', ['scope' => 'own_account', 'target_user_id' => $user->getKey()], AuditLog::SUCCESS, $request);
+        Alerts::watchBulk('own_account_export', null, $request);
 
         return response()
             ->json($export->for($user), 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
