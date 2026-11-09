@@ -159,10 +159,10 @@ return [
     'log_folder' => null,
 
     'policy_dates' => [
-        'faq' => ['date' => 'November 3, 2026', 'hash' => 'fb93756a9d1e256245b8f0a41e5391218855f6b2684a646e3aa0f3e34740aa0d'],
-        'privacy' => ['date' => 'November 9, 2026', 'hash' => '9dcb33b12b90bb8e3a4ec3f69cc7628505dd99efca0811a08bb9d15c3d6ef1ff'],
-        'terms' => ['date' => 'October 26, 2026', 'hash' => '4c4064afa204cc5d5b0440e6d8c33c62371284721fd364ba3be8fd171033c036'],
-        'ai' => ['date' => 'November 3, 2026', 'hash' => '4b82ca8bab07fd15a7503b0cad0264e934d8debadca0101e986bdc739e82cd83'],
+        'faq' => ['date' => 'November 9, 2026', 'hash' => '351073e31ce53fdd7fc6ec01f19c19ca9f9836f9db3be5a1fedf153fe1de35d7'],
+        'privacy' => ['date' => 'November 9, 2026', 'hash' => '374fd71ff213181a633856100238752fd6b16073a68f5c2f79c808a4400ca8d7'],
+        'terms' => ['date' => 'November 9, 2026', 'hash' => 'fd31cf686c6b5e73bd5ade180317225542febe3ca726d56668f9642cf59819f1'],
+        'ai' => ['date' => 'November 9, 2026', 'hash' => 'ce89978fbd594af3c5d9feb161df8ecb8c42ca9243ef71a4163c858544f313c9'],
     ],
 
     // Security audit log (App\Support\AuditLog). An api.error_rate_exceeded line

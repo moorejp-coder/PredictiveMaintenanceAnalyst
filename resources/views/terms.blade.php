@@ -85,7 +85,7 @@
     <p>PRISM may change, pause or shut down at any time without notice. The live site is a contest entry and may be taken offline when the contest ends.</p>
 
     <h2>10. Third-party services and links</h2>
-    <p>PRISM runs on Amazon Web Services, uses Anthropic's API for the optional Explain this reading feature, and cites outside sources. Those services and sites have their own terms. James Moore is not responsible for them.</p>
+    <p>PRISM runs on Amazon Web Services{{ config('prism.require_login') ? ' (including Amazon SES for email)' : '' }}, uses Anthropic's API for the optional Explain this reading feature{{ config('prism.require_login') ? ', checks new passwords against the Have I Been Pwned breach list' : '' }}, and cites outside sources. Those services and sites have their own terms. James Moore is not responsible for them.</p>
 
     <h2>11. Changes to these terms</h2>
     <p>These terms may change. The effective date at the top shows the latest version. If you keep using PRISM after a change, you accept the new terms.</p>
