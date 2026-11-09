@@ -22,6 +22,7 @@
         <env name="REQUIRE_LOGIN" value="false"/>
         <env name="TEST_PASSWORD_BASE" value="phpunit-fixture"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="AUDIT_LOG_STACK" value="null"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>

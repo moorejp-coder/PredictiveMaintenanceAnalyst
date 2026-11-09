@@ -89,10 +89,13 @@ class PasswordRulesTest extends TestCase
 
     public function test_a_refused_password_is_never_shown_flashed_or_logged(): void
     {
-        Log::spy();
         $password = 'Unbelievable';
+        // The form helper creates the account, which writes an audit line. Build
+        // it before the spy starts, so the spy sees only the refused request.
+        $form = $this->form($password);
+        Log::spy();
 
-        $response = $this->from('/set-password')->post('/set-password', $this->form($password));
+        $response = $this->from('/set-password')->post('/set-password', $form);
 
         $response->assertSessionHasErrors('password');
         $response->assertSessionMissing('_old_input.password');

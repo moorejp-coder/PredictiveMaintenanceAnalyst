@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Support\AuditLog;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Model;
@@ -84,6 +85,8 @@ final class AuthorizeResource
 
     private function log(string $level, string $message, Request $request, ?User $user, ?string $param, mixed $resource): void
     {
+        $resourceId = $resource instanceof Model ? $resource->getRouteKey() : (is_scalar($resource) ? $resource : null);
+
         Log::log($level, $message, [
             'user_id' => $user?->getAuthIdentifier(),
             'ip' => $request->ip(),
@@ -91,7 +94,17 @@ final class AuthorizeResource
             'path' => $request->path(),
             'route' => $request->route()?->getName() ?? $request->route()?->uri(),
             'resource_param' => $param,
-            'resource_id' => $resource instanceof Model ? $resource->getRouteKey() : (is_scalar($resource) ? $resource : null),
+            'resource_id' => $resourceId,
         ]);
+
+        // The audit line for the same refusal. The marker keeps the 403 handler
+        // in bootstrap/app.php from writing a second line for it.
+        $request->attributes->set(AuditLog::DENIAL_LOGGED, true);
+        AuditLog::record(
+            $user === null ? 'authz.unauthenticated' : 'authz.denied',
+            ['resource_param' => $param, 'resource_id' => $resourceId],
+            $user === null ? AuditLog::FAILURE : AuditLog::DENIED,
+            $request,
+        );
     }
 }

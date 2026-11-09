@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -129,6 +130,41 @@ return [
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,
+        ],
+
+        // The security audit trail (App\Support\AuditLog). One JSON object per
+        // line. Its level is fixed at info, so LOG_LEVEL=notice on the live site
+        // never drops an audit line. AUDIT_LOG_STACK picks where the lines go:
+        // audit_stderr (default), audit_file, both (audit_stderr,audit_file) or
+        // null. ignore_exceptions keeps a broken sink from failing a request.
+        'audit' => [
+            'driver' => 'stack',
+            'channels' => explode(',', (string) env('AUDIT_LOG_STACK', 'audit_stderr')),
+            'ignore_exceptions' => true,
+        ],
+
+        // Standard error is the sink the hosting platform collects. Ship it off
+        // the server to a store the app cannot change (SECURITY.md, Audit log).
+        'audit_stderr' => [
+            'driver' => 'monolog',
+            'level' => 'info',
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => 'php://stderr',
+            ],
+            'formatter' => JsonFormatter::class,
+        ],
+
+        // A file on the server, for a local copy. Anyone who controls the app
+        // can change this file, so it is no defense by itself. It sits in
+        // storage/logs/audit, apart from the *.log files that an account
+        // deletion edits (App\Services\PersonalData).
+        'audit_file' => [
+            'driver' => 'single',
+            'path' => env('AUDIT_LOG_PATH', storage_path('logs/audit/audit.log')),
+            'level' => 'info',
+            'permission' => 0640,
+            'formatter' => JsonFormatter::class,
         ],
 
         'emergency' => [

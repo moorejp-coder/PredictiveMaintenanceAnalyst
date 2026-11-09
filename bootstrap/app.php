@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\AdminOrDemo;
+use App\Http\Middleware\AuditAdminAction;
+use App\Http\Middleware\AuditApiErrors;
 use App\Http\Middleware\AuthorizeResource;
 use App\Http\Middleware\BindSessionToClient;
 use App\Http\Middleware\DropForeignReferer;
@@ -9,6 +11,7 @@ use App\Http\Middleware\PreventRequestForgery;
 use App\Http\Middleware\RedirectTrailingSlash;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\VerifyRequestOrigin;
+use App\Support\AuditLog;
 use App\Support\ErrorReference;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -38,7 +41,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'authorize.resource' => AuthorizeResource::class,
             'admin.or.demo' => AdminOrDemo::class,
+            'audit.admin' => AuditAdminAction::class,
         ]);
+        // Counts error answers from /api/ routes and alerts on a burst. It runs
+        // after the response is sent, and global middleware also sees an
+        // unknown /api/ path, which no route middleware does.
+        $middleware->append(AuditApiErrors::class);
         $middleware->prepend(RedirectTrailingSlash::class);
         // Prepended last, so it runs first and every response gets the headers.
         $middleware->prepend(SecurityHeaders::class);
@@ -54,6 +62,24 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [DropForeignReferer::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Every refused request goes into the audit log: a policy or gate that
+        // says no, and abort(403). This callback comes first, because a later
+        // one can answer the request and stop the rest from running. Laravel
+        // has already turned an AuthorizationException into an HTTP exception
+        // here and kept the original as getPrevious(). A policy that answers
+        // "not found" (denyAsNotFound) is a refusal too, so the status can be
+        // 404. A refusal that AuthorizeResource already logged, with its
+        // resource details, is not logged twice.
+        $exceptions->render(function (Throwable $e, Request $request) {
+            $refused = $e instanceof HttpExceptionInterface
+                && ($e->getStatusCode() === 403 || $e->getPrevious() instanceof AuthorizationException);
+
+            if ($refused && ! $request->attributes->get(AuditLog::DENIAL_LOGGED)) {
+                AuditLog::record('authz.denied', ['status' => $e->getStatusCode()], AuditLog::DENIED, $request);
+            }
+
+            return null;
+        });
         // A JSON API route rejects input outside its bounds with HTTP 400 and
         // the same message and errors body Laravel sends by default. Form
         // pages keep their redirect back with the errors.

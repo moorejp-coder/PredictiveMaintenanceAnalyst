@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Notifications\AccountLocked;
 use App\Rules\NotCommonPassword;
+use App\Support\AuditLog;
 use App\Support\LogId;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
@@ -67,6 +68,7 @@ class UnlockAccountController extends Controller
         $this->finish($user);
         $user->save();
         Log::notice('Account unlocked from the emailed link', ['email_hash' => LogId::email($data['email'])]);
+        AuditLog::record('auth.account_unlocked', ['target_user_id' => $user->getKey(), 'email_code' => LogId::email($data['email']), 'password_changed' => false], AuditLog::SUCCESS, $request);
 
         return redirect('/login')->with('status', 'Your account is unlocked. Sign in with your email and password.');
     }
@@ -93,6 +95,7 @@ class UnlockAccountController extends Controller
         $user->save();
         event(new PasswordReset($user));
         Log::notice('Password changed from the account lock email', ['email_hash' => LogId::email($data['email'])]);
+        AuditLog::record('auth.account_unlocked', ['target_user_id' => $user->getKey(), 'email_code' => LogId::email($data['email']), 'password_changed' => true], AuditLog::SUCCESS, $request);
 
         return redirect('/login')->with('status', 'Your password is changed and your account is unlocked. Sign in with your new password.');
     }

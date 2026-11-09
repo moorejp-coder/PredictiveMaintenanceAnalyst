@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\OverrideLog;
 use App\Models\User;
+use App\Support\AuditLog;
 use App\Support\PlainText;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
@@ -27,6 +28,8 @@ class MyOverrideController extends Controller
             ->latest('id')
             ->limit(200)
             ->get();
+
+        AuditLog::record('data.bulk_read', ['scope' => 'own_override_entries', 'count' => $rows->count()], AuditLog::SUCCESS, $request);
 
         return response()->json(['data' => $rows->map(fn (OverrideLog $log) => $this->present($log))->all()])
             ->header('Cache-Control', 'no-store');

@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\PersonalData;
 use App\Services\PersonalDataExport;
+use App\Support\AuditLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -42,8 +43,12 @@ class AccountController extends Controller
 
         // Saves a fresh hash of the same password. Every other session holds
         // the old hash, so AuthenticateSession ends each one on its next
-        // request. This browser keeps its session.
+        // request. This browser keeps its session. The password itself does
+        // not change, so the audit log gets a sessions_revoked line and not
+        // a password_changed one (User::booted).
+        $request->attributes->set(AuditLog::SKIP_PASSWORD_EVENT, true);
         Auth::logoutOtherDevices($data['password']);
+        AuditLog::record('account.sessions_revoked', ['target_user_id' => $user->getKey()], AuditLog::SUCCESS, $request);
 
         return redirect('/account')->with('status', 'Every other browser is signed out. This one stays signed in.');
     }
@@ -63,6 +68,7 @@ class AccountController extends Controller
         }
 
         Log::notice('Personal data exported', ['user_id' => $user->getAuthIdentifier()]);
+        AuditLog::record('data.export', ['scope' => 'own_account', 'target_user_id' => $user->getKey()], AuditLog::SUCCESS, $request);
 
         return response()
             ->json($export->for($user), 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)

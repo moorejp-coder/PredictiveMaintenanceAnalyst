@@ -160,9 +160,21 @@ return [
 
     'policy_dates' => [
         'faq' => ['date' => 'November 3, 2026', 'hash' => 'fb93756a9d1e256245b8f0a41e5391218855f6b2684a646e3aa0f3e34740aa0d'],
-        'privacy' => ['date' => 'November 3, 2026', 'hash' => '066cab27b69c3a22cd1340f698a38ee907238471438c1dd9a37e6ac73bf35702'],
+        'privacy' => ['date' => 'November 9, 2026', 'hash' => '9971bbd8aca911ee8322ad10a9aab55ab3969afdbd7ee003b08496f27b8e40e7'],
         'terms' => ['date' => 'October 26, 2026', 'hash' => '4c4064afa204cc5d5b0440e6d8c33c62371284721fd364ba3be8fd171033c036'],
         'ai' => ['date' => 'November 3, 2026', 'hash' => '4b82ca8bab07fd15a7503b0cad0264e934d8debadca0101e986bdc739e82cd83'],
+    ],
+
+    // Security audit log (App\Support\AuditLog). An api.error_rate_exceeded line
+    // goes into it when the /api/ routes answer with this many errors (any 4xx
+    // or 5xx) inside the window, per IP address or from all addresses together
+    // (App\Http\Middleware\AuditApiErrors). The dashboard polls every 1.2
+    // seconds, so a signed-out tab that keeps polling reaches 20 in under half
+    // a minute. That is a real signal, not noise: the tab shows nothing useful.
+    'audit' => [
+        'api_error_window_seconds' => (int) env('AUDIT_API_ERROR_WINDOW', 60),
+        'api_errors_per_ip' => (int) env('AUDIT_API_ERRORS_PER_IP', 20),
+        'api_errors_total' => (int) env('AUDIT_API_ERRORS_TOTAL', 100),
     ],
 
     'bands' => [

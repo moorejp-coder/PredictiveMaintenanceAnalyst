@@ -6,6 +6,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Notifications\JudgeInvite;
+use App\Support\AuditLog;
+use App\Support\LogId;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -29,6 +31,43 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    /**
+     * Account changes go into the audit log from here, so every code path that
+     * saves a User is covered, including ones added later: a new account, a
+     * changed email address and a changed password. PRISM has no page that
+     * changes an email address today. The hook is there so one cannot be added
+     * without a log line. Only a keyed one-way code of the email is logged,
+     * never the address or a password hash.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (User $user): void {
+            AuditLog::record('account.created', [
+                'target_user_id' => $user->getKey(),
+                'email_code' => LogId::email((string) $user->email),
+            ]);
+        });
+
+        static::updated(function (User $user): void {
+            if ($user->wasChanged('email')) {
+                AuditLog::record('account.email_changed', [
+                    'target_user_id' => $user->getKey(),
+                    'old_email_code' => LogId::email((string) $user->getOriginal('email')),
+                    'new_email_code' => LogId::email((string) $user->email),
+                ]);
+            }
+
+            $request = app()->bound('request') ? app('request') : null;
+            $skip = $request !== null && $request->attributes->get(AuditLog::SKIP_PASSWORD_EVENT) === true;
+            if ($user->wasChanged('password') && ! $skip) {
+                AuditLog::record('account.password_changed', [
+                    'target_user_id' => $user->getKey(),
+                    'email_code' => LogId::email((string) $user->email),
+                ]);
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

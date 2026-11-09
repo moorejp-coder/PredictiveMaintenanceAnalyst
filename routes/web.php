@@ -90,7 +90,7 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
     });
     // Admin accounts only. A guest gets 401 (or a redirect to /login), a signed-in
     // user who is not an admin gets 403, and the refusal is logged.
-    Route::middleware('authorize.resource:is-admin')->group(function () {
+    Route::middleware(['authorize.resource:is-admin', 'audit.admin'])->group(function () {
         Route::get('/admin/invites', [InviteController::class, 'index'])->middleware('throttle:heavy-read');
         Route::post('/admin/invites', [InviteController::class, 'store'])->middleware(['throttle:invites', RejectAbuse::class]);
         // Deletion requests (Privacy Policy, section 7). Both remove rows for good.
@@ -104,7 +104,7 @@ Route::middleware(EnsureLoginEnabled::class)->group(function () {
     Route::view('/account/deleted', 'account-deleted');
     // The override review page. Admins see the real log. A Judge Demo session sees
     // fixed sample rows and reads nothing from the log.
-    Route::get('/overrides', [OverrideController::class, 'index'])->middleware(['admin.or.demo', 'throttle:heavy-read']);
+    Route::get('/overrides', [OverrideController::class, 'index'])->middleware(['admin.or.demo', 'audit.admin', 'throttle:heavy-read']);
 });
 
 // With REQUIRE_LOGIN on, the dashboard and every route it calls need a
