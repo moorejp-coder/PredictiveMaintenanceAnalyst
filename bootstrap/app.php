@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminOrDemo;
+use App\Http\Middleware\AlertAuthFailures;
 use App\Http\Middleware\AuditAdminAction;
 use App\Http\Middleware\AuditApiErrors;
 use App\Http\Middleware\AuthorizeResource;
@@ -11,6 +12,7 @@ use App\Http\Middleware\PreventRequestForgery;
 use App\Http\Middleware\RedirectTrailingSlash;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\VerifyRequestOrigin;
+use App\Http\Middleware\WatchAccountProbes;
 use App\Support\AuditLog;
 use App\Support\ErrorReference;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -47,6 +49,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // after the response is sent, and global middleware also sees an
         // unknown /api/ path, which no route middleware does.
         $middleware->append(AuditApiErrors::class);
+        // Counts the accounts each IP address names in sign-in, password and
+        // unlock requests. Global, so a request the rate limit then refuses
+        // still counts.
+        $middleware->append(WatchAccountProbes::class);
+        // Counts 401 and 403 answers for the "above the usual level" alert.
+        $middleware->append(AlertAuthFailures::class);
         $middleware->prepend(RedirectTrailingSlash::class);
         // Prepended last, so it runs first and every response gets the headers.
         $middleware->prepend(SecurityHeaders::class);
@@ -76,6 +84,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($refused && ! $request->attributes->get(AuditLog::DENIAL_LOGGED)) {
                 AuditLog::record('authz.denied', ['status' => $e->getStatusCode()], AuditLog::DENIED, $request);
+                // AlertAuthFailures counts a refusal shown as 404 by this mark.
+                $request->attributes->set(AuditLog::DENIAL_LOGGED, true);
             }
 
             return null;

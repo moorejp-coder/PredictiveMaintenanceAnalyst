@@ -9,7 +9,7 @@ use App\Models\OverrideLog;
 use App\Models\User;
 use App\Services\RiskScorer;
 use App\Services\SensorSimulator;
-use App\Support\AuditLog;
+use App\Support\Alerts;
 use App\Support\DemoMode;
 use App\Support\DemoSamples;
 use App\Support\PlainText;
@@ -111,7 +111,7 @@ class OverrideController extends Controller
         $emails = User::query()->whereIn('id', $logs->pluck('user_id')->filter()->unique()->all())->pluck('email', 'id');
 
         // The admin page shows every account's entries, with each author's email.
-        AuditLog::record('data.bulk_read', ['scope' => 'override_log_all_accounts', 'count' => $logs->count()], AuditLog::SUCCESS, $request);
+        Alerts::bulkRead('override_log_all_accounts', $logs->count(), $request);
 
         return view('overrides', [
             'logs' => $logs

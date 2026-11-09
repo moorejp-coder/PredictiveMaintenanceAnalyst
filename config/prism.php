@@ -160,7 +160,7 @@ return [
 
     'policy_dates' => [
         'faq' => ['date' => 'November 3, 2026', 'hash' => 'fb93756a9d1e256245b8f0a41e5391218855f6b2684a646e3aa0f3e34740aa0d'],
-        'privacy' => ['date' => 'November 9, 2026', 'hash' => '9971bbd8aca911ee8322ad10a9aab55ab3969afdbd7ee003b08496f27b8e40e7'],
+        'privacy' => ['date' => 'November 9, 2026', 'hash' => '9dcb33b12b90bb8e3a4ec3f69cc7628505dd99efca0811a08bb9d15c3d6ef1ff'],
         'terms' => ['date' => 'October 26, 2026', 'hash' => '4c4064afa204cc5d5b0440e6d8c33c62371284721fd364ba3be8fd171033c036'],
         'ai' => ['date' => 'November 3, 2026', 'hash' => '4b82ca8bab07fd15a7503b0cad0264e934d8debadca0101e986bdc739e82cd83'],
     ],
@@ -175,6 +175,59 @@ return [
         'api_error_window_seconds' => (int) env('AUDIT_API_ERROR_WINDOW', 60),
         'api_errors_per_ip' => (int) env('AUDIT_API_ERRORS_PER_IP', 20),
         'api_errors_total' => (int) env('AUDIT_API_ERRORS_TOTAL', 100),
+    ],
+
+    // Security alerts (App\Support\Alerts). A detector that trips writes an
+    // alert.* line into the audit log and sends a message to every address in
+    // ALERT_EMAIL (comma separated) and to the Slack incoming webhook in
+    // ALERT_SLACK_WEBHOOK. With neither set, the audit line is the alert. The
+    // webhook address is a secret: set it as an environment property, never in
+    // the repository. Every number below can be changed with its ALERT_*
+    // variable. Defaults for the three that the entrant did not specify
+    // (accounts window, bulk request rate, password links) are judgment calls,
+    // and so are the 401/403 baseline settings. Tune them after a week of real
+    // traffic.
+    'alerts' => [
+        'email' => array_values(array_filter(array_map('trim', explode(',', (string) env('ALERT_EMAIL', ''))), fn (string $address): bool => $address !== '')),
+        'slack_webhook' => env('ALERT_SLACK_WEBHOOK'),
+        // One alert per detector and subject in this time. Messages per channel per hour.
+        'cooldown_seconds' => (int) env('ALERT_COOLDOWN', 3600),
+        'max_notifications_per_hour' => (int) env('ALERT_MAX_PER_HOUR', 20),
+
+        // 1. More than 10 failed sign-ins for one account in 5 minutes.
+        'failed_logins_per_account' => (int) env('ALERT_FAILED_LOGINS', 10),
+        'failed_logins_window_seconds' => (int) env('ALERT_FAILED_LOGINS_WINDOW', 300),
+
+        // 2. One IP address naming more than 50 different accounts in an hour.
+        'accounts_per_ip' => (int) env('ALERT_ACCOUNTS_PER_IP', 50),
+        'accounts_per_ip_window_seconds' => (int) env('ALERT_ACCOUNTS_PER_IP_WINDOW', 3600),
+
+        // 3. More than 100 records in one query, or more than 10 bulk reads in a minute.
+        'bulk_records_per_query' => (int) env('ALERT_BULK_RECORDS', 100),
+        'bulk_requests_per_window' => (int) env('ALERT_BULK_REQUESTS', 10),
+        'bulk_window_seconds' => (int) env('ALERT_BULK_WINDOW', 60),
+
+        // 4. A sign-in from a new country or a new network. The country comes
+        // from a header a CDN sets (CloudFront-Viewer-Country, CF-IPCountry).
+        // Leave it empty unless every request passes through that CDN, because
+        // a client can send any header. Empty: only the network check runs.
+        'country_header' => env('ALERT_COUNTRY_HEADER'),
+        'new_network' => filter_var(env('ALERT_NEW_NETWORK', true), FILTER_VALIDATE_BOOLEAN),
+        'origins_kept' => 20,
+        'origin_retention_days' => 180,
+
+        // 5. Password links sent to one account in an hour (invite page).
+        'password_links_per_account' => (int) env('ALERT_PASSWORD_LINKS', 3),
+        'password_links_window_seconds' => (int) env('ALERT_PASSWORD_LINKS_WINDOW', 3600),
+
+        // 6. 401 and 403 answers in a 5-minute bucket, against the average
+        // bucket of the last 24 hours. Alert at the floor and above the
+        // multiplier times the average. One address adds at most the cap.
+        'auth_bucket_seconds' => (int) env('ALERT_AUTH_BUCKET', 300),
+        'auth_baseline_hours' => (int) env('ALERT_AUTH_BASELINE_HOURS', 24),
+        'auth_multiplier' => (float) env('ALERT_AUTH_MULTIPLIER', 3),
+        'auth_floor' => (int) env('ALERT_AUTH_FLOOR', 30),
+        'auth_per_ip_cap' => (int) env('ALERT_AUTH_PER_IP_CAP', 20),
     ],
 
     'bands' => [

@@ -8,9 +8,11 @@ use App\Http\Middleware\BindSessionToClient;
 use App\Http\Middleware\EnforceSessionAge;
 use App\Models\User;
 use App\Notifications\AccountLocked;
+use App\Support\Alerts;
 use App\Support\AuditLog;
 use App\Support\EmailBudget;
 use App\Support\LogId;
+use App\Support\LoginOrigins;
 use App\Support\SafeRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -86,6 +88,7 @@ class AuthController extends Controller
         if (is_int($blockedUntil) && $blockedUntil > now()->getTimestamp()) {
             Log::warning('Sign-in refused from a blocked address', ['ip' => $ip]);
             AuditLog::record('auth.login.failed', ['reason' => 'address_blocked', 'email_code' => LogId::email($email)], AuditLog::FAILURE, $request);
+            Alerts::failedLogin($email, $request);
 
             return $this->blocked($request, $blockedUntil - now()->getTimestamp());
         }
@@ -107,6 +110,7 @@ class AuthController extends Controller
             $this->recordAddressFailure($ip);
             Log::notice('Sign-in refused for a locked account', ['ip' => $ip, 'email_hash' => LogId::email($email)]);
             AuditLog::record('auth.login.failed', ['reason' => 'account_locked', 'email_code' => LogId::email($email), 'target_user_id' => $user->getKey()], AuditLog::FAILURE, $request);
+            Alerts::failedLogin($email, $request);
 
             return $this->refuse($request, self::INVALID);
         }
@@ -118,6 +122,7 @@ class AuthController extends Controller
             $this->recordAddressFailure($ip);
             Log::notice('Sign-in refused for an unverified account', ['ip' => $ip, 'email_hash' => LogId::email($email)]);
             AuditLog::record('auth.login.failed', ['reason' => 'account_unverified', 'email_code' => LogId::email($email), 'target_user_id' => $user->getKey()], AuditLog::FAILURE, $request);
+            Alerts::failedLogin($email, $request);
 
             return $this->refuse($request, self::INVALID);
         }
@@ -144,6 +149,7 @@ class AuthController extends Controller
                 'email_code' => LogId::email($email),
                 'target_user_id' => $user?->getKey(),
             ], AuditLog::FAILURE, $request);
+            Alerts::failedLogin($email, $request);
 
             return $this->refuse($request, self::INVALID);
         }
@@ -160,6 +166,9 @@ class AuthController extends Controller
         $request->session()->put(EnforceSessionAge::SESSION_KEY, now()->getTimestamp());
         BindSessionToClient::stamp($request);
         AuditLog::record('auth.login.success', ['email_code' => LogId::email($email)], AuditLog::SUCCESS, $request);
+        if ($signedIn instanceof User) {
+            LoginOrigins::observe($signedIn, $request);
+        }
 
         // The page the guest asked for before sign-in, if it is on PRISM.
         return redirect(SafeRedirect::path($request->session()->pull('url.intended'), '/'));
