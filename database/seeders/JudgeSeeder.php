@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -35,9 +36,17 @@ class JudgeSeeder extends Seeder
         $user = User::firstOrNew(['email' => $email]);
         $user->forceFill([
             'name' => (string) config('prism.judge.name'),
-            'password' => $password,
             'email_verified_at' => $user->email_verified_at ?? now(),
-        ])->save();
+        ]);
+
+        // Hashing the same password again gives a new hash, which would write
+        // a password_changed line and end the account's sessions on every
+        // deploy. Set the password only for a new account or a changed one.
+        if (! $user->exists || ! Hash::check($password, (string) $user->password)) {
+            $user->forceFill(['password' => $password]);
+        }
+
+        $user->save();
 
         Log::info('Judge account is ready.');
     }

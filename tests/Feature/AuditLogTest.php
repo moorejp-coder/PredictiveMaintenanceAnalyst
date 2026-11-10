@@ -7,8 +7,10 @@ use App\Models\OverrideLog;
 use App\Models\User;
 use App\Support\LogId;
 use Database\Seeders\AdminSeeder;
+use Database\Seeders\JudgeSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Monolog\Handler\AbstractProcessingHandler;
@@ -302,6 +304,32 @@ class AuditLogTest extends TestCase
         $this->assertSame('admin', $roles[0]->context['detail']['role']);
         $this->assertSame('console', $roles[0]->context['source']);
         $this->assertNull($roles[0]->context['request']);
+    }
+
+    public function test_the_seeders_log_a_password_change_only_when_the_password_changes(): void
+    {
+        config([
+            'prism.admin.password' => $this->fixturePassword('admin-seed'), 'prism.admin.name' => 'Admin',
+            'prism.judge.email' => 'judge-seed@example.test', 'prism.judge.password' => $this->fixturePassword('judge-seed'), 'prism.judge.name' => 'Judge',
+        ]);
+
+        (new AdminSeeder)->run();
+        (new JudgeSeeder)->run();
+        $this->assertCount(0, $this->lines('account.password_changed'), 'A new account is an account.created line, not a password change.');
+
+        $admin = User::where('email', 'admin@example.test')->firstOrFail();
+        $hash = $admin->password;
+
+        (new AdminSeeder)->run();
+        (new JudgeSeeder)->run();
+        $this->assertCount(0, $this->lines('account.password_changed'), 'A deploy that changes nothing writes no password line.');
+        $this->assertSame($hash, $admin->fresh()->password);
+
+        config(['prism.admin.password' => $this->fixturePassword('admin-seed-new')]);
+        (new AdminSeeder)->run();
+        $lines = $this->lines('account.password_changed');
+        $this->assertCount(1, $lines);
+        $this->assertTrue(Hash::check($this->fixturePassword('admin-seed-new'), (string) $admin->fresh()->password));
     }
 
     // 4. Admin actions -------------------------------------------------------
