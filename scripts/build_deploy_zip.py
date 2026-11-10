@@ -29,6 +29,7 @@ MUST_HAVE = [
     ".ebextensions/01-laravel.config", ".platform/hooks/postdeploy/01_override_log_db.sh",
     ".platform/nginx/conf.d/elasticbeanstalk/laravel.conf",
     ".ebextensions/02-https.config", ".platform/hooks/postdeploy/02_https.sh",
+    ".platform/confighooks/postdeploy/02_https.sh",
     ".platform/nginx/conf.d/elasticbeanstalk/acme.conf",
     "composer.json", "composer.lock", "artisan", "bootstrap/app.php",
 ]
