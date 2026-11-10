@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Casts\EncryptedList;
 use App\Notifications\JudgeInvite;
 use App\Support\AuditLog;
 use App\Support\LogId;
@@ -81,8 +82,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'failed_login_attempts' => 'integer',
             'first_failed_login_at' => 'datetime',
-            // Encrypted at rest with APP_KEY (AES-256-CBC with an HMAC).
-            'failed_login_ips' => 'encrypted:array',
+            // Encrypted at rest with APP_KEY (AES-256-CBC with an HMAC). A stored
+            // value that does not decrypt reads as empty (App\Casts\EncryptedList).
+            'failed_login_ips' => EncryptedList::class,
             'locked_at' => 'datetime',
             'unlock_sent_at' => 'datetime',
         ];

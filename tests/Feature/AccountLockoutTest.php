@@ -5,10 +5,13 @@ namespace Tests\Feature;
 use App\Http\Controllers\AuthController;
 use App\Models\User;
 use App\Notifications\AccountLocked;
+use Illuminate\Encryption\Encrypter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
@@ -348,5 +351,56 @@ class AccountLockoutTest extends TestCase
         $this->postJson('/unlock-account/check', ['token' => 'abc', 'email' => 'judge@example.test'])->assertNotFound();
         $this->post('/unlock-account', ['token' => 'abc', 'email' => 'judge@example.test'])->assertNotFound();
         $this->post('/unlock-account/password', ['token' => 'abc', 'email' => 'judge@example.test'])->assertNotFound();
+    }
+
+    /**
+     * Stored values that do not decrypt: a plain list written before the column
+     * was encrypted, a list encrypted with another key, and garbage.
+     *
+     * @return array<string, array{string}>
+     */
+    public static function unreadableStoredLists(): array
+    {
+        return [
+            'plain list from before encryption' => ['["203.0.113.9"]'],
+            'encrypted with another key' => [(new Encrypter(str_repeat('k', 32), 'AES-256-CBC'))->encryptString('["203.0.113.9"]')],
+            'garbage' => ['not a payload'],
+        ];
+    }
+
+    private function storeRawIps(User $user, string $raw, int $attempts): void
+    {
+        DB::table('users')->where('id', $user->id)->update([
+            'failed_login_ips' => $raw,
+            'failed_login_attempts' => $attempts,
+        ]);
+    }
+
+    #[DataProvider('unreadableStoredLists')]
+    public function test_a_wrong_password_still_gets_the_normal_answer_when_the_stored_ip_list_cannot_be_read(string $raw): void
+    {
+        $user = $this->judge();
+        $this->storeRawIps($user, $raw, 2);
+
+        $this->attempt('198.51.100.5', $user->email, 'wrong')
+            ->assertSessionHasErrors(['email' => AuthController::INVALID]);
+
+        $fresh = $user->fresh();
+        $this->assertSame(3, $fresh->failed_login_attempts);
+        // The unreadable list is replaced by one encrypted with the current key.
+        $this->assertSame(['198.51.100.5'], $fresh->failed_login_ips);
+    }
+
+    #[DataProvider('unreadableStoredLists')]
+    public function test_a_good_sign_in_clears_the_count_when_the_stored_ip_list_cannot_be_read(string $raw): void
+    {
+        $user = $this->judge();
+        $this->storeRawIps($user, $raw, 3);
+
+        $this->attempt('192.0.2.1', $user->email, $this->fixturePassword('correct'))->assertRedirect('/');
+
+        $fresh = $user->fresh();
+        $this->assertSame(0, $fresh->failed_login_attempts);
+        $this->assertNull($fresh->failed_login_ips);
     }
 }
