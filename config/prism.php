@@ -159,10 +159,10 @@ return [
     'log_folder' => null,
 
     'policy_dates' => [
-        'faq' => ['date' => 'November 9, 2026', 'hash' => '351073e31ce53fdd7fc6ec01f19c19ca9f9836f9db3be5a1fedf153fe1de35d7'],
-        'privacy' => ['date' => 'November 9, 2026', 'hash' => '374fd71ff213181a633856100238752fd6b16073a68f5c2f79c808a4400ca8d7'],
+        'faq' => ['date' => 'November 10, 2026', 'hash' => 'b651506f26da4488a01f6550ac88c7a85f4f3cb4e01de12398a6e972126ac02d'],
+        'privacy' => ['date' => 'November 10, 2026', 'hash' => 'b52fffa8d1e2c78655b32d9721180131e0d4435447c9dc7ecd52092b721f8330'],
         'terms' => ['date' => 'November 9, 2026', 'hash' => 'fd31cf686c6b5e73bd5ade180317225542febe3ca726d56668f9642cf59819f1'],
-        'ai' => ['date' => 'November 9, 2026', 'hash' => 'ce89978fbd594af3c5d9feb161df8ecb8c42ca9243ef71a4163c858544f313c9'],
+        'ai' => ['date' => 'November 10, 2026', 'hash' => '3249b5f1aac4595034c66a278cd47985760095422fe66686a0b6a2deaba80c8f'],
     ],
 
     // Security audit log (App\Support\AuditLog). An api.error_rate_exceeded line
@@ -178,21 +178,14 @@ return [
     ],
 
     // Security alerts (App\Support\Alerts). A detector that trips writes an
-    // alert.* line into the audit log and sends a message to every address in
-    // ALERT_EMAIL (comma separated) and to the Slack incoming webhook in
-    // ALERT_SLACK_WEBHOOK. With neither set, the audit line is the alert. The
-    // webhook address is a secret: set it as an environment property, never in
-    // the repository. Every number below can be changed with its ALERT_*
-    // variable. Defaults for the three that the entrant did not specify
-    // (accounts window, bulk request rate, password links) are judgment calls,
-    // and so are the 401/403 baseline settings. Tune them after a week of real
-    // traffic.
+    // alert.* line into the audit log. PRISM sends no email and no Slack
+    // message. Every number below can be changed with its ALERT_* variable.
+    // Defaults for the three that the entrant did not specify (accounts window,
+    // bulk request rate, password links) are judgment calls, and so are the
+    // 401/403 baseline settings. Tune them after a week of real traffic.
     'alerts' => [
-        'email' => array_values(array_filter(array_map('trim', explode(',', (string) env('ALERT_EMAIL', ''))), fn (string $address): bool => $address !== '')),
-        'slack_webhook' => env('ALERT_SLACK_WEBHOOK'),
-        // One alert per detector and subject in this time. Messages per channel per hour.
+        // One alert per detector and subject in this time.
         'cooldown_seconds' => (int) env('ALERT_COOLDOWN', 3600),
-        'max_notifications_per_hour' => (int) env('ALERT_MAX_PER_HOUR', 20),
 
         // 1. More than 10 failed sign-ins for one account in 5 minutes.
         'failed_logins_per_account' => (int) env('ALERT_FAILED_LOGINS', 10),
