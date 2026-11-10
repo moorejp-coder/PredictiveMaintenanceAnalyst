@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Support\AuditLog;
 use App\Support\LogId;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -45,9 +46,17 @@ class AdminSeeder extends Seeder
         $wasAdmin = $user->isAdmin();
         $user->forceFill([
             'name' => (string) config('prism.admin.name'),
-            'password' => $password,
             'email_verified_at' => $user->email_verified_at ?? now(),
-        ])->save();
+        ]);
+
+        // Hashing the same password again gives a new hash, which would write
+        // a password_changed line and end the account's sessions on every
+        // deploy. Set the password only for a new account or a changed one.
+        if (! $user->exists || ! Hash::check($password, (string) $user->password)) {
+            $user->forceFill(['password' => $password]);
+        }
+
+        $user->save();
 
         // There is no role column. An account is an admin because its verified
         // email equals ADMIN_EMAIL (User::isAdmin), so this is where a role

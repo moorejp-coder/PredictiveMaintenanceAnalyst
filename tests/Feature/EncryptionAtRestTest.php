@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\OverrideLog;
 use App\Models\User;
+use Illuminate\Encryption\Encrypter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -54,6 +56,51 @@ class EncryptionAtRestTest extends TestCase
         $this->assertStringNotContainsString('Pat Rivera', (string) $row->original_reason);
         $this->assertSame(self::REASON, Crypt::decryptString((string) $row->original_reason));
         $this->assertSame('A second reason that is long enough.', $log->fresh()->reason);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function unreadableReasons(): array
+    {
+        return [
+            'plain text from before encryption' => ['A reason saved before encryption was added.'],
+            'encrypted with another key' => [(new Encrypter(random_bytes(32), 'AES-256-CBC'))->encryptString('Sealed with an older key.')],
+            'not a payload' => ['eyJpdiI6'],
+        ];
+    }
+
+    #[DataProvider('unreadableReasons')]
+    public function test_an_override_reason_that_cannot_be_read_reads_as_empty_and_the_pages_still_load(string $raw): void
+    {
+        config(['prism.require_login' => true]);
+        $me = User::factory()->create();
+        $good = $this->entry();
+        $bad = $this->entry();
+        DB::table('override_logs')->whereIn('id', [$good->id, $bad->id])->update(['user_id' => $me->id]);
+        DB::table('override_logs')->where('id', $bad->id)->update(['reason' => $raw, 'original_reason' => $raw]);
+
+        $this->assertNull($bad->fresh()->reason);
+        $this->assertSame(self::REASON, $good->fresh()->reason);
+
+        $this->actingAs($me);
+        $list = $this->getJson('/api/overrides')->assertOk();
+        $reasons = collect($list->json('data'))->pluck('reason')->all();
+        $this->assertContains(self::REASON, $reasons);
+        $this->assertContains(null, $reasons);
+
+        $this->getJson("/api/overrides/{$bad->uuid}")->assertOk()->assertJsonPath('data.reason', null);
+        $this->putJson("/api/overrides/{$bad->uuid}", ['reason' => 'A new reason that is long enough.'])
+            ->assertOk()
+            ->assertJsonPath('data.reason', 'A new reason that is long enough.');
+        $this->assertSame('A new reason that is long enough.', $bad->fresh()->reason);
+    }
+
+    public function test_an_unreadable_override_reason_does_not_change_the_stored_bytes_on_read(): void
+    {
+        $log = $this->entry();
+        DB::table('override_logs')->where('id', $log->id)->update(['reason' => 'not a payload']);
+
+        $this->assertNull(OverrideLog::findOrFail($log->id)->reason);
+        $this->assertSame('not a payload', DB::table('override_logs')->where('id', $log->id)->value('reason'));
     }
 
     public function test_the_ip_addresses_of_wrong_passwords_are_encrypted(): void

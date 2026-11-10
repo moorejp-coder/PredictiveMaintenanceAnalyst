@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\EncryptedText;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -51,12 +52,13 @@ class OverrideLog extends Model
     {
         // The reason is free text, so a person may type personal details
         // into it. It is stored encrypted (AES-256-CBC with an HMAC, keyed by
-        // APP_KEY), so a copy of the database file alone does not reveal it.
+        // APP_KEY), so a copy of the database file alone does not reveal it. A
+        // stored value that does not decrypt reads as null (App\Casts\EncryptedText).
         return [
             'reading' => 'array',
             'edited_at' => 'datetime',
-            'reason' => 'encrypted',
-            'original_reason' => 'encrypted',
+            'reason' => EncryptedText::class,
+            'original_reason' => EncryptedText::class,
         ];
     }
 }
