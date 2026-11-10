@@ -30,7 +30,7 @@ Safety disclaimer: PRISM supports a qualified technician and does not replace an
 ## What PRISM does not do
 
 - It reads no real machine. Every reading comes from `app/Services/SensorSimulator.php`, and a technician cannot enter real readings.
-- It sends no alerts. The only email it sends is an invite, and only when the entrant sends one.
+- It sends no alerts. It sends three kinds of account email and nothing else: an invite (only when the entrant sends one), a notice when an account is locked after 10 wrong passwords, and a confirmation after an account is deleted.
 - It gives no failure date. The projection looks a few readings ahead on simulated trends.
 - It records no stops, downtime or confirmed faults.
 - It lets neither the AI nor the learned estimate change the score, the band or the action.
