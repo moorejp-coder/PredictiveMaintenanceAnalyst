@@ -67,6 +67,6 @@ final class EncryptedList implements CastsAttributes
             return null;
         }
 
-        return Crypt::encryptString(json_encode(array_values((array) $value), JSON_THROW_ON_ERROR));
+        return Crypt::encryptString(json_encode($value, JSON_THROW_ON_ERROR));
     }
 }
