@@ -19,13 +19,12 @@ Rules for all of them:
 
 - One alert per detector and subject per hour (`ALERT_COOLDOWN`). A long attack writes one alert line. The audit lines for the attack keep coming.
 - The alert line holds counts, keyed codes (the same one-way code the audit log uses for an email), the request's IP address and the detector's fields. Never an email address, a password or a token.
-- With email or Slack delivery set (not used), a message is capped at 20 an hour per channel (`ALERT_MAX_PER_HOUR`), and one `alert.notifications_suppressed` line says so.
 
 Password reset: PRISM has no "forgot password" page. A password link comes only from the admin's invite page (`/admin/invites`). Alert 5 watches those links. If you add a self-service reset, call `Alerts::passwordLinkSent($email, $request)` from it.
 
-## Email and Slack delivery (not used)
+## No email or Slack
 
-The code in `app/Support/Alerts.php` can send an alert by email (`ALERT_EMAIL`) or to a Slack incoming webhook (`ALERT_SLACK_WEBHOOK`) when either setting holds a value. The entrant has decided not to use either, so PRISM sets neither and sends no message. Do not set them without first updating the Privacy Policy, the FAQ and "How PRISM uses AI", which say PRISM sends no alert messages.
+PRISM sends no message for an alert. The delivery code (email and Slack) was removed on Nov 10, 2026, and the settings `ALERT_EMAIL`, `ALERT_SLACK_WEBHOOK` and `ALERT_MAX_PER_HOUR` no longer exist. The Privacy Policy, the FAQ and "How PRISM uses AI" say PRISM sends no alert messages. Read the alerts in the audit log, or build a message path outside the app (last section).
 
 Test after you deploy: run `php artisan tinker --execute='App\Support\Alerts::fire("failed_logins", "test", ["note" => "test message"]);'` on the server. It writes a real `alert.failed_logins` audit line. Wait an hour or clear the cache before you run the same test again, because of the cooldown.
 

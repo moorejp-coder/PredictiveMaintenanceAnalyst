@@ -178,21 +178,14 @@ return [
     ],
 
     // Security alerts (App\Support\Alerts). A detector that trips writes an
-    // alert.* line into the audit log and sends a message to every address in
-    // ALERT_EMAIL (comma separated) and to the Slack incoming webhook in
-    // ALERT_SLACK_WEBHOOK. With neither set, the audit line is the alert. The
-    // webhook address is a secret: set it as an environment property, never in
-    // the repository. Every number below can be changed with its ALERT_*
-    // variable. Defaults for the three that the entrant did not specify
-    // (accounts window, bulk request rate, password links) are judgment calls,
-    // and so are the 401/403 baseline settings. Tune them after a week of real
-    // traffic.
+    // alert.* line into the audit log. PRISM sends no email and no Slack
+    // message. Every number below can be changed with its ALERT_* variable.
+    // Defaults for the three that the entrant did not specify (accounts window,
+    // bulk request rate, password links) are judgment calls, and so are the
+    // 401/403 baseline settings. Tune them after a week of real traffic.
     'alerts' => [
-        'email' => array_values(array_filter(array_map('trim', explode(',', (string) env('ALERT_EMAIL', ''))), fn (string $address): bool => $address !== '')),
-        'slack_webhook' => env('ALERT_SLACK_WEBHOOK'),
-        // One alert per detector and subject in this time. Messages per channel per hour.
+        // One alert per detector and subject in this time.
         'cooldown_seconds' => (int) env('ALERT_COOLDOWN', 3600),
-        'max_notifications_per_hour' => (int) env('ALERT_MAX_PER_HOUR', 20),
 
         // 1. More than 10 failed sign-ins for one account in 5 minutes.
         'failed_logins_per_account' => (int) env('ALERT_FAILED_LOGINS', 10),

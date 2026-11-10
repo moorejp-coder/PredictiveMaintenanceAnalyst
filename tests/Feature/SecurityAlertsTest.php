@@ -4,11 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\OverrideLog;
 use App\Models\User;
-use App\Notifications\SecurityAlert;
 use App\Support\LogId;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Client\Request as HttpRequest;
-use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -20,15 +17,13 @@ use Monolog\LogRecord;
 use Tests\TestCase;
 
 /**
- * The six security alerts (App\Support\Alerts, LoginOrigins) and how an alert
- * reaches email and Slack. Each test uses small limits so a few requests trip
+ * The security alerts (App\Support\Alerts, LoginOrigins). An alert is an audit
+ * line and nothing else. Each test uses small limits so a few requests trip
  * the detector. The real defaults sit in config/prism.php.
  */
 class SecurityAlertsTest extends TestCase
 {
     use RefreshDatabase;
-
-    private const WEBHOOK = 'https://hooks.example.test/services/T000/B000/SECRETVALUE';
 
     protected function setUp(): void
     {
@@ -36,15 +31,13 @@ class SecurityAlertsTest extends TestCase
         config([
             'prism.require_login' => true,
             'prism.admin.email' => 'admin@example.test',
-            'prism.alerts.email' => ['security@example.test'],
-            'prism.alerts.slack_webhook' => self::WEBHOOK,
         ]);
 
         config(['logging.channels.audit' => ['driver' => 'monolog', 'handler' => TestHandler::class, 'level' => 'debug']]);
         Log::forgetChannel('audit');
         Cache::flush();
         Notification::fake();
-        Http::fake(['hooks.example.test/*' => Http::response('ok', 200)]);
+        Http::fake();
     }
 
     /** @return list<LogRecord> */
@@ -85,21 +78,6 @@ class SecurityAlertsTest extends TestCase
         $this->app['auth']->forgetGuards();
     }
 
-    private function assertEmailed(string $title): void
-    {
-        Notification::assertSentOnDemand(
-            SecurityAlert::class,
-            fn (SecurityAlert $n, array $channels, object $notifiable): bool => $n->title === $title
-                && $notifiable->routes['mail'] === ['security@example.test'],
-        );
-    }
-
-    private function assertSlacked(string $title): void
-    {
-        Http::assertSent(fn (HttpRequest $r): bool => $r->url() === self::WEBHOOK
-            && str_contains((string) $r['text'], $title));
-    }
-
     // 1. Failed sign-ins for one account -------------------------------------
 
     public function test_more_than_ten_failed_sign_ins_for_one_account_in_five_minutes_alert(): void
@@ -111,7 +89,6 @@ class SecurityAlertsTest extends TestCase
             $this->failLogin('judge@example.test', '198.51.100.'.$i);
         }
         $this->assertSame([], $this->lines('alert.failed_logins'));
-        Notification::assertSentOnDemandTimes(SecurityAlert::class, 0);
 
         // The eleventh is refused by the lock, and still counts.
         $this->failLogin('judge@example.test', '198.51.100.11');
@@ -122,13 +99,10 @@ class SecurityAlertsTest extends TestCase
         $this->assertSame(11, $alert[0]->context['detail']['failed_attempts']);
         $this->assertSame(LogId::email('judge@example.test'), $alert[0]->context['detail']['email_code']);
         $this->assertSame('198.51.100.11', $alert[0]->context['client']['ip']);
-        $this->assertEmailed('Many failed sign-ins for one account');
-        $this->assertSlacked('Many failed sign-ins for one account');
 
         // A twelfth does not send a second message while the first one cools down.
         $this->failLogin('judge@example.test', '198.51.100.12');
         $this->assertCount(1, $this->lines('alert.failed_logins'));
-        Notification::assertSentOnDemandTimes(SecurityAlert::class, 1);
     }
 
     public function test_failed_sign_ins_for_an_unknown_email_alert_too(): void
@@ -185,7 +159,6 @@ class SecurityAlertsTest extends TestCase
         $this->assertCount(1, $alert);
         $this->assertSame('203.0.113.50', $alert[0]->context['client']['ip']);
         $this->assertSame(6, $alert[0]->context['detail']['different_accounts']);
-        $this->assertEmailed('One IP address tried many accounts');
         $this->assertStringNotContainsString('a6@example.test', json_encode($alert[0]->context, JSON_THROW_ON_ERROR));
     }
 
@@ -239,7 +212,6 @@ class SecurityAlertsTest extends TestCase
         $this->assertSame(101, $alert[0]->context['detail']['records']);
         $this->assertSame('own_override_entries', $alert[0]->context['detail']['scope']);
         $this->assertSame($user->id, $alert[0]->context['actor']['user_id']);
-        $this->assertEmailed('One request read a large number of records');
         // The existing audit line is still written, with the count.
         $this->assertSame(101, $this->lines('data.bulk_read')[1]->context['detail']['count']);
     }
@@ -259,7 +231,6 @@ class SecurityAlertsTest extends TestCase
         $alert = $this->lines('alert.bulk_read_rapid');
         $this->assertCount(1, $alert);
         $this->assertSame(4, $alert[0]->context['detail']['requests']);
-        $this->assertEmailed('Many bulk reads in a short time');
     }
 
     public function test_exports_count_toward_the_rapid_rule(): void
@@ -294,8 +265,6 @@ class SecurityAlertsTest extends TestCase
         $this->assertSame(['US'], $alert[0]->context['detail']['known_countries']);
         $this->assertSame('198.51.100.4', $alert[0]->context['client']['ip']);
         $this->assertSame([], $this->lines('alert.login_new_network'), 'A new country is one alert, not two.');
-        $this->assertEmailed('Sign-in from a new country');
-        $this->assertSlacked('Sign-in from a new country');
 
         // Germany is now known. A repeat does not alert again.
         $this->loginFrom('judge@example.test', '198.51.100.4', 'DE');
@@ -318,7 +287,6 @@ class SecurityAlertsTest extends TestCase
         $this->assertCount(1, $alert);
         $this->assertSame('192.0.2.77', $alert[0]->context['client']['ip']);
         $this->assertSame([], $this->lines('alert.login_new_country'));
-        $this->assertEmailed('Sign-in from a new network');
     }
 
     public function test_the_network_check_works_without_a_country_header(): void
@@ -424,7 +392,6 @@ class SecurityAlertsTest extends TestCase
         $this->assertSame(3, $alert[0]->context['detail']['links_sent']);
         $this->assertSame(LogId::email('invitee@example.test'), $alert[0]->context['detail']['email_code']);
         $this->assertSame($admin->id, $alert[0]->context['actor']['user_id']);
-        $this->assertEmailed('Several password links sent to one account');
     }
 
     public function test_password_links_to_different_accounts_do_not_alert(): void
@@ -459,7 +426,6 @@ class SecurityAlertsTest extends TestCase
         $this->assertCount(1, $alert);
         $this->assertSame(5, $alert[0]->context['detail']['refused_requests']);
         $this->assertSame(0.0, $alert[0]->context['detail']['baseline_per_window']);
-        $this->assertEmailed('Refused requests above the usual level');
     }
 
     public function test_a_normal_level_of_refusals_does_not_alert(): void
@@ -507,92 +473,33 @@ class SecurityAlertsTest extends TestCase
         $this->assertSame([], $this->lines('alert.auth_failures'));
     }
 
-    // Delivery ---------------------------------------------------------------
+    // What an alert is -------------------------------------------------------
 
-    public function test_with_no_channel_set_the_alert_is_only_an_audit_line(): void
+    public function test_an_alert_is_only_an_audit_line_and_sends_nothing(): void
     {
-        config(['prism.alerts.email' => [], 'prism.alerts.slack_webhook' => null]);
-
         config(['prism.alerts.failed_logins_per_account' => 1]);
-        $this->failLogin('nobody@example.test', '198.51.100.1');
-        $this->failLogin('nobody@example.test', '198.51.100.2');
+
+        $this->failLogin('target@example.test', '198.51.100.1');
+        $this->failLogin('target@example.test', '198.51.100.2');
 
         $this->assertCount(1, $this->lines('alert.failed_logins'));
         Notification::assertNothingSent();
-        Http::assertNotSent(fn (HttpRequest $r): bool => str_contains($r->url(), 'hooks.example.test'));
+        Http::assertNothingSent();
     }
 
-    public function test_a_failing_slack_webhook_never_changes_the_answer_or_leaks_its_address(): void
-    {
-        Http::fake(['hooks.example.test/*' => Http::response('no', 500)]);
-        config(['prism.alerts.failed_logins_per_account' => 1]);
-
-        $this->failLogin('nobody@example.test', '198.51.100.1');
-        $response = $this->fromIp('198.51.100.2')->post('/login', ['email' => 'nobody@example.test', 'password' => 'wrong-password-123']);
-
-        $response->assertRedirect();
-        $this->assertCount(1, $this->lines('alert.failed_logins'));
-        $this->assertEmailed('Many failed sign-ins for one account');
-        $text = json_encode(array_map(fn (LogRecord $r): array => $r->context, $this->lines()), JSON_THROW_ON_ERROR);
-        $this->assertStringNotContainsString('SECRETVALUE', $text);
-    }
-
-    public function test_a_webhook_that_is_not_https_is_not_used(): void
-    {
-        config(['prism.alerts.slack_webhook' => 'http://hooks.example.test/services/plain', 'prism.alerts.failed_logins_per_account' => 1]);
-
-        $this->failLogin('nobody@example.test', '198.51.100.1');
-        $this->failLogin('nobody@example.test', '198.51.100.2');
-
-        Http::assertNotSent(fn (HttpRequest $r): bool => str_contains($r->url(), 'hooks.example.test'));
-    }
-
-    public function test_messages_per_hour_are_capped_and_the_cap_is_logged_once(): void
-    {
-        config(['prism.alerts.max_notifications_per_hour' => 2, 'prism.alerts.failed_logins_per_account' => 1]);
-
-        foreach (['a', 'b', 'c', 'd'] as $n => $name) {
-            $this->failLogin("{$name}@example.test", '198.51.100.'.(10 + 2 * $n));
-            $this->failLogin("{$name}@example.test", '198.51.100.'.(11 + 2 * $n));
-        }
-
-        $this->assertCount(4, $this->lines('alert.failed_logins'), 'Every alert is still in the audit log.');
-        Notification::assertSentOnDemandTimes(SecurityAlert::class, 2);
-        $suppressed = $this->lines('alert.notifications_suppressed');
-        $this->assertCount(2, $suppressed, 'Once for email and once for Slack.');
-        $this->assertEqualsCanonicalizing(['email', 'slack'], array_map(fn (LogRecord $r): string => $r->context['detail']['channel'], $suppressed));
-    }
-
-    public function test_a_message_holds_no_email_address_password_or_token(): void
+    public function test_an_alert_line_holds_no_email_address_password_or_token(): void
     {
         config(['prism.alerts.failed_logins_per_account' => 1]);
         $this->failLogin('target@example.test', '198.51.100.1');
         $this->failLogin('target@example.test', '198.51.100.2');
 
-        Notification::assertSentOnDemand(SecurityAlert::class, function (SecurityAlert $n): bool {
-            $all = $n->title.$n->check.implode("\n", $n->lines);
-            $this->assertStringNotContainsString('target@example.test', $all);
-            $this->assertStringNotContainsString('wrong-password-123', $all);
-            $this->assertStringContainsString('Request IP address: 198.51.100.2', $all);
-            $this->assertStringContainsString(LogId::email('target@example.test'), $all);
-
-            return true;
-        });
-        Http::assertSent(function (HttpRequest $r): bool {
-            $this->assertStringNotContainsString('target@example.test', (string) $r['text']);
-
-            return str_contains((string) $r->url(), 'hooks.example.test');
-        });
-    }
-
-    public function test_the_email_has_a_clear_subject_and_a_what_to_check_line(): void
-    {
-        $mail = (new SecurityAlert('Many failed sign-ins for one account', 'Look in the audit log.', ['Event: alert.failed_logins']))
-            ->toMail(new AnonymousNotifiable);
-
-        $this->assertSame('[PRISM alert] Many failed sign-ins for one account', $mail->subject);
-        $this->assertContains('What to check: Look in the audit log.', $mail->introLines);
-        $this->assertContains('Event: alert.failed_logins', $mail->introLines);
+        $alert = $this->lines('alert.failed_logins');
+        $this->assertCount(1, $alert);
+        $text = json_encode($alert[0]->context, JSON_THROW_ON_ERROR);
+        $this->assertStringNotContainsString('target@example.test', $text);
+        $this->assertStringNotContainsString('wrong-password-123', $text);
+        $this->assertSame('198.51.100.2', $alert[0]->context['client']['ip']);
+        $this->assertSame(LogId::email('target@example.test'), $alert[0]->context['detail']['email_code']);
     }
 
     private function entryFor(User $owner): OverrideLog
