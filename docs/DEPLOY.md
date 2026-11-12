@@ -66,3 +66,15 @@ The live site uses a free Let's Encrypt certificate on a free DuckDNS name. ngin
 ## Hosting cost
 
 The server runs on the AWS Free Tier. The entrant confirmed this in the AWS account on Oct 22, 2026. The Claude API is a separate paid service and is not part of the free tier.
+
+## Audit log in CloudWatch
+
+The app writes each audit line to standard error and to `/var/log/prism/audit.log` (`.ebextensions/03-audit-log.config`). `.platform/hooks/postdeploy/03_audit_log.sh` creates the folder and asks the CloudWatch agent to ship the file. `.platform/confighooks/postdeploy/03_audit_log.sh` repeats that after a configuration change in the console.
+
+Check after each deploy:
+
+1. Fail one sign-in on the live site.
+2. Open CloudWatch Logs and the group `/aws/elasticbeanstalk/<environment>/var/log/prism/audit.log`.
+3. Search for `auth.login.failed`.
+
+If the group is missing, read `eb-hooks.log` for lines that start with `PRISM audit log:`. The instance role needs `logs:CreateLogGroup`, `logs:CreateLogStream` and `logs:PutLogEvents`. I have not confirmed this setup on the live platform.

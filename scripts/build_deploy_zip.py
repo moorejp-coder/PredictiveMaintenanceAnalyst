@@ -31,6 +31,8 @@ MUST_HAVE = [
     ".ebextensions/02-https.config", ".platform/hooks/postdeploy/02_https.sh",
     ".platform/confighooks/postdeploy/02_https.sh",
     ".platform/nginx/conf.d/elasticbeanstalk/acme.conf",
+    ".ebextensions/03-audit-log.config", ".platform/hooks/postdeploy/03_audit_log.sh",
+    ".platform/confighooks/postdeploy/03_audit_log.sh",
     "composer.json", "composer.lock", "artisan", "bootstrap/app.php",
 ]
 FORBIDDEN_PREFIXES = (".env", ".git-credentials", "vendor/", "node_modules/", ".git/")
