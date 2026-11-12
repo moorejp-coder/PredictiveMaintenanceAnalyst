@@ -12,6 +12,14 @@ PRISM is a failure-risk dashboard for one industrial milling machine (M-01). It 
 
 Safety disclaimer: PRISM supports a qualified technician and does not replace an inspection. Stop the machine and call a qualified maintenance professional for any safety concern.
 
+![PRISM dashboard in the Worn tool situation. The failure risk score is 35 out of 100 (Low risk), with a plain-English reason, a learned estimate, a risk chart of the last 30 readings and one stress bar per failure check.](docs/img/prism-dashboard.png)
+
+The dashboard on simulated data: the score, the reason, the stress on each failure check and the learned estimate.
+
+![The Explain this reading pop-up for a High risk reading of 73. It shows an AI-GENERATED label, a likely cause, a drafted work order, a test on a copy of the reading and the tools the AI used.](docs/img/prism-explain-reading.png)
+
+"Explain this reading" on a High risk reading: the AI-GENERATED label, the likely cause, the drafted work order, the tested fix and what the AI looked at.
+
 ## What PRISM does
 
 - Shows a failure-risk score from 0 to 100 with a band: Low, Elevated (40 and above) or High (70 and above).
@@ -35,6 +43,7 @@ Safety disclaimer: PRISM supports a qualified technician and does not replace an
 - It records no stops, downtime or confirmed faults.
 - It lets neither the AI nor the learned estimate change the score, the band or the action.
 - It asks for no operator name. An override entry records the signed-in account instead.
+- It does not keep personal data on a separate system from the public site. Accounts, the override log and AI ratings share one SQLite file on one server. See [SECURITY.md](SECURITY.md) and [docs/RECOVERY.md](docs/RECOVERY.md).
 
 ## How PRISM meets the judging criteria
 
@@ -63,7 +72,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026.
 ## Override log
 
 - When PRISM says "Stop the machine and inspect it now," the dashboard shows a "Keep running anyway" button.
-- The form asks for a name (2 to 100 characters) and a reason (10 to 500 characters).
+- The form asks for a reason (10 to 500 characters). It asks for no name. The entry records the signed-in account.
 - The server rebuilds the reading and the score from the scenario and reading number. It accepts an entry only for a High-risk reading and ignores any score the browser sends.
 - `/overrides` lists the newest 200 entries for admin accounts only (`ADMIN_EMAIL`). With `REQUIRE_LOGIN` off, the page returns 404.
 - The write route is limited to 20 requests a minute per user. The log is a SQLite file on the host, so a replaced server erases it.
