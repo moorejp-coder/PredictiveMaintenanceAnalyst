@@ -35,6 +35,7 @@ Safety disclaimer: PRISM supports a qualified technician and does not replace an
 - It records no stops, downtime or confirmed faults.
 - It lets neither the AI nor the learned estimate change the score, the band or the action.
 - It asks for no operator name. An override entry records the signed-in account instead.
+- It does not keep personal data on a separate system from the public site. Accounts, the override log and AI ratings share one SQLite file on one server. See [SECURITY.md](SECURITY.md) and [docs/RECOVERY.md](docs/RECOVERY.md).
 
 ## How PRISM meets the judging criteria
 
@@ -63,7 +64,7 @@ Criteria and weights come from the CUA AI Vibe Coding Competition, Fall 2026.
 ## Override log
 
 - When PRISM says "Stop the machine and inspect it now," the dashboard shows a "Keep running anyway" button.
-- The form asks for a name (2 to 100 characters) and a reason (10 to 500 characters).
+- The form asks for a reason (10 to 500 characters). It asks for no name. The entry records the signed-in account.
 - The server rebuilds the reading and the score from the scenario and reading number. It accepts an entry only for a High-risk reading and ignores any score the browser sends.
 - `/overrides` lists the newest 200 entries for admin accounts only (`ADMIN_EMAIL`). With `REQUIRE_LOGIN` off, the page returns 404.
 - The write route is limited to 20 requests a minute per user. The log is a SQLite file on the host, so a replaced server erases it.
