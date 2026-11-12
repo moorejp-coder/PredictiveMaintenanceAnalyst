@@ -160,7 +160,7 @@ return [
 
     'policy_dates' => [
         'faq' => ['date' => 'November 10, 2026', 'hash' => 'b651506f26da4488a01f6550ac88c7a85f4f3cb4e01de12398a6e972126ac02d'],
-        'privacy' => ['date' => 'November 10, 2026', 'hash' => 'b52fffa8d1e2c78655b32d9721180131e0d4435447c9dc7ecd52092b721f8330'],
+        'privacy' => ['date' => 'November 12, 2026', 'hash' => '714a8a68752d163bcc2da51725291375c0af182379ce4d236921a276acd4e21a'],
         'terms' => ['date' => 'November 9, 2026', 'hash' => 'fd31cf686c6b5e73bd5ade180317225542febe3ca726d56668f9642cf59819f1'],
         'ai' => ['date' => 'November 10, 2026', 'hash' => '3249b5f1aac4595034c66a278cd47985760095422fe66686a0b6a2deaba80c8f'],
     ],
