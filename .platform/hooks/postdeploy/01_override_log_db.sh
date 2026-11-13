@@ -11,8 +11,12 @@
 
 DATA_DIR=/var/app/prism-data
 
-mkdir -p "$DATA_DIR" || true
-touch "$DATA_DIR/prism.sqlite" || true
+# The folder and the database file start owner only, so no other account on the
+# server reads the override log or the accounts, even for a moment. The umask
+# is limited to these two commands: artisan below also writes files under
+# storage/ as root, and those must stay readable to the web app.
+(umask 077; mkdir -p "$DATA_DIR") || true
+(umask 077; touch "$DATA_DIR/prism.sqlite") || true
 
 cd /var/app/current || exit 0
 php artisan migrate --force || echo "PRISM: migrate failed. The override log is unavailable."
@@ -33,9 +37,10 @@ php artisan db:seed --class=AdminSeeder --force || echo "PRISM: the admin accoun
 # does not keep an email address in the token table.
 php artisan auth:clear-resets invites || echo "PRISM: expired invite links were not cleared."
 
-# The web server user must be able to write the file and its folder.
+# Only the web app user (webapp, which runs PHP) reads or writes the file and
+# its folder. Group and other get no access.
 chown -R webapp:webapp "$DATA_DIR" || true
-chmod 750 "$DATA_DIR" || true
-chmod 640 "$DATA_DIR/prism.sqlite" || true
+chmod 700 "$DATA_DIR" || true
+chmod 600 "$DATA_DIR/prism.sqlite" || true
 
 exit 0
