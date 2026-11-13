@@ -4,7 +4,8 @@
 Usage: python3 scripts/build_deploy_zip.py [output.zip] [previous-working.zip]
 
 What it does
-- Zips every git-tracked file (current contents on disk) except data/ and docs/ (same as past deploys).
+- Zips every git-tracked file (current contents on disk) except data/ and docs/ (same as past deploys)
+  and the development-only files in DEV_ONLY (tests, AI coding tool settings, CI, training script).
 - Stores files as 644 and scripts (artisan, *.sh) as 755. Owner-only modes
   (600/700) make the web server unable to read CSS, fonts and brand files,
   and the live site shows up unstyled. This script never uses them.
@@ -35,7 +36,14 @@ MUST_HAVE = [
     ".platform/confighooks/postdeploy/03_audit_log.sh",
     "composer.json", "composer.lock", "artisan", "bootstrap/app.php",
 ]
-FORBIDDEN_PREFIXES = (".env", ".git-credentials", "vendor/", "node_modules/", ".git/")
+# Development-only files. The live site does not read them, so they stay out of
+# the zip. resources/ml/ (the exported model) is NOT here: the app reads it.
+DEV_ONLY = (
+    "tests/", ".claude/", ".github/", "ml/", ".mcp.json", "boost.json",
+    "CLAUDE.md", "AGENTS.md", "phpunit.xml", "phpstan.neon", ".styleci.yml",
+    ".editorconfig", ".npmrc",
+)
+FORBIDDEN_PREFIXES = (".env", ".git-credentials", "vendor/", "node_modules/", ".git/") + DEV_ONLY
 
 
 def main():
@@ -47,7 +55,7 @@ def main():
         print("WARNING: uncommitted changes. Edited tracked files ARE in the zip as they are on disk. New untracked files (??) are NOT. Commit first so the zip matches GitHub:\n" + dirty)
 
     files = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
-    files = [f for f in files if not f.startswith(("data/", "docs/"))]
+    files = [f for f in files if not f.startswith(("data/", "docs/") + DEV_ONLY)]
 
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for f in files:
@@ -76,9 +84,12 @@ def main():
         with zipfile.ZipFile(previous) as p, zipfile.ZipFile(out) as n:
             old, new = set(p.namelist()), set(n.namelist())
             print("added vs previous:", sorted(new - old))
-            print("removed vs previous:", sorted(old - new))
-            if old - new:
-                problems.append("files removed vs previous zip")
+            removed = sorted(old - new)
+            print("removed vs previous:", removed)
+            # Development-only files are removed on purpose. Anything else needs an explanation.
+            unexpected = [f for f in removed if not f.startswith(DEV_ONLY)]
+            if unexpected:
+                problems.append("files removed vs previous zip: %s" % unexpected)
 
     if problems:
         print("\nPROBLEMS:\n- " + "\n- ".join(problems))
