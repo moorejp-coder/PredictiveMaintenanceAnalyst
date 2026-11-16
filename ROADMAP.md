@@ -1,25 +1,21 @@
 # PRISM contest roadmap
 
-Last updated: Oct 22, 2026. This file tracks contest deliverables and dates, then lists product ideas that are not built.
+Last updated: Nov 16, 2026. This file tracks contest deliverables and dates, then lists product ideas that are not built.
 
 ## Dates
-- Fri Oct 30: reply to the faculty reviewer with the branch protection confirmation, the judge access option and a test link.
-- Fri Nov 20: access link and a 2 to 3 minute screen recording at the top of the README.
-- Thu Nov 26: contest final deadline.
+- Mon Nov 16, 11:59 p.m. ET: code freeze. Judges evaluate the last commit on main before this time. No redeploy to AWS after it.
+- Final submission email: repo, live link, one-click demo login, video under 5 minutes and a two-sentence summary.
 
 ## Done
 - [x] Branch protection on main: a pull request is required, the PHP 8.4, PHP 8.5 and Code style (Pint) checks are required, and deletion and force pushes are blocked.
 - [x] Judge access: the Judge Demo at https://prismcua.duckdns.org/demo is read-only, needs no login and sends no emails (pull request #20).
-- [x] Access link at the top of the README.
+- [x] Access link and demo video link at the top of the README (pull request #68).
+- [x] README checked against the contest rubric, with screenshots added (pull request #63).
+- [x] One-page summary (problem, solution, AI usage, key learnings).
 
 ## To do
-- [ ] Reply to the faculty reviewer (by Oct 30).
-- [ ] Screen recording, 2 to 3 minutes (by Nov 20), added at the top of the README through a pull request.
-  - Open the Judge Demo and show the dashboard and the four situations.
-  - Press "Explain this reading" and show the AI-GENERATED label, the tool calls and the work order.
-  - State what PRISM does not do: the data is simulated, the score is rule-based and no technician was interviewed.
-- [ ] Demo script for the 5 to 10 minute presentation, written in the last week before Nov 26.
-- [ ] One-page summary for the final submission (problem, solution, AI usage, key learnings), written in the last week before Nov 26. It is the last task before submitting.
+- [ ] Send the final submission email.
+- [ ] Demo script for the 5 to 10 minute presentation, if the contest still requires one.
 
 ## Rules for every change
 - Work on a branch, open a pull request with a short what-and-why description, wait for green checks, then merge.
