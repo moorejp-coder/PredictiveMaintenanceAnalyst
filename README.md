@@ -2,6 +2,7 @@
 
 [![Tests](https://github.com/moorejp-coder/PredictiveMaintenanceAnalyst/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/moorejp-coder/PredictiveMaintenanceAnalyst/actions/workflows/tests.yml)
 
+- Demo video (under 5 minutes): https://www.youtube.com/watch?v=ETry_yLaUTc
 - Live site: https://prismcua.duckdns.org/ (HTTPS)
 - Judge Demo (no login, no password, read-only): https://prismcua.duckdns.org/demo
 - Local site: http://127.0.0.1:8000/ (run `php artisan serve` in the project folder first)
