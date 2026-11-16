@@ -274,7 +274,7 @@ class AuthController extends Controller
         try {
             $user->notify(new AccountLocked($token, $user->first_failed_login_at ?? $lockedAt, $lockedAt, $user->failed_login_ips ?? []));
         } catch (Throwable $e) {
-            Log::error('Could not send the account lock email', ['email_hash' => LogId::email((string) $user->email), 'error' => $e->getMessage()]);
+            Log::error('Could not send the account lock email', ['email_hash' => LogId::email((string) $user->email), 'class' => $e::class]);
         }
 
         // The IP addresses exist only to go into this email. Once it is

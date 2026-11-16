@@ -1,5 +1,6 @@
 <?php
 
+use App\Logging\RedactLogs;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
@@ -61,6 +62,8 @@ return [
 
         'single' => [
             'driver' => 'single',
+            'tap' => [RedactLogs::class],
+            'permission' => 0640,
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
@@ -68,6 +71,8 @@ return [
 
         'daily' => [
             'driver' => 'daily',
+            'tap' => [RedactLogs::class],
+            'permission' => 0640,
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'max_files' => env('LOG_DAILY_DAYS', 14),
@@ -76,6 +81,8 @@ return [
 
         'monthly' => [
             'driver' => 'monthly',
+            'tap' => [RedactLogs::class],
+            'permission' => 0640,
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'max_files' => 3,
@@ -84,6 +91,7 @@ return [
 
         'slack' => [
             'driver' => 'slack',
+            'tap' => [RedactLogs::class],
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
             'username' => env('LOG_SLACK_USERNAME', env('APP_NAME', 'Laravel')),
             'emoji' => env('LOG_SLACK_EMOJI', ':boom:'),
@@ -93,6 +101,7 @@ return [
 
         'papertrail' => [
             'driver' => 'monolog',
+            'tap' => [RedactLogs::class],
             'level' => env('LOG_LEVEL', 'debug'),
             'handler' => env('LOG_PAPERTRAIL_HANDLER', SyslogUdpHandler::class),
             'handler_with' => [
@@ -105,6 +114,7 @@ return [
 
         'stderr' => [
             'driver' => 'monolog',
+            'tap' => [RedactLogs::class],
             'level' => env('LOG_LEVEL', 'debug'),
             'handler' => StreamHandler::class,
             'handler_with' => [
@@ -116,6 +126,7 @@ return [
 
         'syslog' => [
             'driver' => 'syslog',
+            'tap' => [RedactLogs::class],
             'level' => env('LOG_LEVEL', 'debug'),
             'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
             'replace_placeholders' => true,
@@ -123,6 +134,7 @@ return [
 
         'errorlog' => [
             'driver' => 'errorlog',
+            'tap' => [RedactLogs::class],
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
@@ -147,6 +159,7 @@ return [
         // the server to a store the app cannot change (SECURITY.md, Audit log).
         'audit_stderr' => [
             'driver' => 'monolog',
+            'tap' => [RedactLogs::class],
             'level' => 'info',
             'handler' => StreamHandler::class,
             'handler_with' => [
@@ -161,6 +174,7 @@ return [
         // deletion edits (App\Services\PersonalData).
         'audit_file' => [
             'driver' => 'single',
+            'tap' => [RedactLogs::class],
             'path' => env('AUDIT_LOG_PATH', storage_path('logs/audit/audit.log')),
             'level' => 'info',
             'permission' => 0640,

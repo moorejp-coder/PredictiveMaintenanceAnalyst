@@ -474,7 +474,7 @@ final class Investigator
         try {
             return Cache::get($key);
         } catch (\Throwable $e) {
-            Log::warning('ai_cache_failed', ['class' => $e::class, 'message' => $e->getMessage()]);
+            Log::warning('ai_cache_failed', ['class' => $e::class]);
 
             return null;
         }
@@ -486,7 +486,7 @@ final class Investigator
         try {
             Cache::put($key, $value, $seconds);
         } catch (\Throwable $e) {
-            Log::warning('ai_cache_failed', ['class' => $e::class, 'message' => $e->getMessage()]);
+            Log::warning('ai_cache_failed', ['class' => $e::class]);
             // A broken cache must not break the page.
         }
     }
